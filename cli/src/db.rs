@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 use super::define;
-use nesmap_core::model::{OuiData, PortData, OsTtl, TCPFingerprint};
+use nesmap_core::models::{PortData, OsTtl, TCPFingerprint};
+use nesmap_core::db_models;
 
 pub fn get_oui_map() -> HashMap<String, String> {
     let mut oui_map: HashMap<String, String> = HashMap::new();
-    let rs_nscan_oui: Vec<OuiData> = serde_json::from_str(define::NESMAP_OUI).unwrap_or(vec![]);
+    let rs_nscan_oui: Vec<db_models::Oui> = db_models::Oui::get_oui_list();
     for oui in rs_nscan_oui {
         oui_map.insert(oui.mac_prefix, oui.vendor_name_detail);
     }

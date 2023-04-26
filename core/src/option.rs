@@ -5,7 +5,7 @@ use std::fs::read_to_string;
 use ipnet::Ipv4Net;
 use std::str::FromStr;
 use serde::{Serialize, Deserialize};
-use crate::model::TCPFingerprint;
+use crate::models::TCPFingerprint;
 
 use super::network;
 use super::process;

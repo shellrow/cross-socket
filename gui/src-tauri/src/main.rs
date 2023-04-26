@@ -11,10 +11,10 @@ use commands::{exec_portscan, exec_hostscan, exec_ping, exec_traceroute, lookup_
 
 fn main() {
   // Initialize DB
-  match nesmap_core::db::init_db() {
+  /* match nesmap_core::db::init_db() {
     Ok(raw_count) => println!("DB initialized. affected {} rows.", raw_count),
     Err(e) => println!("DB init failed: {}", e),
-  }
+  } */
   // Check if we are running as root
   if !nesmap_core::process::privileged() {
     //nesmap_core::process::restart_as_root();

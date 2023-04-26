@@ -4,7 +4,7 @@ use rusqlite::{Connection, Result, params, Transaction, Statement, Rows};
 use uuid::Uuid;
 use crate::{define, option};
 use crate::result::{PortScanResult, HostScanResult, PingStat, PingResult, TraceResult, Node};
-use crate::model::{ProbeLog, DataSetItem, MapInfo, MapNode, MapEdge, MapLayout, MapData, ProbeStat};
+use crate::db_models::{ProbeLog, DataSetItem, MapInfo, MapNode, MapEdge, MapLayout, MapData, ProbeStat, TcpService, OsTtl, OsFingerprint};
 
 pub fn connect_db() -> Result<Connection,rusqlite::Error> {
     let mut path: PathBuf = env::current_exe().unwrap();
@@ -12,197 +12,6 @@ pub fn connect_db() -> Result<Connection,rusqlite::Error> {
     path.push(define::DB_NAME);
     let conn = Connection::open(path)?;
     Ok(conn)
-}
-
-pub fn init_db() -> Result<usize, rusqlite::Error> {
-    let mut affected_row_count: usize = 0;
-    let conn: Connection = match connect_db() {
-        Ok(c)=> c, 
-        Err(e) => return Err(e),
-    };
-    // NOTE
-    // This DB is intended to store and search results and is not relational aware.
-    // datetime(CURRENT_TIMESTAMP, 'localtime')
-    // probe_result
-    let sql: &str = "CREATE TABLE IF NOT EXISTS probe_result (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        probe_id TEXT NOT NULL,
-        probe_type_id TEXT NOT NULL,
-        probe_target_addr TEXT NOT NULL,
-        probe_target_name TEXT NOT NULL,
-        protocol_id TEXT NOT NULL,
-        probe_option TEXT NULL,
-        scan_time INTEGER NULL, 
-        service_detection_time INTEGER NULL, 
-        os_detection_time INTEGER NULL, 
-        probe_time INTEGER NULL, 
-        transmitted_count INTEGER NULL,
-        received_count INTEGER NULL,
-        min_value INTEGER NULL,
-        avg_value INTEGER NULL,
-        max_value INTEGER NULL,
-        issued_at TEXT NOT NULL);";
-    match conn.execute(sql, params![]){
-        Ok(row_count) => {
-            affected_row_count += row_count;
-        },
-        Err(e) => return Err(e),
-    };
-    // port_scan_result
-    let sql: &str = "CREATE TABLE IF NOT EXISTS port_scan_result (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        probe_id TEXT NOT NULL,
-                        socket_addr TEXT NOT NULL,
-                        ip_addr TEXT NOT NULL,
-                        host_name TEXT NOT NULL,
-                        port_no INTEGER NOT NULL, 
-                        port_status_id TEXT NOT NULL, 
-                        protocol_id TEXT NOT NULL,
-                        issued_at TEXT NOT NULL
-                    );";
-    match conn.execute(sql, params![]){
-        Ok(row_count) => {
-            affected_row_count += row_count;
-        },
-        Err(e) => return Err(e),
-    };
-    // host_scan_result
-    let sql: &str = "CREATE TABLE IF NOT EXISTS host_scan_result (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        probe_id TEXT NOT NULL,
-                        ip_addr TEXT NOT NULL,
-                        host_name TEXT NOT NULL,
-                        port_no INTEGER NOT NULL,
-                        issued_at TEXT NOT NULL
-                    );";
-    match conn.execute(sql, params![]){
-        Ok(row_count) => {
-            affected_row_count += row_count;
-        },
-        Err(e) => return Err(e),
-    };
-    // ping_result
-    let sql: &str = "CREATE TABLE IF NOT EXISTS ping_result (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        probe_id TEXT NOT NULL,
-                        seq INTEGER NOT NULL,
-                        ip_addr TEXT NOT NULL,
-                        host_name TEXT NOT NULL,
-                        port_no INTEGER NOT NULL,
-                        status TEXT NOT NULL,
-                        ttl INTEGER NULL,
-                        hop INTEGER NULL,
-                        rtt INTEGER NULL,
-                        issued_at TEXT NOT NULL
-                    );";
-    match conn.execute(sql, params![]){
-        Ok(row_count) => {
-            affected_row_count += row_count;
-        },
-        Err(e) => return Err(e),
-    };
-    // traceroute_result
-    let sql: &str = "CREATE TABLE IF NOT EXISTS traceroute_result (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        probe_id TEXT NOT NULL,
-                        seq INTEGER NOT NULL,
-                        ip_addr TEXT NOT NULL,
-                        host_name TEXT NOT NULL,
-                        ttl INTEGER NULL,
-                        hop INTEGER NULL,
-                        rtt INTEGER NULL,
-                        node_type TEXT NULL,
-                        issued_at TEXT NOT NULL
-                    );";
-    match conn.execute(sql, params![]){
-        Ok(row_count) => {
-            affected_row_count += row_count;
-        },
-        Err(e) => return Err(e),
-    };
-    // probe_type
-    let sql: &str = "CREATE TABLE IF NOT EXISTS probe_type (
-            probe_type_id TEXT PRIMARY KEY,
-            probe_type_name TEXT NULL 
-        );";
-    match conn.execute(sql, params![]){
-        Ok(row_count) => {
-            affected_row_count += row_count;
-        },
-        Err(e) => return Err(e),
-    };
-    // probe type records
-    let sql: &str = "INSERT OR IGNORE INTO probe_type (probe_type_id, probe_type_name) VALUES (?1, ?2);";
-    let params_1: &[&dyn rusqlite::ToSql] = params![option::CommandType::PortScan.id(),option::CommandType::PortScan.name()];
-    let params_2: &[&dyn rusqlite::ToSql] = params![option::CommandType::HostScan.id(),option::CommandType::HostScan.name()];
-    let params_3: &[&dyn rusqlite::ToSql] = params![option::CommandType::Ping.id(),option::CommandType::Ping.name()];
-    let params_4: &[&dyn rusqlite::ToSql] = params![option::CommandType::Traceroute.id(),option::CommandType::Traceroute.name()];
-    for params in vec![params_1,params_2,params_3,params_4] {
-        match conn.execute(sql, params) {
-            Ok(row_count) => {
-                affected_row_count += row_count;
-            },
-            Err(e) => return Err(e),
-        };
-    }
-    // map_info
-    let sql: &str = "CREATE TABLE IF NOT EXISTS map_info (
-        map_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        map_name TEXT NULL, 
-        display_order INTEGER NULL,
-        created_at TEXT NULL 
-    );";
-    match conn.execute(sql, params![]){
-        Ok(row_count) => {
-            affected_row_count += row_count;
-        },
-        Err(e) => return Err(e),
-    };
-    // map_node
-    let sql: &str = "CREATE TABLE IF NOT EXISTS map_node (
-        map_id INTEGER NOT NULL, 
-        node_id TEXT NOT NULL,
-        node_name TEXT NULL,
-        ip_addr TEXT NULL, 
-        host_name TEXT NULL, 
-        PRIMARY KEY(map_id, node_id) 
-    );";
-    match conn.execute(sql, params![]){
-        Ok(row_count) => {
-            affected_row_count += row_count;
-        },
-        Err(e) => return Err(e),
-    };
-    // map_edge
-    let sql: &str = "CREATE TABLE IF NOT EXISTS map_edge (
-        map_id INTEGER NOT NULL,  
-        edge_id TEXT NOT NULL,
-        source_node_id TEXT NOT NULL,
-        target_node_id TEXT NOT NULL, 
-        edge_label TEXT NULL, 
-        PRIMARY KEY(map_id, edge_id) 
-    );";
-    match conn.execute(sql, params![]){
-        Ok(row_count) => {
-            affected_row_count += row_count;
-        },
-        Err(e) => return Err(e),
-    };
-    // map_layout
-    let sql: &str = "CREATE TABLE IF NOT EXISTS map_layout (
-        map_id INTEGER NOT NULL, 
-        node_id TEXT NOT NULL,
-        x_value INTEGER NOT NULL,
-        y_value INTEGER NOT NULL, 
-        PRIMARY KEY(map_id, node_id)
-    );";
-    match conn.execute(sql, params![]){
-        Ok(row_count) => {
-            affected_row_count += row_count;
-        },
-        Err(e) => return Err(e),
-    };
-    Ok(affected_row_count)
 }
 
 pub fn get_probe_id() -> String {
@@ -882,4 +691,130 @@ pub fn get_probe_stat() -> ProbeStat {
         }
     }
     probe_stat
+}
+
+pub fn get_tcp_services() -> Vec<TcpService> {
+    let mut tcp_services: Vec<TcpService> = Vec::new();
+    let conn: Connection = connect_db().unwrap();
+    let sql: &str = "SELECT port, service_name, service_description, wellknown_flag, default_flag FROM tcp_service;";
+    let mut stmt: Statement = conn.prepare(sql).unwrap();
+    let mut rows: Rows = stmt.query([]).unwrap();
+    while let Some(row) = rows.next().unwrap() {
+        let tcp_service: TcpService = TcpService {
+            port: row.get(0).unwrap(),
+            service_name: row.get(1).unwrap(),
+            service_description: row.get(2).unwrap(),
+            wellknown_flag: row.get(3).unwrap(),
+            default_flag: row.get(4).unwrap()
+        };
+        tcp_services.push(tcp_service);
+    }
+    tcp_services
+}
+
+pub fn get_default_services() -> Vec<TcpService> {
+    let mut default_services: Vec<TcpService> = vec![];
+    let conn = connect_db().unwrap();
+    let sql: &str = "SELECT port, service_name, service_description FROM tcp_service WHERE default_flag = 1;";
+    let mut stmt = conn.prepare(sql).unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    while let Some(row) = rows.next().unwrap() {
+        let tcp_service: TcpService = TcpService {
+            port: row.get(0).unwrap(),
+            service_name: row.get(1).unwrap(),
+            service_description: row.get(2).unwrap(),
+            wellknown_flag: row.get(3).unwrap(),
+            default_flag: row.get(4).unwrap()
+        };
+        default_services.push(tcp_service);
+    }
+    default_services
+}
+
+pub fn get_wellknown_services() -> Vec<TcpService> {
+    let mut wellknown_services: Vec<TcpService> = vec![];
+    let conn = connect_db().unwrap();
+    let sql: &str = "SELECT port, service_name, service_description FROM tcp_service WHERE wellknown_flag = 1;";
+    let mut stmt = conn.prepare(sql).unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    while let Some(row) = rows.next().unwrap() {
+        let tcp_service: TcpService = TcpService {
+            port: row.get(0).unwrap(),
+            service_name: row.get(1).unwrap(),
+            service_description: row.get(2).unwrap(),
+            wellknown_flag: row.get(3).unwrap(),
+            default_flag: row.get(4).unwrap()
+        };
+        wellknown_services.push(tcp_service);
+    }
+    wellknown_services
+}
+
+pub fn get_http_ports() -> Vec<u16> {
+    let mut http_ports: Vec<u16> = vec![];
+    let conn = connect_db().unwrap();
+    let sql: &str = "SELECT port FROM tcp_tag WHERE tag = 'http';";
+    let mut stmt = conn.prepare(sql).unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    while let Some(row) = rows.next().unwrap() {
+        let port: u16 = row.get(0).unwrap();
+        http_ports.push(port);
+    }
+    http_ports
+}
+
+pub fn get_https_ports() -> Vec<u16> {
+    let mut https_ports: Vec<u16> = vec![];
+    let conn = connect_db().unwrap();
+    let sql: &str = "SELECT port FROM tcp_tag WHERE tag = 'https';";
+    let mut stmt = conn.prepare(sql).unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    while let Some(row) = rows.next().unwrap() {
+        let port: u16 = row.get(0).unwrap();
+        https_ports.push(port);
+    }
+    https_ports
+}
+
+pub fn get_os_ttl() -> Vec<OsTtl> {
+    let mut os_ttl_list: Vec<OsTtl> = vec![];
+    let conn = connect_db().unwrap();
+    let sql: &str = "SELECT os_family, os_description, initial_ttl FROM os_ttl;";
+    let mut stmt = conn.prepare(sql).unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    while let Some(row) = rows.next().unwrap() {
+        let os_ttl: OsTtl = OsTtl {
+            os_family: row.get(0).unwrap(),
+            os_description: row.get(1).unwrap(),
+            initial_ttl: row.get(2).unwrap()
+        };
+        os_ttl_list.push(os_ttl);
+    }
+    os_ttl_list
+}
+
+pub fn search_os_fingerprints(tcp_window_size: u16, tcp_option_pattern: String) -> Vec<OsFingerprint> {
+    let mut results: Vec<OsFingerprint> = vec![];
+    let conn: Connection = connect_db().unwrap();
+    let sql: &str = "SELECT cpe, os_name, os_vendor, os_family, os_generation, device_type, tcp_window_size, tcp_option_pattern FROM os_fingerprint WHERE tcp_window_size = ?1 AND tcp_option_pattern = ?2;";
+    let params_vec: &[&dyn rusqlite::ToSql] = params![
+        tcp_window_size,
+        tcp_option_pattern
+    ];
+    let mut stmt: Statement = conn.prepare(sql).unwrap();
+    let mut rows: Rows = stmt.query(params_vec).unwrap();    
+    while let Some(row) = rows.next().unwrap() {
+        let os_fingerprint: OsFingerprint = OsFingerprint {
+            cpe: row.get(0).unwrap(),
+            os_name: row.get(1).unwrap(),
+            os_vendor: row.get(2).unwrap(),
+            os_family: row.get(3).unwrap(),
+            os_generation: row.get(4).unwrap(),
+            device_type: row.get(5).unwrap(),
+            tcp_window_size: row.get(6).unwrap(),
+            tcp_option_pattern: row.get(7).unwrap()
+        };
+        results.push(os_fingerprint);
+    }
+    results
 }

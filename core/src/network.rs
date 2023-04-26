@@ -190,8 +190,8 @@ pub fn get_interface_by_name(if_name: String) -> Option<default_net::Interface> 
     return None;
 }
 
-pub fn get_default_interface_model() -> crate::model::NetworkInterface {
-    let mut default_interface: crate::model::NetworkInterface = crate::model::NetworkInterface::new();
+pub fn get_default_interface_model() -> crate::models::NetworkInterface {
+    let mut default_interface: crate::models::NetworkInterface = crate::models::NetworkInterface::new();
     match default_net::get_default_interface() {
         Ok(interface) => {
             default_interface.index = interface.index;

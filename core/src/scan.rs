@@ -15,7 +15,7 @@ use tracert::trace::Tracer;
 use tracert::ping::{Pinger};
 use crate::option::{TargetInfo, Protocol};
 use crate::result::{PortScanResult, HostScanResult, HostInfo, PingStat, PingResult, ProbeStatus, TraceResult, Node, NodeType, Domain, DomainScanResult};
-use crate::model::TCPFingerprint;
+use crate::models::TCPFingerprint;
 use crate::option::ScanOption;
 use crate::{define, network};
 

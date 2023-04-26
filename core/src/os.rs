@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use netscan::os::TcpFingerprint;
-use crate::model::TCPFingerprint;
+use crate::{models::TCPFingerprint, db_models::OsFingerprint};
+use crate::db;
 
 fn search_latest_gen(map: HashMap<String, (u32, TCPFingerprint)>, point: u32) -> TCPFingerprint {
     let mut gen_list : Vec<String> = vec![];
@@ -92,4 +93,29 @@ pub fn verify_fingerprints(fingerprint: TcpFingerprint, fingerprint_db:Vec<TCPFi
             return TCPFingerprint::new()
         },
     }
+}
+
+pub fn verify_os_fingerprint(fingerprint: TcpFingerprint) -> OsFingerprint {
+    let result: OsFingerprint = OsFingerprint::new();
+    if fingerprint.tcp_syn_ack_fingerprint.len() == 0 {
+        return result;
+    }
+    let mut tcp_options: Vec<String> = vec![];
+    for f in &fingerprint.tcp_syn_ack_fingerprint {
+        let mut options: Vec<String> = vec![];
+        f.tcp_option_order.iter().for_each(|option| {
+            options.push(option.name());
+        });
+        tcp_options.push(options.join("-"));
+    }
+    let tcp_window_size: u16  = fingerprint.tcp_syn_ack_fingerprint[0].tcp_window_size;
+    let tcp_option_pattern: String = tcp_options.join("|");
+    // 1. Select exact match fingerprint
+    let fingerprints: Vec<OsFingerprint> = db::search_os_fingerprints(tcp_window_size, tcp_option_pattern);
+    if fingerprints.len() > 0 {
+        return fingerprints[0].clone();
+    }
+    // 2. Select the fingerprint that most closely approximates
+    // 3. Select from Initial TTL
+    result
 }

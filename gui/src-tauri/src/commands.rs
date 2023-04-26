@@ -1,6 +1,6 @@
 use std::sync::mpsc::{channel ,Sender, Receiver};
 use std::thread;
-use nesmap_core::model::{ProbeLog, DataSetItem, ProbeStat};
+use nesmap_core::db_models::{ProbeLog, DataSetItem, ProbeStat};
 use tauri::Manager;
 use nesmap_core::option::{ScanOption};
 use nesmap_core::result::{PortScanResult, HostScanResult, PingStat, TraceResult};
@@ -134,7 +134,7 @@ pub fn get_probed_hosts() -> Vec<DataSetItem> {
 }
 
 #[tauri::command]
-pub fn save_map_data(map_data: nesmap_core::model::MapData) -> u32 {
+pub fn save_map_data(map_data: nesmap_core::db_models::MapData) -> u32 {
     let mut conn = nesmap_core::db::connect_db().unwrap();
     match nesmap_core::db::save_map_data(&mut conn, map_data) {
         Ok(_affected_rows) => {
@@ -148,7 +148,7 @@ pub fn save_map_data(map_data: nesmap_core::model::MapData) -> u32 {
 }
 
 #[tauri::command]
-pub fn get_map_data(map_id: u32) -> nesmap_core::model::MapData {
+pub fn get_map_data(map_id: u32) -> nesmap_core::db_models::MapData {
     nesmap_core::db::get_map_data(map_id)
 }
 
@@ -163,6 +163,6 @@ pub fn get_probe_stat() -> ProbeStat {
 }
 
 #[tauri::command]
-pub fn get_default_interface() -> nesmap_core::model::NetworkInterface {
+pub fn get_default_interface() -> nesmap_core::models::NetworkInterface {
     nesmap_core::network::get_default_interface_model()
 }
