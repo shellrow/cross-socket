@@ -219,3 +219,13 @@ pub fn get_default_interface_model() -> crate::models::NetworkInterface {
     }
     default_interface
 }
+
+pub fn guess_initial_ttl(ttl: u8) -> u8 {
+    if ttl <= 64 {
+        64
+    }else if 64 < ttl && ttl <= 128 {
+        128
+    }else {
+        255
+    }
+}

@@ -5,7 +5,7 @@ use std::fs::read_to_string;
 use ipnet::Ipv4Net;
 use std::str::FromStr;
 use serde::{Serialize, Deserialize};
-use crate::models::TCPFingerprint;
+//use crate::models::TCPFingerprint;
 
 use super::network;
 use super::process;
@@ -241,8 +241,7 @@ pub struct ScanOption {
     pub save_file_path: String,
     pub http_ports: Vec<u16>,
     pub https_ports: Vec<u16>,
-    pub tcp_map: HashMap<String,String>,
-    pub tcp_fingerprints: Vec<TCPFingerprint>,
+    pub tcp_map: HashMap<u16, String>,
     pub oui_map: HashMap<String, String>,
     pub ttl_map: HashMap<u8, String>,
 }
@@ -282,7 +281,6 @@ impl ScanOption {
             http_ports: vec![],
             https_ports: vec![],
             tcp_map: HashMap::new(),
-            tcp_fingerprints: vec![],
             oui_map: HashMap::new(),
             ttl_map: HashMap::new(),
         }

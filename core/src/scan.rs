@@ -15,7 +15,7 @@ use tracert::trace::Tracer;
 use tracert::ping::{Pinger};
 use crate::option::{TargetInfo, Protocol};
 use crate::result::{PortScanResult, HostScanResult, HostInfo, PingStat, PingResult, ProbeStatus, TraceResult, Node, NodeType, Domain, DomainScanResult};
-use crate::models::TCPFingerprint;
+use crate::db_models::OsFingerprint;
 use crate::option::ScanOption;
 use crate::{define, network};
 
@@ -238,21 +238,25 @@ pub async fn run_service_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) ->
             let port_info = crate::result::PortInfo { 
                 port_number: port.port.clone(), 
                 port_status: format!("{:?}", port.status), 
-                service_name: tcp_map.get(&port.port.to_string()).unwrap_or(&String::new()).to_string(), 
+                service_name: tcp_map.get(&port.port).unwrap_or(&String::new()).to_string(), 
                 service_version: service_map.get(&port.port).unwrap_or(&String::new()).to_string(), 
                 remark: String::new(), 
             };     
             result.ports.push(port_info);  
         }
         // HostInfo
-        let tcp_fingetprint =  if od_result.len() > 0 { crate::os::verify_fingerprints(od_result[0].tcp_fingerprint.clone(), opt.tcp_fingerprints) } else{ TCPFingerprint::new() };
+        let os_fingetprint =  if od_result.len() > 0 { 
+            crate::os::verify_os_fingerprint(od_result[0].tcp_fingerprint.clone())
+        } else{ 
+            OsFingerprint::new() 
+        };
         let host_info = crate::result::HostInfo {
             ip_addr: ip.to_string(),
             host_name: dns_lookup::lookup_addr(&ip).unwrap_or(String::new()),
             mac_addr: String::new(),
             vendor_info: String::new(),
-            os_name: tcp_fingetprint.os_name ,
-            cpe: tcp_fingetprint.cpe,
+            os_name: os_fingetprint.os_name,
+            cpe: os_fingetprint.cpe,
         };
         result.host = host_info;
         result.port_scan_time = ps_result.scan_time;
@@ -311,7 +315,7 @@ pub async fn run_node_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) -> Ho
                     opt.oui_map.get(mac).unwrap_or(&String::new()).to_string()
                 }
             }else{String::new()},
-            os_name: opt.ttl_map.get(&host.ttl).unwrap_or(&String::new()).to_string(),
+            os_name: opt.ttl_map.get(&network::guess_initial_ttl(host.ttl)).unwrap_or(&String::new()).to_string(),
             cpe: String::new(),
         };
         result.hosts.push(host_info);

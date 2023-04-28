@@ -54,7 +54,7 @@ pub fn insert_port_scan_result(conn:&Connection, probe_id: String, scan_result: 
     };
 
     for port in scan_result.ports.clone() {
-        let sql: &str = "INSERT INTO port_scan_result (probe_id, socket_addr, ip_addr, host_name, port_no, port_status_id, protocol_id, issued_at)
+        let sql: &str = "INSERT INTO port_scan_result (probe_id, socket_addr, ip_addr, host_name, port, port_status_id, protocol_id, issued_at)
         VALUES (?1,?2,?3,?4,?5,?6,?7,datetime(CURRENT_TIMESTAMP, 'localtime'));";
         let params_vec: &[&dyn rusqlite::ToSql] = params![
             probe_id,
@@ -105,7 +105,7 @@ pub fn insert_host_scan_result(conn:&Connection, probe_id: String, scan_result: 
         Err(e) => return Err(e),
     };
     for host in scan_result.hosts {
-        let sql: &str = "INSERT INTO host_scan_result (probe_id, ip_addr, host_name, port_no, issued_at)
+        let sql: &str = "INSERT INTO host_scan_result (probe_id, ip_addr, host_name, port, issued_at)
         VALUES (?1,?2,?3,?4,datetime(CURRENT_TIMESTAMP, 'localtime'));";
         let params_vec: &[&dyn rusqlite::ToSql] = params![
             probe_id,
@@ -715,7 +715,7 @@ pub fn get_tcp_services() -> Vec<TcpService> {
 pub fn get_default_services() -> Vec<TcpService> {
     let mut default_services: Vec<TcpService> = vec![];
     let conn = connect_db().unwrap();
-    let sql: &str = "SELECT port, service_name, service_description FROM tcp_service WHERE default_flag = 1;";
+    let sql: &str = "SELECT port, service_name, service_description, wellknown_flag, default_flag FROM tcp_service WHERE default_flag = 1;";
     let mut stmt = conn.prepare(sql).unwrap();
     let mut rows = stmt.query([]).unwrap();
     while let Some(row) = rows.next().unwrap() {
@@ -817,4 +817,47 @@ pub fn search_os_fingerprints(tcp_window_size: u16, tcp_option_pattern: String) 
         results.push(os_fingerprint);
     }
     results
+}
+
+pub fn get_approximate_fingerprints(tcp_window_size: u16, tcp_option_pattern: String) -> Vec<OsFingerprint> {
+    let mut results: Vec<OsFingerprint> = vec![];
+    let conn: Connection = connect_db().unwrap();
+    let sql: String = format!("SELECT cpe, os_name, os_vendor, os_family, os_generation, device_type, tcp_window_size, tcp_option_pattern FROM  os_fingerprint 
+    WHERE tcp_option_pattern LIKE '{}%' AND tcp_window_size BETWEEN ({} - 1000) AND ({} + 1000) AND device_type = 'general purpose' ORDER BY os_generation DESC;", tcp_option_pattern, tcp_window_size, tcp_window_size);
+    let params_vec: &[&dyn rusqlite::ToSql] = params![];
+    let mut stmt: Statement = conn.prepare(&sql).unwrap();
+    let mut rows: Rows = stmt.query(params_vec).unwrap();
+    while let Some(row) = rows.next().unwrap() {
+        let os_fingerprint: OsFingerprint = OsFingerprint {
+            cpe: row.get(0).unwrap(),
+            os_name: row.get(1).unwrap(),
+            os_vendor: row.get(2).unwrap(),
+            os_family: row.get(3).unwrap(),
+            os_generation: row.get(4).unwrap(),
+            device_type: row.get(5).unwrap(),
+            tcp_window_size: row.get(6).unwrap(),
+            tcp_option_pattern: row.get(7).unwrap()
+        };
+        results.push(os_fingerprint);
+    }
+    results
+}
+
+pub fn get_os_family(initial_ttl: u8) -> OsTtl {
+    let mut os_ttl: OsTtl = OsTtl::new();
+    let conn = connect_db().unwrap();
+    let sql: &str = "SELECT os_family, os_description, initial_ttl FROM os_ttl WHERE initial_ttl = ?1;";
+    let params_vec: &[&dyn rusqlite::ToSql] = params![
+        initial_ttl
+    ];
+    let mut stmt = conn.prepare(sql).unwrap();
+    let mut rows = stmt.query(params_vec).unwrap();
+    while let Some(row) = rows.next().unwrap() {
+        os_ttl = OsTtl {
+            os_family: row.get(0).unwrap(),
+            os_description: row.get(1).unwrap(),
+            initial_ttl: row.get(2).unwrap()
+        };
+    }
+    os_ttl
 }

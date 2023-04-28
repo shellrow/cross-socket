@@ -1,6 +1,5 @@
 use std::{vec};
 use serde::{Deserialize, Serialize};
-//use std::path::{PathBuf};
 use rusqlite::{Result, params, Transaction};
 
 use crate::db;
@@ -206,6 +205,7 @@ pub struct PortScanResult {
     pub port_status_id: String,
     pub service_id: String,
     pub service_version: String,
+    pub protocol_id: String,
     pub issued_at: String,
 }
 impl PortScanResult {
@@ -220,6 +220,7 @@ impl PortScanResult {
             port_status_id: String::new(), 
             service_id: String::new(), 
             service_version: String::new(),
+            protocol_id: String::new(),
             issued_at: String::new() 
         }
     }
@@ -232,7 +233,8 @@ impl PortScanResult {
             host_name TEXT NOT NULL,
             port INTEGER NOT NULL,
             port_status_id TEXT NOT NULL,
-            service_id TEXT NOT NULL,
+            protocol_id TEXT NOT NULL,
+            service_id TEXT NULL,
             service_version TEXT NULL,
             issued_at TEXT NOT NULL);";
         let params_vec: &[&dyn rusqlite::ToSql] = params![];

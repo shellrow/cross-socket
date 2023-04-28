@@ -1,9 +1,8 @@
 use std::sync::mpsc::{channel ,Sender, Receiver};
 use std::thread;
 use nesmap_core::result::{PingStat, TraceResult};
-use nesmap_core::{option, scan, result, define};
+use nesmap_core::{option, scan, result, define, dataset};
 use indicatif::{ProgressBar, ProgressStyle};
-use super::db;
 use super::output;
 
 fn get_spinner() -> ProgressBar {
@@ -73,8 +72,8 @@ pub async fn handle_port_scan(opt: option::ScanOption) {
 
 pub async fn handle_host_scan(opt: option::ScanOption) {
     let mut probe_opt: option::ScanOption = opt.clone();
-    probe_opt.oui_map = db::get_oui_map();
-    probe_opt.ttl_map = db::get_os_ttl();
+    probe_opt.oui_map = dataset::get_oui_detail_map();
+    probe_opt.ttl_map = dataset::get_os_ttl();
     let (msg_tx, msg_rx): (Sender<String>, Receiver<String>) = channel();
     let handle = thread::spawn(move|| {
         async_io::block_on(async {

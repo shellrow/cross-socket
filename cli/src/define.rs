@@ -1,9 +1,3 @@
-pub const CRATE_UPDATE_DATE: &str = "2023-04-16";
+pub const CRATE_UPDATE_DATE: &str = "2023-04-28";
 pub const CRATE_REPOSITORY: &str = "https://github.com/shellrow/nesmap";
 pub const DEFAULT_SRC_PORT: u16 = 53443;
-pub const NESMAP_TCP_PORT: &str = include_str!("../../data/nesmap-tcp-port.json");
-pub const NESMAP_DEFAULT_PORTS: &str = include_str!("../../data/nesmap-default-ports.txt");
-pub const NESMAP_HTTP: &str = include_str!("../../data/nesmap-http.txt");
-pub const NESMAP_HTTPS: &str = include_str!("../../data/nesmap-https.txt");
-pub const NESMAP_OSDB: &str = include_str!("../../data/nesmap-osdb-min.json");
-pub const NESMAP_OS_TTL: &str = include_str!("../../data/nesmap-os-ttl.json");

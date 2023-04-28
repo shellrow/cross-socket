@@ -3,8 +3,7 @@ use serde::{Serialize, Deserialize};
 use nesmap_core::option::{TargetInfo, ScanOption, CommandType, ScanType, Protocol};
 use nesmap_core::validator;
 use nesmap_core::network;
-
-use crate::db;
+use nesmap_core::dataset;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PortArg {
@@ -19,22 +18,10 @@ pub struct PortArg {
 }
 
 impl PortArg {
-/*     pub fn new() -> PortArg {
-        PortArg {
-            target_host: String::new(),
-            port_option: String::new(),
-            ports: vec![],
-            scan_type: String::new(),
-            async_flag: false,
-            service_detection_flag: false,
-            os_detection_flag: false,
-            save_flag: false,
-        }
-    } */
     pub fn to_scan_option(&self) -> nesmap_core::option::ScanOption {
         let mut opt: ScanOption = ScanOption::default();
         opt.command_type = CommandType::PortScan;
-        opt.tcp_map = db::get_tcp_map();
+        opt.tcp_map = dataset::get_tcp_map();
         let ip_addr: IpAddr;
         if validator::is_ipaddr(self.target_host.clone()) {
             ip_addr = self.target_host.parse::<IpAddr>().unwrap();
@@ -50,11 +37,11 @@ impl PortArg {
         }
         let mut target: TargetInfo = TargetInfo::new_with_ip_addr(ip_addr);
         if self.port_option == String::from("well_known") {
-            target.ports = db::get_wellknown_ports();
+            target.ports = dataset::get_wellknown_ports();
         }else if self.port_option == String::from("custom_list") {
             target.ports = self.ports.clone();
         }else{
-            target.ports = db::get_default_ports();
+            target.ports = dataset::get_default_ports();
             opt.default_scan = true;
         }
         if self.async_flag {
@@ -62,12 +49,11 @@ impl PortArg {
         }
         if self.service_detection_flag {
             opt.service_detection = true;
-            opt.http_ports = db::get_http_ports();
-            opt.https_ports = db::get_https_ports();
+            opt.http_ports = dataset::get_http_ports();
+            opt.https_ports = dataset::get_https_ports();
         }
         if self.os_detection_flag {
             opt.os_detection = true;
-            opt.tcp_fingerprints = db::get_tcp_fingerprints(); 
         }
         opt.targets.push(target);
         opt
@@ -89,20 +75,6 @@ pub struct HostArg {
 }
 
 impl HostArg {
-/*     pub fn new() -> HostArg {
-        HostArg {
-            network_address: String::new(),
-            prefix_len: 24,
-            protocol: Protocol::ICMPv4.name(),
-            port: 0,
-            target_hosts: vec![],
-            scan_type: String::new(),
-            async_flag: false,
-            dsn_lookup_flag: false,
-            os_detection_flag: false,
-            save_flag: false,
-        }
-    } */
     pub fn to_scan_option(&self) -> nesmap_core::option::ScanOption {
         let mut opt: ScanOption = ScanOption::default();
         opt.command_type = CommandType::HostScan;
@@ -114,8 +86,8 @@ impl HostArg {
             opt.host_scan_type = ScanType::IcmpPingScan;
         }
         opt.async_scan = self.async_flag;
-        opt.oui_map = db::get_oui_map();
-        opt.ttl_map = db::get_os_ttl();
+        opt.oui_map = dataset::get_oui_detail_map();
+        opt.ttl_map = dataset::get_os_ttl();
         if self.scan_type == String::from("custom_list") {
             for host in &self.target_hosts {
                 match host.parse::<IpAddr>(){
