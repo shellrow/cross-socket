@@ -560,13 +560,13 @@ impl MapEdge {
 pub struct MapLayout {
     pub map_id: u32,
     pub node_id: String,
-    pub x_value: i32,
-    pub y_value: i32
+    pub x_value: f32,
+    pub y_value: f32
 }
 
 impl MapLayout {
     pub fn new() -> MapLayout {
-        MapLayout { map_id: 0, node_id: String::new(), x_value: 0, y_value: 0 }
+        MapLayout { map_id: 0, node_id: String::new(), x_value: 0.0, y_value: 0.0 }
     }
     pub fn create(tran:&Transaction) -> Result<usize,rusqlite::Error> {
         let sql: &str = "CREATE TABLE IF NOT EXISTS map_layout (
