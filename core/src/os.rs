@@ -13,7 +13,6 @@ pub fn verify_os_fingerprint(fingerprint: TcpFingerprint) -> OsFingerprint {
         f.tcp_option_order.iter().for_each(|option| {
             options.push(option.name());
         });
-        println!("[Debug] tcp_option: {}", options.join("-"));
         tcp_options.push(options.join("-"));
     }
     let tcp_window_size: u16  = fingerprint.tcp_syn_ack_fingerprint[0].tcp_window_size;
