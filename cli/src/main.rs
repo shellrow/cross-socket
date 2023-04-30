@@ -13,15 +13,11 @@ use clap::{Command, AppSettings, Arg, App, ArgGroup};
 use nesmap_core::{option, process, sys, validator};
 
 fn main() {
-    if !nesmap_core::process::privileged() {
-        //nesmap_core::process::restart_as_root();
-    }
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         show_app_desc();
         std::process::exit(0);
     }
-    //nesmap_core::db::init_db().unwrap();
     let app = get_app_settings();
     let matches = app.get_matches();
     let opt: option::ScanOption = parser::parse_args(matches);
