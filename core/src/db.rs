@@ -54,8 +54,8 @@ pub fn insert_port_scan_result(conn:&Connection, probe_id: String, scan_result: 
     };
 
     for port in scan_result.ports.clone() {
-        let sql: &str = "INSERT INTO port_scan_result (probe_id, socket_addr, ip_addr, host_name, port, port_status_id, protocol_id, issued_at)
-        VALUES (?1,?2,?3,?4,?5,?6,?7,datetime(CURRENT_TIMESTAMP, 'localtime'));";
+        let sql: &str = "INSERT INTO port_scan_result (probe_id, socket_addr, ip_addr, host_name, port, port_status_id, protocol_id, service_id, service_version, issued_at)
+        VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,datetime(CURRENT_TIMESTAMP, 'localtime'));";
         let params_vec: &[&dyn rusqlite::ToSql] = params![
             probe_id,
             format!("{}:{}",scan_result.host.ip_addr, port.port_number),
@@ -63,7 +63,9 @@ pub fn insert_port_scan_result(conn:&Connection, probe_id: String, scan_result: 
             scan_result.host.host_name,
             port.port_number,
             port.port_status,
-            option::Protocol::TCP.id()
+            option::Protocol::TCP.id(),
+            port.service_name,
+            port.service_version
         ];   
         match conn.execute(sql, params_vec) {
             Ok(row_count) => {
