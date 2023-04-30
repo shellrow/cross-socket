@@ -53,6 +53,26 @@ pub fn insert_port_scan_result(conn:&Connection, probe_id: String, scan_result: 
         Err(e) => return Err(e),
     };
 
+    let sql: &str = "INSERT INTO host_scan_result (probe_id, ip_addr, host_name, port, protocol_id, mac_addr, vendor, os_name, cpe, issued_at)
+    VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,datetime(CURRENT_TIMESTAMP, 'localtime'));";
+    let params_vec: &[&dyn rusqlite::ToSql] = params![
+        probe_id,
+        scan_result.host.ip_addr,
+        scan_result.host.host_name,
+        scan_result.ports[0].port_number,
+        option::Protocol::TCP.id(),
+        scan_result.host.mac_addr,
+        scan_result.host.vendor_info,
+        scan_result.host.os_name,
+        scan_result.host.cpe
+    ];   
+    match conn.execute(sql, params_vec) {
+        Ok(row_count) => {
+            affected_row_count += row_count;
+        },
+        Err(e) => return Err(e),
+    };
+
     for port in scan_result.ports.clone() {
         let sql: &str = "INSERT INTO port_scan_result (probe_id, socket_addr, ip_addr, host_name, port, port_status_id, protocol_id, service_id, service_version, issued_at)
         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,datetime(CURRENT_TIMESTAMP, 'localtime'));";
@@ -107,13 +127,17 @@ pub fn insert_host_scan_result(conn:&Connection, probe_id: String, scan_result: 
         Err(e) => return Err(e),
     };
     for host in scan_result.hosts {
-        let sql: &str = "INSERT INTO host_scan_result (probe_id, ip_addr, host_name, port, issued_at)
-        VALUES (?1,?2,?3,?4,datetime(CURRENT_TIMESTAMP, 'localtime'));";
+        let sql: &str = "INSERT INTO host_scan_result (probe_id, ip_addr, host_name, port,protocol_id, mac_addr, vendor, os_name, issued_at)
+        VALUES (?1,?2,?3,?4,?5,?6,?7,?8,datetime(CURRENT_TIMESTAMP, 'localtime'));";
         let params_vec: &[&dyn rusqlite::ToSql] = params![
             probe_id,
             host.ip_addr,
             host.host_name,
-            scan_result.port_number
+            scan_result.port_number,
+            scan_result.protocol.id(),
+            host.mac_addr,
+            host.vendor_info,
+            host.os_name
         ];   
         match conn.execute(sql, params_vec) {
             Ok(row_count) => {

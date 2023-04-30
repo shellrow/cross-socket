@@ -265,6 +265,10 @@ pub struct HostScanResult {
     pub host_name: String,
     pub port: u16,
     pub protocol_id: String,
+    pub mac_addr: String,
+    pub vendor: String,
+    pub os_name: String,
+    pub cpe: String,
     pub issued_at: String,
 }
 
@@ -277,6 +281,10 @@ impl HostScanResult {
             host_name: String::new(), 
             port: 0, 
             protocol_id: String::new(), 
+            mac_addr: String::new(),
+            vendor: String::new(),
+            os_name: String::new(),
+            cpe: String::new(),
             issued_at: String::new() 
         }
     }
@@ -288,6 +296,10 @@ impl HostScanResult {
             host_name TEXT NOT NULL,
             port INTEGER NOT NULL,
             protocol_id TEXT NOT NULL,
+            mac_addr TEXT NULL,
+            vendor TEXT NULL,
+            os_name TEXT NULL,
+            cpe TEXT NULL,
             issued_at TEXT NOT NULL);";
         let params_vec: &[&dyn rusqlite::ToSql] = params![];
         tran.execute(sql, params_vec)
