@@ -172,8 +172,8 @@ const selectedNodes = ref<string[]>([]);
 const selectedEdges = ref<string[]>([]);
 
 const getNewPosition = () => {
-  let x = 0;
-  let y = 0;
+  let x = 40;
+  let y = 40;
   Object.keys(layouts.nodes).forEach(key => {
     if ( (x > layouts.nodes[key].x - 100 && x <= layouts.nodes[key].x + 100) 
     && (y > layouts.nodes[key].y - 60 && y <= layouts.nodes[key].y + 60) ){
@@ -301,7 +301,7 @@ const saveMap = () => {
 }
 
 const loadMapData = () => {
-  invoke<MapData>('get_map_data', { "mapId": 1 }).then((mapData) => {
+  invoke<MapData>('get_map_data', { "mapId": 0 }).then((mapData) => {
     console.log(mapData);
     // Map Info
     mapInfo.map_id = mapData.map_info.map_id;
