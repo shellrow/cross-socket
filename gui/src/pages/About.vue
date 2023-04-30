@@ -6,7 +6,7 @@ import { debounce } from 'lodash';
 const about_app = reactive({
     name: 'NesMap',
     version: 'v0.1.0',
-    release_date: '2023-04-16',
+    release_date: '2023-04-28',
     author: 'shellrow <shellrow@protonmail.com>',
     description: 'Cross-platform network mapper',
     repository: 'https://github.com/shellrow/nesmap',
