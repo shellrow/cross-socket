@@ -131,7 +131,7 @@ function reloadMap() {
 
 const mapInfo: MapInfo = reactive(
   {
-    map_id: 1,
+    map_id: 0,
     map_name: "default",
     display_order: 1,
     created_at: "",
