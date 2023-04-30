@@ -145,6 +145,21 @@ const edges: vNG.Edges = reactive({});
 const configs = reactive(vNG.defineConfigs({
   view: {
     autoPanAndZoomOnLoad: false,
+    grid: {
+      visible: true,
+      interval: 100,
+      thickIncrements: 1,
+      line: {
+        color: "#e0e0e0",
+        width: 1,
+        dasharray: 0,
+      },
+      thick: {
+        color: "#cccccc",
+        width: 1,
+        dasharray: 0,
+      },
+    },
   },
   node: {
     selectable: true,
