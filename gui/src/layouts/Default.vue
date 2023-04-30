@@ -122,10 +122,10 @@ onUnmounted(() => {
                             <el-icon><Document /></el-icon>
                             <template #title><router-link to="/log">Log</router-link></template>
                         </el-menu-item>
-                        <el-menu-item index="4">
+                        <!-- <el-menu-item index="4">
                             <el-icon><Setting /></el-icon>
                             <template #title><router-link to="/setting">Setting</router-link></template>
-                        </el-menu-item>
+                        </el-menu-item> -->
                     </el-menu>
                 </el-aside>
                 <el-main>
