@@ -37,7 +37,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [],
+      "resources": ["resources/*"],
       "shortDescription": "Cross-platform network mapper",
       "targets": "all",
       "windows": {
