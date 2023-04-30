@@ -137,7 +137,7 @@ onUnmounted(() => {
             <el-table-column prop="hop" label="HOP" />
             <el-table-column prop="rtt" label="RTT" />
             <el-table-column prop="node_type" label="Node Type" />
-            <el-table-column prop="status" label="Status" />
+            <!-- <el-table-column prop="status" label="Status" /> -->
         </el-table>
       </div>
       <div v-else>
