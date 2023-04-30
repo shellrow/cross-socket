@@ -9,14 +9,9 @@ mod commands;
 use commands::{exec_portscan, exec_hostscan, exec_ping, exec_traceroute, lookup_hostname, lookup_ipaddr, get_probe_log, get_probed_hosts, save_map_data, get_map_data, get_top_probe_hist, get_probe_stat,get_default_interface};
 
 fn main() {
-  // Initialize DB
-  /* match nesmap_core::db::init_db() {
-    Ok(raw_count) => println!("DB initialized. affected {} rows.", raw_count),
-    Err(e) => println!("DB init failed: {}", e),
-  } */
   // Check if we are running as root
   if !nesmap_core::process::privileged() {
-    //nesmap_core::process::restart_as_root();
+    nesmap_core::process::restart_as_root();
   }
   // Run the Tauri application
   tauri::Builder::default()
