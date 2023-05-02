@@ -2,7 +2,7 @@ use std::{env, vec};
 use std::path::{PathBuf};
 use rusqlite::{Connection, Result, params, Transaction, Statement, Rows};
 use uuid::Uuid;
-use crate::{define, option};
+use crate::{define, option, sys};
 use crate::result::{PortScanResult, HostScanResult, PingStat, PingResult, TraceResult, Node};
 use crate::db_models::{ProbeLog, DataSetItem, MapInfo, MapNode, MapEdge, MapLayout, MapData, ProbeStat, TcpService, OsTtl, OsFingerprint};
 
@@ -10,6 +10,9 @@ pub fn connect_db() -> Result<Connection,rusqlite::Error> {
     let mut path: PathBuf = env::current_exe().unwrap();
     path.pop();
     path.push(define::DB_NAME);
+    if !path.exists() {
+        sys::copy_db();
+    }
     let conn = Connection::open(path)?;
     Ok(conn)
 }

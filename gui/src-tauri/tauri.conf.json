@@ -11,7 +11,10 @@
   },
   "tauri": {
     "allowlist": {
-      "all": true
+      "all": true,
+      "fs": {
+        "scope": ["$RESOURCE/*"]
+      }
     },
     "bundle": {
       "active": true,
@@ -37,7 +40,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": ["../../embed/resources/*","../../embed/binaries/*"],
+      "resources": ["resources/*"],
       "shortDescription": "Cross-platform network mapper",
       "targets": "all",
       "windows": {
