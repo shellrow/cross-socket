@@ -50,22 +50,58 @@ pub fn get_install_dir_path() -> PathBuf {
     path
 }
 
-pub fn get_install_cli_path() -> PathBuf {
-    let mut path: PathBuf = home::home_dir().unwrap();
-    path.push(".nesmap");
+/* pub fn get_install_cli_path() -> PathBuf {
+    let mut path: PathBuf = get_install_dir_path();
     if get_os_type() == "windows" {
         path.push("nesmap.exe");
     } else {
         path.push("nesmap");
     }
     path
+} */
+
+pub fn get_current_shell() -> String {
+    match env::var("SHELL") {
+        Ok(val) => {
+            if val.contains(define::SHELL_ZSH) {
+                return define::SHELL_ZSH.to_owned();
+            }else if val.contains(define::SHELL_BASH) {
+                return define::SHELL_BASH.to_owned();
+            }else{
+                return "unknown".to_owned();
+            }
+        },
+        Err(_e) => {
+            return "unknown".to_owned();
+        },
+    }
 }
 
-pub fn get_simlink_path() -> PathBuf {
-    let mut path: PathBuf = PathBuf::from("/usr");
-    path.push("local");
-    path.push("bin");
-    path.push("nesmap");
+pub fn check_app_env_path() -> bool {
+    match env::var("PATH") {
+        Ok(val) => {
+            if val.contains(define::APP_NAME_NESMAP) {
+                return true;
+            }else{
+                return false;
+            }
+        },
+        Err(_e) => {
+            return false;
+        },
+    }
+}
+
+pub fn get_rc_file_path() -> PathBuf {
+    let shell: String = get_current_shell();
+    let mut path: PathBuf = home::home_dir().unwrap();
+    if shell == define::SHELL_ZSH {
+        path.push(".zshrc");
+    } else if shell == define::SHELL_BASH {
+        path.push(".bashrc");
+    } else {
+        path.push(".bashrc");
+    }
     path
 }
 

@@ -19,3 +19,5 @@ pub const APP_NAME_NESMAP: &str = "nesmap.exe";
 // pub const APP_NAME_NESMAP_DESKTOP: &str = "nesmap-desktop";
 // #[cfg(target_os = "windows")]
 // pub const APP_NAME_NESMAP_DESKTOP: &str = "nesmap-desktop.exe";
+pub const SHELL_ZSH: &str = "zsh";
+pub const SHELL_BASH: &str = "bash";

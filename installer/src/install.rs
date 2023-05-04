@@ -68,30 +68,26 @@ pub fn copy_db() {
 }
 
 #[cfg(not(target_os = "windows"))]
-pub fn add_path(){
-    let mut cmd = std::process::Command::new("ln");
-    cmd.arg("-sf");
-    cmd.arg(sys::get_install_cli_path());
-    cmd.arg(sys::get_simlink_path());
-    match cmd.status() {
-        Ok(status) => {
-            println!("Path added. {}", status.to_string());
+pub fn add_path() {
+    // Select current shell and rc file
+    let rc_path: PathBuf = sys::get_rc_file_path();
+    let mut file = match fs::OpenOptions::new().append(true).open(rc_path.clone()) {
+        Ok(file) => file,
+        Err(e) => {
+            return sys::exit_with_error_message(e.to_string().as_str());
+        }
+    };
+    let install_path: PathBuf = sys::get_install_dir_path();
+    let mut path_str = String::from("export PATH=\"$PATH:");
+    path_str.push_str(install_path.to_str().unwrap());
+    path_str.push_str("\"\n");
+    match file.write_all(path_str.as_bytes()) {
+        Ok(_) => {
+            println!("Path added to {}", rc_path.display());
+            println!("Please restart your terminal or run `source {}`", rc_path.display());
         },
-        Err(_e) => {
-            let mut cmd = runas::Command::new("ln");
-            //cmd.gui(true);    
-            cmd.force_prompt(true);
-            cmd.arg("-sf");
-            cmd.arg(sys::get_install_cli_path());
-            cmd.arg(sys::get_simlink_path());
-            match cmd.status() {
-                Ok(status) => {
-                    println!("Path added. {}", status.to_string());
-                },
-                Err(e) => {
-                    println!("Failed to add path. {}", e.to_string());
-                }
-            }
+        Err(e) => {
+            sys::exit_with_error_message(e.to_string().as_str());
         }
     }
 }
@@ -101,38 +97,15 @@ pub fn add_path(){
 
 }
 
-#[allow(dead_code)]
-#[cfg(not(target_os = "windows"))]
+/* #[cfg(not(target_os = "windows"))]
 pub fn remove_path() {
-    let mut cmd = std::process::Command::new("unlink");
-    cmd.arg(sys::get_simlink_path());
-    match cmd.status() {
-        Ok(status) => {
-            println!("Path removed. {}", status.to_string());
-        },
-        Err(_e) => {
-            let mut cmd = runas::Command::new("unlink");
-            //cmd.gui(true);    
-            cmd.force_prompt(true);
-            cmd.arg(sys::get_simlink_path());
-            match cmd.status() {
-                Ok(status) => {
-                    println!("Path removed. {}", status.to_string());
-                },
-                Err(e) => {
-                    println!("Failed to remove path. {}", e.to_string());
-                }
-            }
-        }
-    }
+
 }
 
 #[cfg(target_os = "windows")]
 pub fn remove_path() {
 
-}
-
-
+} */
 
 pub fn install_offline() {
     println!("Checking packages...");
@@ -148,8 +121,10 @@ pub fn install_offline() {
     copy_cli_package();
     println!("Installing nesmap-desktop ...");
     copy_gui_package();
-    println!("Adding path ...");
-    add_path();
+    if !sys::check_app_env_path() {
+        println!("Adding path ...");
+        add_path();
+    }
 }
 
 pub fn install_online() {
