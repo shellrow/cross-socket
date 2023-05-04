@@ -13,5 +13,5 @@ Cargo.lock
 .DS_Store
 # DB 
 nmdb.db
-# bin resources
-embed/binaries/*
+# Resources
+!installer/resources/nmdb.db
