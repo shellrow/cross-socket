@@ -50,6 +50,25 @@ pub fn get_install_dir_path() -> PathBuf {
     path
 }
 
+pub fn get_install_cli_path() -> PathBuf {
+    let mut path: PathBuf = home::home_dir().unwrap();
+    path.push(".nesmap");
+    if get_os_type() == "windows" {
+        path.push("nesmap.exe");
+    } else {
+        path.push("nesmap");
+    }
+    path
+}
+
+pub fn get_simlink_path() -> PathBuf {
+    let mut path: PathBuf = PathBuf::from("/usr");
+    path.push("local");
+    path.push("bin");
+    path.push("nesmap");
+    path
+}
+
 pub fn check_cli_package() -> bool {
     let mut path: PathBuf = get_exe_dir_path();
     path.push(define::PACKAGE_DIR_NAME);
