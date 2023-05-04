@@ -2,5 +2,6 @@
 members = [
     "core",
     "cli",
-    "gui/src-tauri"
+    "gui/src-tauri",
+    "installer"
 ]
