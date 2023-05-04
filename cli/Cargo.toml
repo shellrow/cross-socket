@@ -24,3 +24,15 @@ async-io = "1.6"
 chrono = "0.4"
 dns-lookup = "1.0"
 nesmap-core = { path = "../core", version = "0.1.0"}
+
+[package.metadata.bundle]
+name = "nesmap"
+identifier = "com.intsigma.nesmap"
+#icon = ["32x32.png", "128x128.png", "128x128@2x.png"]
+version = "0.1.0"
+resources = ["resources/*"]
+copyright = "Copyright (c) shellrow 2023. All rights reserved."
+category = "Developer Tool"
+short_description = "Cross-platform network mapper"
+long_description = "Cross-platform network mapper"
+osx_url_schemes = ["com.intsigma.nesmap"]
