@@ -101,6 +101,39 @@ pub fn add_path(){
 
 }
 
+#[allow(dead_code)]
+#[cfg(not(target_os = "windows"))]
+pub fn remove_path() {
+    let mut cmd = std::process::Command::new("unlink");
+    cmd.arg(sys::get_simlink_path());
+    match cmd.status() {
+        Ok(status) => {
+            println!("Path removed. {}", status.to_string());
+        },
+        Err(_e) => {
+            let mut cmd = runas::Command::new("unlink");
+            //cmd.gui(true);    
+            cmd.force_prompt(true);
+            cmd.arg(sys::get_simlink_path());
+            match cmd.status() {
+                Ok(status) => {
+                    println!("Path removed. {}", status.to_string());
+                },
+                Err(e) => {
+                    println!("Failed to remove path. {}", e.to_string());
+                }
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+pub fn remove_path() {
+
+}
+
+
+
 pub fn install_offline() {
     println!("Checking packages...");
     if !sys::check_cli_package() {
