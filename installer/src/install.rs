@@ -67,6 +67,40 @@ pub fn copy_db() {
     }
 }
 
+#[cfg(not(target_os = "windows"))]
+pub fn add_path(){
+    let mut cmd = std::process::Command::new("ln");
+    cmd.arg("-sf");
+    cmd.arg(sys::get_install_cli_path());
+    cmd.arg(sys::get_simlink_path());
+    match cmd.status() {
+        Ok(status) => {
+            println!("Path added. {}", status.to_string());
+        },
+        Err(_e) => {
+            let mut cmd = runas::Command::new("ln");
+            //cmd.gui(true);    
+            cmd.force_prompt(true);
+            cmd.arg("-sf");
+            cmd.arg(sys::get_install_cli_path());
+            cmd.arg(sys::get_simlink_path());
+            match cmd.status() {
+                Ok(status) => {
+                    println!("Path added. {}", status.to_string());
+                },
+                Err(e) => {
+                    println!("Failed to add path. {}", e.to_string());
+                }
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+pub fn add_path(){
+
+}
+
 pub fn install_offline() {
     println!("Checking packages...");
     if !sys::check_cli_package() {
@@ -81,6 +115,8 @@ pub fn install_offline() {
     copy_cli_package();
     println!("Installing nesmap-desktop ...");
     copy_gui_package();
+    println!("Adding path ...");
+    add_path();
 }
 
 pub fn install_online() {
