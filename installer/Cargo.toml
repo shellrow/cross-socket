@@ -3,7 +3,7 @@ name = "nesmap-installer"
 version = "0.1.0"
 edition = "2021"
 authors = ["shellrow <shellrow@protonmail.com>"]
-description = "nesmap installer. Support install, uninstall, and update."
+description = "nesmap management tool. Support install, uninstall, and update."
 repository = "https://github.com/shellrow/nesmap"
 readme = "README.md"
 
