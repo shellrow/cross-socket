@@ -17,9 +17,20 @@ fn main() {
     let app = get_app_settings();
     let matches = app.get_matches();
     if matches.contains_id("check") {
-        // install::check_installation();
+        if install::check_installation() {
+            println!("Installation is complete.");
+        }else {
+            println!("Installation is incomplete. Please check the above messages.");
+        }
+    }else if matches.contains_id("install") {
+        install::install();
+    }else if matches.contains_id("update") {
+    
+    }else if matches.contains_id("uninstall") {
+        
+    }else{
+        install::intaractive_install();
     }
-    println!("{:#?}",matches);
 }
 
 fn get_app_settings<'a>() -> Command<'a> {
@@ -56,6 +67,11 @@ fn get_app_settings<'a>() -> Command<'a> {
             .help("Online mode")
             .short('n')
             .long("online")
+        )
+        .arg(Arg::new("auto")
+            .help("Skip prompt")
+            .short('a')
+            .long("auto")
         )
         .setting(AppSettings::DeriveDisplayOrder)
         ;

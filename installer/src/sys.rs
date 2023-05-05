@@ -18,6 +18,10 @@ pub fn get_os_type() -> String{"macos".to_owned()}
     std::process::exit(0);
 } */
 
+pub fn write_console_log(log_text: &str) {
+    println!("{} {}", chrono::Local::now().to_string(), log_text);
+}
+
 pub fn exit_with_error_message(message: &str) {
     println!();
     println!("Error: {}", message);
@@ -109,7 +113,6 @@ pub fn check_cli_package() -> bool {
     let mut path: PathBuf = get_exe_dir_path();
     path.push(define::PACKAGE_DIR_NAME);
     path.push(define::PACKAGE_NAME_NESMAP);
-    println!("{:?}", path);
     path.exists()
 }
 
@@ -117,6 +120,5 @@ pub fn check_gui_package() -> bool {
     let mut path: PathBuf = get_exe_dir_path();
     path.push(define::PACKAGE_DIR_NAME);
     path.push(define::PACKAGE_NAME_NESMAP_DESKTOP);
-    println!("{:?}", path);
     path.exists()
 }

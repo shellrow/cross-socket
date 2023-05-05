@@ -83,7 +83,7 @@ pub fn add_path() {
     path_str.push_str("\"\n");
     match file.write_all(path_str.as_bytes()) {
         Ok(_) => {
-            println!("Path added to {}", rc_path.display());
+            sys::write_console_log(format!("Path added to {}", rc_path.display()).as_str());
             println!("Please restart your terminal or run `source {}`", rc_path.display());
         },
         Err(e) => {
@@ -107,22 +107,57 @@ pub fn remove_path() {
 
 } */
 
+pub fn check_installation() -> bool {
+    println!("Checking installation...");
+    let mut path: PathBuf = sys::get_install_dir_path();
+    path.push(define::APP_NAME_NESMAP);
+    if path.exists() {
+        sys::write_console_log("Package `nesmap` found.");
+    }else{
+        sys::write_console_log("Package `nesmap` not found.");
+        return false;
+    }
+    path.pop();
+    path.push(define::PACKAGE_NAME_NESMAP_DESKTOP);
+    if path.exists() {
+        sys::write_console_log("Package `nesmap-desktop` found.");
+    }else {
+        sys::write_console_log("Package `nesmap-desktop` not found.");
+        return false;
+    }
+    path.pop();
+    path.push(define::DB_NAME);
+    if path.exists() {
+        sys::write_console_log("Database found.");
+    }else {
+        sys::write_console_log("Database not found.");
+        return false;
+    }
+    if sys::check_app_env_path() {
+        sys::write_console_log("Path found.");
+    }else {
+        sys::write_console_log("Path not found.");
+        return false;
+    }
+    return true;
+}
+
 pub fn install_offline() {
-    println!("Checking packages...");
+    sys::write_console_log("Checking packages...");
     if !sys::check_cli_package() {
         sys::exit_with_error_message("package `nesmap` not found. Exit.");
     }
     if !sys::check_gui_package() {
         sys::exit_with_error_message("package `nesmap-desktop` not found. Exit.");
     }
-    println!("Installing nesmap-database ...");
+    sys::write_console_log("Installing nesmap-database ...");
     copy_db();
-    println!("Installing nesmap ...");
+    sys::write_console_log("Installing nesmap ...");
     copy_cli_package();
-    println!("Installing nesmap-desktop ...");
+    sys::write_console_log("Installing nesmap-desktop ...");
     copy_gui_package();
     if !sys::check_app_env_path() {
-        println!("Adding path ...");
+        sys::write_console_log("Adding path ...");
         add_path();
     }
 }
@@ -131,8 +166,18 @@ pub fn install_online() {
 
 }
 
+pub fn install() {
+    println!("Start installation of nesmap.");
+
+    println!("Installing nesmap packages...");
+    create_default_install_dir();
+    install_offline();
+    println!("Installation complete.");
+}
+
 pub fn intaractive_install() {
-    print!("Start installation of nesmap. Press any key to continue...");
+    println!("Start installation of nesmap.");
+    print!("Press any key to continue...");
     io::stdout().flush().unwrap();
     let mut user_input = String::new();
     match io::stdin().read_line(&mut user_input){
@@ -162,7 +207,8 @@ pub fn intaractive_install() {
     } else {
         install_offline();
     }
-    print!("Installation complete. Press any key to exit...");
+    println!("Installation complete.");
+    print!("Press any key to exit...");
     io::stdout().flush().unwrap();
     match io::stdin().read_line(&mut user_input){
         Ok(_) => {},
