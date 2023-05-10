@@ -5,7 +5,7 @@ import { ElMessage } from 'element-plus'
 //import { debounce } from 'lodash';
 //import {sleep} from '../logic/shared.js';
 import {PORT_OPTION_DEFAULT,PORT_OPTION_WELL_KNOWN,PORT_OPTION_CUSTOM_LIST,PORTSCAN_TYPE_TCP_SYN,PORTSCAN_TYPE_TCP_CONNECT} from '../define.js';
-import { isValidHostname, isValidIPaddress } from '../logic/shared';
+import { isIpv4NetworkAddress, isIpv6NetworkAddress, isValidHostname, isValidIPaddress } from '../logic/shared';
 
 const scanning = ref(false);
 const dialog_list_visible = ref(false);
@@ -63,7 +63,7 @@ const result = reactive({
 const port_options = [
   {
     value: PORT_OPTION_DEFAULT,
-    label: 'Default(1005 ports)',
+    label: 'Default(711 ports)',
   },
   {
     value: PORT_OPTION_WELL_KNOWN,
@@ -131,10 +131,16 @@ const validateInput = () => {
     return "Invalid host";
   }
   if (isValidIPaddress(option.target_host) || isValidHostname(option.target_host)) {
+    if (isIpv4NetworkAddress(option.target_host)) {
+      return "Invalid host (network address)";
+    }
+    if (isIpv6NetworkAddress(option.target_host)) {
+      return "Invalid host (network address)";
+    }
     return "OK";
-  }else{
+  }else {
     return "Invalid host";
-  }  
+  }
 }
 
 const clearResult = () => {
@@ -235,9 +241,6 @@ onUnmounted(() => {
             </el-col>
             <el-col :span="4">
                 <el-checkbox v-model="option.os_detection_flag" label="OS Detection" />
-            </el-col>
-            <el-col :span="4">
-                <el-checkbox v-model="option.save_flag" label="Save" />
             </el-col>
         </el-row>
         <!-- Options -->

@@ -109,7 +109,7 @@ function initMap() {
     });
   });
   loadMapData();
-  selectMappedHosts();
+  //selectMappedHosts();
   if (!graph.value) return;
   console.log("panned");
   graph.value.panTo({
@@ -378,7 +378,7 @@ const removeUncheckedNodes = () => {
 }
 
 const selectMappedHosts = () => {
-  targetHosts.value.splice(0, probedHosts.value.length);
+  targetHosts.value.splice(0, targetHosts.value.length);
   probedHosts.value.forEach(host => {
     const nodeId = getNodeId(host);
     if (nodeId !== "") {

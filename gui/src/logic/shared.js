@@ -27,6 +27,32 @@ export function isValidIPv6Address(ipaddress)
   return false;
 }
 
+export function isIpv4NetworkAddress(ipAddress){
+  if (isValidIPv4Address(ipAddress) === false){
+    return false;
+  } 
+  if (ipAddress.includes('/')){
+    return true;
+  }
+  if (ipAddress.substr(-2) === '.0'){
+    return true;
+  }
+  return false;
+}
+
+export function isIpv6NetworkAddress(ipAddress){
+  if (isValidIPv6Address(ipAddress) === false){
+    return false;
+  } 
+  if (ipAddress.includes('/')){
+    return true;
+  }
+  if (ipAddress.substr(-2) === '::'){
+    return true;
+  }
+  return false;
+}
+
 export function isValidHostname(value) {
     if (typeof value !== 'string'){
         return false;
