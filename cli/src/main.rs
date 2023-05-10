@@ -3,16 +3,22 @@ extern crate clap;
 
 mod define;
 mod models;
+mod option;
+mod sys;
+mod network;
+mod process;
 mod db;
+mod validator;
+mod result;
 mod parser;
+mod scan;
 mod handler;
 mod output;
+mod os;
 
 use std::env;
 use chrono::{Local, DateTime};
 use clap::{Command, AppSettings, Arg, App, ArgGroup};
-
-use nesmap_core::{option, process, sys, validator};
 
 fn main() {
     let args: Vec<String> = env::args().collect();

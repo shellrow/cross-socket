@@ -1,7 +1,7 @@
 use std::sync::mpsc::{channel ,Sender, Receiver};
 use std::thread;
-use nesmap_core::result::{PingStat, TraceResult};
-use nesmap_core::{option, scan, result, define, dataset};
+use crate::result::{PingStat, TraceResult};
+use crate::{option, scan, result, define, db};
 use indicatif::{ProgressBar, ProgressStyle};
 use super::output;
 
@@ -53,16 +53,6 @@ pub async fn handle_port_scan(opt: option::ScanOption) {
     let result: result::PortScanResult = handle.join().unwrap();
     output::show_portscan_result(result.clone());
 
-    // DB Insert
-    let probe_id = nesmap_core::db::get_probe_id();
-    let conn = nesmap_core::db::connect_db().unwrap();
-    match nesmap_core::db::insert_port_scan_result(&conn, probe_id, result.clone(), String::new()) {
-        Ok(_affected_rows) => {},
-        Err(e) => {
-            println!("{}", e);
-        }
-    }
-
     if !opt.save_file_path.is_empty() {
         output::save_json(serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")), opt.save_file_path.clone());
         println!("Probe result saved to: {}", opt.save_file_path);
@@ -72,8 +62,8 @@ pub async fn handle_port_scan(opt: option::ScanOption) {
 
 pub async fn handle_host_scan(opt: option::ScanOption) {
     let mut probe_opt: option::ScanOption = opt.clone();
-    probe_opt.oui_map = dataset::get_oui_detail_map();
-    probe_opt.ttl_map = dataset::get_os_ttl();
+    probe_opt.oui_map = db::get_oui_detail_map();
+    probe_opt.ttl_map = db::get_os_ttl_map();
     let (msg_tx, msg_rx): (Sender<String>, Receiver<String>) = channel();
     let handle = thread::spawn(move|| {
         async_io::block_on(async {
@@ -96,16 +86,6 @@ pub async fn handle_host_scan(opt: option::ScanOption) {
     let result: result::HostScanResult = handle.join().unwrap();
     output::show_hostscan_result(result.clone());
 
-    // DB Insert
-    let probe_id = nesmap_core::db::get_probe_id();
-    let conn = nesmap_core::db::connect_db().unwrap();
-    match nesmap_core::db::insert_host_scan_result(&conn, probe_id, result.clone(), String::new()) {
-        Ok(_affected_rows) => {},
-        Err(e) => {
-            println!("{}", e);
-        }
-    }
-
     if !opt.save_file_path.is_empty() {
         output::save_json(serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")), opt.save_file_path.clone());
         println!("Probe result saved to: {}", opt.save_file_path);
@@ -125,16 +105,6 @@ pub fn handle_ping(opt: option::ScanOption) {
     let result: PingStat = handle.join().unwrap();
     output::show_ping_result(result.clone());
 
-    // DB Insert
-    let probe_id = nesmap_core::db::get_probe_id();
-    let conn = nesmap_core::db::connect_db().unwrap();
-    match nesmap_core::db::insert_ping_result(&conn, probe_id, result.clone(), String::new()) {
-        Ok(_affected_rows) => {},
-        Err(e) => {
-            println!("{}", e);
-        }
-    }
-
     if !opt.save_file_path.is_empty() {
         output::save_json(serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")), opt.save_file_path.clone());
         println!("Probe result saved to: {}", opt.save_file_path);
@@ -153,16 +123,6 @@ pub fn handle_trace(opt: option::ScanOption) {
     }
     let result: TraceResult = handle.join().unwrap();
     output::show_trace_result(result.clone());
-
-    // DB Insert
-    let probe_id = nesmap_core::db::get_probe_id();
-    let conn = nesmap_core::db::connect_db().unwrap();
-    match nesmap_core::db::insert_trace_result(&conn, probe_id, result.clone(), String::new()) {
-        Ok(_affected_rows) => {},
-        Err(e) => {
-            println!("{}", e);
-        }
-    }
 
     if !opt.save_file_path.is_empty() {
         output::save_json(serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")), opt.save_file_path.clone());

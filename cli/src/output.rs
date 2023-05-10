@@ -2,8 +2,8 @@ use std::fs;
 use term_table::{Table, TableStyle};
 use term_table::table_cell::{TableCell,Alignment};
 use term_table::row::Row;
-use nesmap_core::option::{CommandType, ScanOption};
-use nesmap_core::result::{PortScanResult, HostScanResult, PingStat, TraceResult, DomainScanResult};
+use crate::option::{CommandType, ScanOption};
+use crate::result::{PortScanResult, HostScanResult, PingStat, TraceResult, DomainScanResult};
 
 pub fn show_options(opt: ScanOption) {
     let mut table = Table::new();

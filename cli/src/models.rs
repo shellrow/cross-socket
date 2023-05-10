@@ -76,6 +76,21 @@ pub struct OsFingerprint {
     pub tcp_option_pattern: String,
 }
 
+impl OsFingerprint {
+    pub fn new() -> OsFingerprint {
+        OsFingerprint { 
+            cpe: String::new(), 
+            os_name: String::new(), 
+            os_vendor: String::new(), 
+            os_family: String::new(), 
+            os_generation: String::new(), 
+            device_type: String::new(), 
+            tcp_window_size: 0, 
+            tcp_option_pattern: String::new() 
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct OsTtl {
     pub os_family: String,

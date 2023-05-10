@@ -3,11 +3,11 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 use std::time::Duration;
 use clap::ArgMatches;
-use nesmap_core::option;
-use nesmap_core::network;
-use nesmap_core::option::Protocol;
-use nesmap_core::option::TargetInfo;
-use nesmap_core::dataset;
+use crate::option;
+use crate::network;
+use crate::option::Protocol;
+use crate::option::TargetInfo;
+use crate::db;
 use super::define;
 use super::validator;
 use super::process;
@@ -83,10 +83,10 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
             }
         }else{
             opt.default_scan = true;
-            target_info.ports = dataset::get_default_ports();
+            target_info.ports = db::get_default_ports();
         }
         opt.targets.push(target_info);
-        opt.tcp_map = dataset::get_tcp_map();
+        opt.tcp_map = db::get_tcp_map();
     }else if matches.contains_id("host") {
         opt.command_type = option::CommandType::HostScan;
         opt.protocol = option::Protocol::ICMPv4;
@@ -203,7 +203,7 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
     // Flags
     if matches.contains_id("interface") {
         let v_interface: String = matches.get_one::<String>("interface").unwrap().to_string();
-        if let Some(interface) = nesmap_core::network::get_interface_by_name(v_interface){
+        if let Some(interface) = network::get_interface_by_name(v_interface){
             opt.interface_index = interface.index;
             opt.interface_name = interface.name;
             if interface.ipv4.len() > 0 {
@@ -283,8 +283,8 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
     }
     if matches.contains_id("service") {
         opt.service_detection = true;
-        opt.http_ports = dataset::get_http_ports();
-        opt.https_ports = dataset::get_https_ports();
+        opt.http_ports = db::get_http_ports();
+        opt.https_ports = db::get_https_ports();
     }
     if matches.contains_id("os") {
         opt.os_detection = true;
