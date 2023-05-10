@@ -2,6 +2,8 @@
 extern crate clap;
 
 mod define;
+mod models;
+mod db;
 mod parser;
 mod handler;
 mod output;
