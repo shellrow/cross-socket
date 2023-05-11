@@ -246,8 +246,7 @@ pub async fn run_service_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) ->
             result.ports.push(port_info);  
         }
         // HostInfo
-        let os_fingetprint =  if od_result.len() > 0 { 
-            // TODO! 
+        let os_fingetprint =  if od_result.len() > 0 {  
             crate::os::verify_os_fingerprint(od_result[0].tcp_fingerprint.clone())
         } else{ 
             OsFingerprint::new() 
