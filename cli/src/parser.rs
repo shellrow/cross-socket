@@ -82,8 +82,24 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
                 target_info.set_dst_ports_from_csv(port_opt);
             }
         }else{
-            opt.default_scan = true;
-            target_info.ports = db::get_default_ports();
+            if matches.contains_id("wellknown") {
+                opt.wellknown = true;
+                target_info.ports = db::get_wellknown_ports();
+            }else if matches.contains_id("list") {
+                let list: &str = matches.value_of("list").unwrap();
+                match validator::validate_filepath(list) {
+                    Ok(_) => {
+                        target_info.set_dst_ports_from_list(list.to_string());
+                    },
+                    Err(_) => {
+                        target_info.ports = db::get_default_ports();
+                    },
+                }
+            }
+            else {
+                opt.default_scan = true;
+                target_info.ports = db::get_default_ports();
+            }
         }
         opt.targets.push(target_info);
         opt.tcp_map = db::get_tcp_map();
@@ -199,6 +215,9 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
         opt.protocol = Protocol::UDP;
         let base_domain: &str = matches.value_of("domain").unwrap();
         opt.targets.push(TargetInfo::new_with_base_domain(base_domain.to_string()));
+        if matches.contains_id("passive") {
+            opt.passive = true;   
+        }
     }
     // Flags
     if matches.contains_id("interface") {

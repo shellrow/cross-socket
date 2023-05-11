@@ -3,8 +3,8 @@ use crate::models::{OsFingerprint, OsTtl};
 use crate::{db, network};
 
 pub fn verify_os_fingerprint(fingerprint: TcpFingerprint) -> OsFingerprint {
-    let result: OsFingerprint = OsFingerprint::new();
-    /* if fingerprint.tcp_syn_ack_fingerprint.len() == 0 {
+    let mut result: OsFingerprint = OsFingerprint::new();
+    if fingerprint.tcp_syn_ack_fingerprint.len() == 0 {
         return result;
     }
     let mut tcp_options: Vec<String> = vec![];
@@ -17,23 +17,38 @@ pub fn verify_os_fingerprint(fingerprint: TcpFingerprint) -> OsFingerprint {
     }
     let tcp_window_size: u16  = fingerprint.tcp_syn_ack_fingerprint[0].tcp_window_size;
     let tcp_option_pattern: String = tcp_options.join("|");
+    
+    // Get OS Fingerprint list
+    let os_fingerprints = db::get_os_fingerprints();
+    
     // 1. Select exact match OS fingerprint
-    let fingerprints: Vec<OsFingerprint> = db::search_os_fingerprints(tcp_window_size, tcp_option_pattern.clone());
-    if fingerprints.len() > 0 {
-        return fingerprints[0].clone();
+    for f in &os_fingerprints {
+        if f.tcp_window_size == tcp_window_size && f.tcp_option_pattern == tcp_option_pattern {
+            return f.clone();
+        }
     }
-    // 2. Select OS fingerprint that most closely approximates
-    let fingerprints: Vec<OsFingerprint> = db::get_approximate_fingerprints(tcp_window_size, tcp_option_pattern);
-    if fingerprints.len() > 0 {
-        return fingerprints[0].clone();
+    // 2. Select OS fingerprint that have most closely tcp_option_pattern
+    for f in &os_fingerprints {
+        if f.tcp_window_size == tcp_window_size && f.tcp_option_pattern.contains(&tcp_option_pattern) {
+            return f.clone();
+        }
     }
-    // 3. from TTL
+    // 3. Select OS fingerprint that most closely approximates
+    for f in os_fingerprints {
+        if tcp_window_size - 100 < f.tcp_window_size  && f.tcp_window_size < tcp_window_size + 100 && f.tcp_option_pattern.contains(&tcp_option_pattern) {
+            return f;
+        }
+    }
+    // 4. from TTL
+    let os_ttl_list: Vec<OsTtl> = db::get_os_ttl_list();
     let initial_ttl = network::guess_initial_ttl(fingerprint.ip_ttl);
-    let os_ttl: OsTtl = db::get_os_family(initial_ttl);
-    if !os_ttl.os_family.is_empty() {
-        result.cpe = String::from("(Failed to OS Fingerprinting)");
-        result.os_family = os_ttl.os_family;
-        result.os_name = os_ttl.os_description;
-    } */
+    for os_ttl in os_ttl_list {
+        if os_ttl.initial_ttl == initial_ttl {
+            result.cpe = String::from("(Failed to OS Fingerprinting)");
+            result.os_family = os_ttl.os_family;
+            result.os_name = os_ttl.os_description;
+            return result;
+        }
+    }
     result
 }

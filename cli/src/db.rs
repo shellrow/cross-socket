@@ -2,14 +2,14 @@ use std::collections::HashMap;
 use crate::define;
 use crate::models;
 
-pub fn get_oui_map() -> HashMap<String, String> {
+/* pub fn get_oui_map() -> HashMap<String, String> {
     let mut oui_map: HashMap<String, String> = HashMap::new();
     let ds_oui: Vec<models::Oui> = serde_json::from_str(define::OUI_JSON).unwrap_or(vec![]);
     for oui in ds_oui {
         oui_map.insert(oui.mac_prefix, oui.vendor_name);
     }
     oui_map
-}
+} */
 
 pub fn get_oui_detail_map() -> HashMap<String, String> {
     let mut oui_map: HashMap<String, String> = HashMap::new();
@@ -94,6 +94,11 @@ pub fn get_os_ttl_map() -> HashMap<u8, String> {
     os_ttl_map
 }
 
+pub fn get_os_ttl_list() -> Vec<models::OsTtl> {
+    let ds_os_ttl: Vec<models::OsTtl> = serde_json::from_str(define::OS_TTL_JSON).unwrap_or(vec![]);
+    ds_os_ttl
+}
+
 pub fn get_subdomain() -> Vec<String> {
     let ds_subdomain: Vec<&str> = define::SUBDOMAIN_TXT.trim().split("\n").collect();
     let mut subdomain: Vec<String> = vec![];
@@ -101,4 +106,9 @@ pub fn get_subdomain() -> Vec<String> {
         subdomain.push(r.to_string());
     }
     subdomain
+}
+
+pub fn get_os_fingerprints() -> Vec<models::OsFingerprint> {
+    let ds_os_fingerprints: Vec<models::OsFingerprint> = serde_json::from_str(define::OS_FINGERPRINT_JSON).unwrap_or(vec![]);
+    ds_os_fingerprints
 }

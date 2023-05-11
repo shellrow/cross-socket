@@ -18,6 +18,7 @@ use crate::result::{PortScanResult, HostScanResult, HostInfo, PingStat, PingResu
 use crate::models::OsFingerprint;
 use crate::option::ScanOption;
 use crate::{define, network};
+use crate::db;
 
 pub fn run_port_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) -> netscan::result::PortScanResult {
     let mut port_scanner = match PortScanner::new(opt.src_ip){
@@ -459,7 +460,13 @@ pub fn run_domain_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) -> Domain
             domain_scanner.add_word(d.to_string());
         }
     }else{
-        domain_scanner.set_passive(true);
+        if opt.passive {
+            domain_scanner.set_passive(true);
+        }else {
+            for d in db::get_subdomain() {
+                domain_scanner.add_word(d);
+            }
+        }
     }
     domain_scanner.set_timeout(opt.timeout);
     match msg_tx.send(String::from(define::MESSAGE_START_DOMAINSCAN)) {

@@ -2,6 +2,7 @@ use std::fs;
 use term_table::{Table, TableStyle};
 use term_table::table_cell::{TableCell,Alignment};
 use term_table::row::Row;
+use crate::network;
 use crate::option::{CommandType, ScanOption};
 use crate::result::{PortScanResult, HostScanResult, PingStat, TraceResult, DomainScanResult};
 
@@ -56,10 +57,26 @@ pub fn show_options(opt: ScanOption) {
             table.style = TableStyle::blank();
             println!("Target:");
             for target in opt.targets {
-                table.add_row(Row::new(vec![
-                    TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
-                    TableCell::new_with_alignment(target.ip_addr, 1, Alignment::Left)
-                ]));
+                let hostname: String = if target.host_name.is_empty() {
+                    network::lookup_ip_addr(target.ip_addr.to_string())
+                }else {
+                    target.host_name
+                };
+                if target.ip_addr.to_string() == hostname {
+                    table.add_row(Row::new(vec![
+                        TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
+                        TableCell::new_with_alignment(target.ip_addr, 1, Alignment::Left)
+                    ]));
+                }else {
+                    table.add_row(Row::new(vec![
+                        TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
+                        TableCell::new_with_alignment(target.ip_addr, 1, Alignment::Left)
+                    ]));
+                    table.add_row(Row::new(vec![
+                        TableCell::new_with_alignment("HostName", 1, Alignment::Left),
+                        TableCell::new_with_alignment(hostname, 1, Alignment::Left)
+                    ]));
+                }
                 if target.ports.len() > 10 {
                     table.add_row(Row::new(vec![
                         TableCell::new_with_alignment("Port", 1, Alignment::Left),

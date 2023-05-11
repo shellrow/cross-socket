@@ -5,9 +5,8 @@ use std::fs::read_to_string;
 use ipnet::Ipv4Net;
 use std::str::FromStr;
 use serde::{Serialize, Deserialize};
-
-use super::network;
-use super::process;
+use crate::network;
+//use crate::process;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum CommandType {
@@ -19,7 +18,7 @@ pub enum CommandType {
 }
 
 impl CommandType {
-    pub fn id(&self) -> String {
+    /* pub fn id(&self) -> String {
         match *self {
             CommandType::PortScan => String::from("port_scan"),
             CommandType::HostScan => String::from("host_scan"),
@@ -27,7 +26,7 @@ impl CommandType {
             CommandType::Traceroute => String::from("traceroute"),
             CommandType::DomainScan => String::from("domain_scan"),
         }
-    }
+    } */
     pub fn name(&self) -> String {
         match *self {
             CommandType::PortScan => String::from("Port scan"),
@@ -37,7 +36,7 @@ impl CommandType {
             CommandType::DomainScan => String::from("Domain scan"),
         }
     }
-    pub fn description(&self) -> String {
+    /* pub fn description(&self) -> String {
         match *self {
             CommandType::PortScan => String::from("Port scan"),
             CommandType::HostScan => String::from("Host scan"),
@@ -45,7 +44,7 @@ impl CommandType {
             CommandType::Traceroute => String::from("Traceroute"),
             CommandType::DomainScan => String::from("Domain scan"),
         }
-    }
+    } */
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -57,14 +56,14 @@ pub enum Protocol {
 }
 
 impl Protocol {
-    pub fn id(&self) -> String {
+    /* pub fn id(&self) -> String {
         match *self {
-            Protocol::TCP => String::from("TCP"),
-            Protocol::UDP => String::from("UDP"),
-            Protocol::ICMPv4 => String::from("ICMPv4"),
-            Protocol::ICMPv6 => String::from("ICMPv6"),
+            Protocol::TCP => String::from("tcp"),
+            Protocol::UDP => String::from("udp"),
+            Protocol::ICMPv4 => String::from("icmpv4"),
+            Protocol::ICMPv6 => String::from("icmpv6"),
         }
-    }
+    } */
     pub fn name(&self) -> String {
         match *self {
             Protocol::TCP => String::from("TCP"),
@@ -155,15 +154,6 @@ impl TargetInfo {
             base_domain: String::new(),
         }
     }
-    pub fn new_with_base_uri(base_uri: String) -> TargetInfo {
-        TargetInfo {
-            ip_addr: IpAddr::V4(Ipv4Addr::LOCALHOST),
-            host_name: String::new(),
-            ports: vec![],
-            base_uri: base_uri,
-            base_domain: String::new(),
-        }
-    }
     pub fn new_with_base_domain(base_domain: String) -> TargetInfo {
         TargetInfo {
             ip_addr: IpAddr::V4(Ipv4Addr::LOCALHOST),
@@ -231,6 +221,8 @@ pub struct ScanOption {
     pub use_wordlist: bool,
     pub use_content: bool,
     pub use_config: bool,
+    pub passive: bool,
+    pub wellknown: bool,
     pub accept_invalid_certs: bool,
     pub wordlist_path: String,
     pub content_path: String,
@@ -270,6 +262,8 @@ impl ScanOption {
             use_wordlist: false,
             use_content: false,
             use_config: false,
+            passive: false,
+            wellknown: false,
             accept_invalid_certs: false,
             wordlist_path: String::new(),
             content_path: String::new(),
@@ -284,7 +278,7 @@ impl ScanOption {
             ttl_map: HashMap::new(),
         }
     }
-    pub fn default() -> ScanOption {
+    /* pub fn default() -> ScanOption {
         let mut opt = ScanOption::new();
         opt.src_port = 53443;
         match default_net::get_default_interface() {
@@ -308,7 +302,7 @@ impl ScanOption {
             opt.async_scan = true;
         }
         opt
-    }
+    } */
     pub fn set_dst_hosts_from_na(&mut self, v: String, prefix_len: u8, port: Option<u16>) {
         match v.parse::<IpAddr>(){
             Ok(addr) => {
@@ -358,8 +352,5 @@ impl ScanOption {
                 },
             }
         }
-    }
-    pub fn set_timeout_from_milis(&mut self, timeout: u64) {
-        self.timeout = Duration::from_millis(timeout);
     }
 }

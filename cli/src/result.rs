@@ -1,7 +1,6 @@
 use std::{time::Duration, vec};
 use std::net::IpAddr;
 use serde::{Serialize, Deserialize};
-
 use crate::option::Protocol;
 
 /// Exit status of probe
@@ -16,13 +15,13 @@ pub enum ProbeStatus {
 }
 
 impl ProbeStatus {
-    pub fn name(&self) -> String {
+    /* pub fn name(&self) -> String {
         match *self {
             ProbeStatus::Done => String::from("Done"),
             ProbeStatus::Error => String::from("Error"),
             ProbeStatus::Timeout => String::from("Timeout"),
         }
-    }
+    } */
 }
 
 /// Node type 
@@ -37,13 +36,13 @@ pub enum NodeType {
 }
 
 impl NodeType {
-    pub fn name(&self) -> String {
+    /* pub fn name(&self) -> String {
         match *self {
             NodeType::DefaultGateway => String::from("DefaultGateway"),
             NodeType::Relay => String::from("Relay"),
             NodeType::Destination => String::from("Destination"),
         }
-    }
+    } */
 }
 
 /// Node structure
@@ -75,7 +74,7 @@ pub struct PortInfo {
 }
 
 impl PortInfo {
-    pub fn new() -> PortInfo {
+    /* pub fn new() -> PortInfo {
         PortInfo { 
             port_number: 0, 
             port_status: String::new(), 
@@ -83,7 +82,7 @@ impl PortInfo {
             service_version: String::new(), 
             remark: String::new(), 
         }
-    }
+    } */
 }
 
 #[derive(Clone, Debug ,Serialize, Deserialize)]
@@ -249,11 +248,11 @@ pub struct DomainScanResult {
 }
 
 impl DomainScanResult {
-    pub fn new() -> DomainScanResult {
+    /* pub fn new() -> DomainScanResult {
         DomainScanResult {
             domains: vec![], 
             scan_time: Duration::from_millis(0),
             scan_status: ProbeStatus::Done,
         }
-    }
+    } */
 }
