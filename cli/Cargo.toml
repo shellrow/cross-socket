@@ -33,4 +33,3 @@ netscan = { version = "0.13.0", features = ["full"] }
 domainscan = "0.1.0"
 tracert = "0.4.1"
 tokio = "1.0"
-#nesmap-core = { path = "../core", version = "0.1.0"}
