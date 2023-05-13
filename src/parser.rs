@@ -8,6 +8,7 @@ use crate::option;
 use crate::option::Protocol;
 use crate::option::TargetInfo;
 use clap::ArgMatches;
+use ipnet::IpNet;
 use std::net::IpAddr;
 use std::net::SocketAddr;
 use std::str::FromStr;
@@ -137,15 +138,14 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
                 }
             };
             // network
-            if target.contains("/") {
-                let nw_vec: Vec<&str> = target.split("/").collect();
-                let prefix_len: u8 = match nw_vec[0].parse::<u8>() {
-                    Ok(prefix_len) => prefix_len,
-                    Err(_) => 24,
-                };
-                opt.set_dst_hosts_from_na(nw_addr, prefix_len, Some(port));
-            } else {
-                opt.set_dst_hosts_from_na(nw_addr, 24, Some(port));
+            match target.parse::<IpNet>() {
+                Ok(ipnet) => {
+                    let prefix_len: u8 = ipnet.prefix_len();
+                    opt.set_dst_hosts_from_na(nw_addr, prefix_len, Some(port));
+                }
+                Err(_) => {
+                    opt.set_dst_hosts_from_na(nw_addr, 24, Some(port));
+                }
             }
         } else {
             // list
