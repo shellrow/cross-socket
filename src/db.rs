@@ -2,15 +2,6 @@ use crate::define;
 use crate::models;
 use std::collections::HashMap;
 
-/* pub fn get_oui_map() -> HashMap<String, String> {
-    let mut oui_map: HashMap<String, String> = HashMap::new();
-    let ds_oui: Vec<models::Oui> = serde_json::from_str(define::OUI_JSON).unwrap_or(vec![]);
-    for oui in ds_oui {
-        oui_map.insert(oui.mac_prefix, oui.vendor_name);
-    }
-    oui_map
-} */
-
 pub fn get_oui_detail_map() -> HashMap<String, String> {
     let mut oui_map: HashMap<String, String> = HashMap::new();
     let ds_oui: Vec<models::Oui> = serde_json::from_str(define::OUI_JSON).unwrap_or(vec![]);
