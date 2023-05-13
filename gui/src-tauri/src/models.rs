@@ -1,9 +1,9 @@
 use std::net::IpAddr;
 use serde::{Serialize, Deserialize};
-use nesmap_core::option::{TargetInfo, ScanOption, CommandType, ScanType, Protocol};
-use nesmap_core::validator;
-use nesmap_core::network;
-use nesmap_core::dataset;
+use crate::option::{TargetInfo, ScanOption, CommandType, ScanType, Protocol};
+use crate::validator;
+use crate::network;
+use crate::dataset;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PortArg {
@@ -18,7 +18,7 @@ pub struct PortArg {
 }
 
 impl PortArg {
-    pub fn to_scan_option(&self) -> nesmap_core::option::ScanOption {
+    pub fn to_scan_option(&self) -> crate::option::ScanOption {
         let mut opt: ScanOption = ScanOption::default();
         opt.command_type = CommandType::PortScan;
         opt.tcp_map = dataset::get_tcp_map();
@@ -75,7 +75,7 @@ pub struct HostArg {
 }
 
 impl HostArg {
-    pub fn to_scan_option(&self) -> nesmap_core::option::ScanOption {
+    pub fn to_scan_option(&self) -> crate::option::ScanOption {
         let mut opt: ScanOption = ScanOption::default();
         opt.command_type = CommandType::HostScan;
         if self.protocol == Protocol::TCP.name() {
@@ -123,7 +123,7 @@ pub struct PingArg {
 }
 
 impl PingArg {
-    pub fn to_scan_option(&self) -> nesmap_core::option::ScanOption {
+    pub fn to_scan_option(&self) -> crate::option::ScanOption {
         let mut opt: ScanOption = ScanOption::default();
         opt.command_type = CommandType::Ping;
         // TODO: IPv6 support
@@ -167,7 +167,7 @@ pub struct TracerouteArg {
 }
 
 impl TracerouteArg {
-    pub fn to_scan_option(&self) -> nesmap_core::option::ScanOption {
+    pub fn to_scan_option(&self) -> crate::option::ScanOption {
         let mut opt: ScanOption = ScanOption::default();
         opt.command_type = CommandType::Traceroute;
         opt.set_timeout_from_milis(self.timeout);
@@ -200,4 +200,35 @@ pub struct LogSearchArg {
     pub probe_types: Vec<String>,
     pub start_date: String,
     pub end_date: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NetworkInterface {
+    pub index: u32,
+    pub name: String,
+    pub friendly_name: String,
+    pub description: String,
+    pub if_type: String,
+    pub mac_addr: String,
+    pub ipv4: Vec<String>,
+    pub ipv6: Vec<String>,
+    pub gateway_mac_addr: String,
+    pub gateway_ip_addr: String,
+}
+
+impl NetworkInterface {
+    pub fn new() -> NetworkInterface {
+        NetworkInterface {
+            index: 0,
+            name: String::new(),
+            friendly_name: String::new(),
+            description: String::new(),
+            if_type: String::new(),
+            mac_addr: String::new(),
+            ipv4: vec![],
+            ipv6: vec![],
+            gateway_mac_addr: String::new(),
+            gateway_ip_addr: String::new(),
+        }
+    }
 }
