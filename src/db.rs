@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use crate::define;
 use crate::models;
+use std::collections::HashMap;
 
 /* pub fn get_oui_map() -> HashMap<String, String> {
     let mut oui_map: HashMap<String, String> = HashMap::new();
@@ -22,7 +22,8 @@ pub fn get_oui_detail_map() -> HashMap<String, String> {
 
 pub fn get_tcp_map() -> HashMap<u16, String> {
     let mut tcp_map: HashMap<u16, String> = HashMap::new();
-    let ds_tcp_service: Vec<models::TcpService> = serde_json::from_str(define::TCP_SERVICE_JSON).unwrap_or(vec![]);
+    let ds_tcp_service: Vec<models::TcpService> =
+        serde_json::from_str(define::TCP_SERVICE_JSON).unwrap_or(vec![]);
     for port in ds_tcp_service {
         tcp_map.insert(port.port, port.service_name);
     }
@@ -36,8 +37,8 @@ pub fn get_default_ports() -> Vec<u16> {
         match r.trim_end().parse::<u16>() {
             Ok(port) => {
                 default_ports.push(port);
-            },
-            Err(_) => {},
+            }
+            Err(_) => {}
         }
     }
     default_ports
@@ -50,8 +51,8 @@ pub fn get_wellknown_ports() -> Vec<u16> {
         match r.trim_end().parse::<u16>() {
             Ok(port) => {
                 wellknown_ports.push(port);
-            },
-            Err(_) => {},
+            }
+            Err(_) => {}
         }
     }
     wellknown_ports
@@ -64,8 +65,8 @@ pub fn get_http_ports() -> Vec<u16> {
         match r.trim_end().parse::<u16>() {
             Ok(port) => {
                 http_ports.push(port);
-            },
-            Err(_) => {},
+            }
+            Err(_) => {}
         }
     }
     http_ports
@@ -78,8 +79,8 @@ pub fn get_https_ports() -> Vec<u16> {
         match r.trim_end().parse::<u16>() {
             Ok(port) => {
                 https_ports.push(port);
-            },
-            Err(_) => {},
+            }
+            Err(_) => {}
         }
     }
     https_ports
@@ -109,6 +110,7 @@ pub fn get_subdomain() -> Vec<String> {
 }
 
 pub fn get_os_fingerprints() -> Vec<models::OsFingerprint> {
-    let ds_os_fingerprints: Vec<models::OsFingerprint> = serde_json::from_str(define::OS_FINGERPRINT_JSON).unwrap_or(vec![]);
+    let ds_os_fingerprints: Vec<models::OsFingerprint> =
+        serde_json::from_str(define::OS_FINGERPRINT_JSON).unwrap_or(vec![]);
     ds_os_fingerprints
 }

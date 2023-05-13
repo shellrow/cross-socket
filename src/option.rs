@@ -1,11 +1,11 @@
-use std::collections::HashMap;
-use std::time::Duration;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::fs::read_to_string;
-use ipnet::Ipv4Net;
-use std::str::FromStr;
-use serde::{Serialize, Deserialize};
 use crate::network;
+use ipnet::Ipv4Net;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs::read_to_string;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::str::FromStr;
+use std::time::Duration;
 //use crate::process;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -14,7 +14,7 @@ pub enum CommandType {
     HostScan,
     Ping,
     Traceroute,
-    DomainScan
+    DomainScan,
 }
 
 impl CommandType {
@@ -74,23 +74,23 @@ impl Protocol {
     }
 }
 
-/// Scan Type 
+/// Scan Type
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum ScanType {
     /// Default fast port scan type.
-    /// 
+    ///
     /// Send TCP packet with SYN flag to the target ports and check response.
     TcpSynScan,
     /// Attempt TCP connection and check port status.
-    /// 
+    ///
     /// Slow but can be run without administrator privileges.
     TcpConnectScan,
     /// Default host scan type.
-    /// 
+    ///
     /// Send ICMP echo request and check response.
     IcmpPingScan,
     /// Perform host scan for a specific service.
-    /// 
+    ///
     /// Send TCP packets with SYN flag to a specific port and check response.
     TcpPingScan,
     UdpPingScan,
@@ -103,7 +103,7 @@ impl ScanType {
             ScanType::TcpConnectScan => String::from("TCP Connect Scan"),
             ScanType::IcmpPingScan => String::from("ICMP Ping Scan"),
             ScanType::TcpPingScan => String::from("TCP Ping Scan"),
-            ScanType::UdpPingScan => String::from("UDP Ping Scan"), 
+            ScanType::UdpPingScan => String::from("UDP Ping Scan"),
         }
     }
     pub fn to_netscan_type(&self) -> netscan::setting::ScanType {
@@ -171,11 +171,11 @@ impl TargetInfo {
     pub fn set_dst_ports_from_csv(&mut self, v: String) {
         let values: Vec<&str> = v.split(",").collect();
         for p in values {
-            match p.parse::<u16>(){
-                Ok(port) =>{
+            match p.parse::<u16>() {
+                Ok(port) => {
                     self.ports.push(port);
-                },
-                Err(_) =>{},
+                }
+                Err(_) => {}
             }
         }
     }
@@ -187,11 +187,11 @@ impl TargetInfo {
         };
         let port_list: Vec<&str> = text.trim().split("\n").collect();
         for port in port_list {
-            match port.parse::<u16>(){
-                Ok(p) =>{
+            match port.parse::<u16>() {
+                Ok(p) => {
                     self.ports.push(p);
-                },
-                Err(_) =>{},
+                }
+                Err(_) => {}
             }
         }
     }
@@ -239,7 +239,7 @@ pub struct ScanOption {
 
 impl ScanOption {
     pub fn new() -> ScanOption {
-        ScanOption{
+        ScanOption {
             command_type: CommandType::PortScan,
             interface_index: u32::MIN,
             interface_name: String::new(),
@@ -304,25 +304,25 @@ impl ScanOption {
         opt
     } */
     pub fn set_dst_hosts_from_na(&mut self, v: String, prefix_len: u8, port: Option<u16>) {
-        match v.parse::<IpAddr>(){
-            Ok(addr) => {
-                match addr {
-                    IpAddr::V4(ipv4_addr) => {
-                        let net: Ipv4Net = Ipv4Net::new(ipv4_addr, prefix_len).unwrap();
-                        let nw_addr = Ipv4Net::new(net.network(), prefix_len).unwrap();
-                        let hosts: Vec<Ipv4Addr> = nw_addr.hosts().collect();
-                        for host in hosts {
-                            if let Some(p) = port {
-                                self.targets.push(TargetInfo::new_with_socket(IpAddr::V4(host), p));
-                            }else{
-                                self.targets.push(TargetInfo::new_with_socket(IpAddr::V4(host), 80));
-                            }
+        match v.parse::<IpAddr>() {
+            Ok(addr) => match addr {
+                IpAddr::V4(ipv4_addr) => {
+                    let net: Ipv4Net = Ipv4Net::new(ipv4_addr, prefix_len).unwrap();
+                    let nw_addr = Ipv4Net::new(net.network(), prefix_len).unwrap();
+                    let hosts: Vec<Ipv4Addr> = nw_addr.hosts().collect();
+                    for host in hosts {
+                        if let Some(p) = port {
+                            self.targets
+                                .push(TargetInfo::new_with_socket(IpAddr::V4(host), p));
+                        } else {
+                            self.targets
+                                .push(TargetInfo::new_with_socket(IpAddr::V4(host), 80));
                         }
-                    },
-                    IpAddr::V6(_) => {},
+                    }
                 }
+                IpAddr::V6(_) => {}
             },
-            Err(_) =>{},
+            Err(_) => {}
         }
         //TODO: add v6 support
     }
@@ -334,22 +334,25 @@ impl ScanOption {
         };
         let host_list: Vec<&str> = text.trim().split("\n").collect();
         for host in host_list {
-            match host.parse::<IpAddr>(){
-                Ok(addr) =>{
+            match host.parse::<IpAddr>() {
+                Ok(addr) => {
                     self.targets.push(TargetInfo::new_with_ip_addr(addr));
-                },
-                Err(_) =>{
+                }
+                Err(_) => {
                     if let Some(addr) = network::lookup_host_name(host.to_string()) {
                         self.targets.push(TargetInfo::new_with_ip_addr(addr));
-                    }else{
-                        match  SocketAddr::from_str(host) {
+                    } else {
+                        match SocketAddr::from_str(host) {
                             Ok(sock_addr) => {
-                                self.targets.push(TargetInfo::new_with_socket(sock_addr.ip(), sock_addr.port()));
-                            },
-                            Err(_) => {},
+                                self.targets.push(TargetInfo::new_with_socket(
+                                    sock_addr.ip(),
+                                    sock_addr.port(),
+                                ));
+                            }
+                            Err(_) => {}
                         }
                     }
-                },
+                }
             }
         }
     }

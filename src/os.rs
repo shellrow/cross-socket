@@ -1,6 +1,6 @@
-use netscan::os::TcpFingerprint;
 use crate::models::{OsFingerprint, OsTtl};
 use crate::{db, network};
+use netscan::os::TcpFingerprint;
 
 pub fn verify_os_fingerprint(fingerprint: TcpFingerprint) -> OsFingerprint {
     let mut result: OsFingerprint = OsFingerprint::new();
@@ -15,12 +15,12 @@ pub fn verify_os_fingerprint(fingerprint: TcpFingerprint) -> OsFingerprint {
         });
         tcp_options.push(options.join("-"));
     }
-    let tcp_window_size: u16  = fingerprint.tcp_syn_ack_fingerprint[0].tcp_window_size;
+    let tcp_window_size: u16 = fingerprint.tcp_syn_ack_fingerprint[0].tcp_window_size;
     let tcp_option_pattern: String = tcp_options.join("|");
-    
+
     // Get OS Fingerprint list
     let os_fingerprints = db::get_os_fingerprints();
-    
+
     // 1. Select exact match OS fingerprint
     for f in &os_fingerprints {
         if f.tcp_window_size == tcp_window_size && f.tcp_option_pattern == tcp_option_pattern {
@@ -29,13 +29,18 @@ pub fn verify_os_fingerprint(fingerprint: TcpFingerprint) -> OsFingerprint {
     }
     // 2. Select OS fingerprint that have most closely tcp_option_pattern
     for f in &os_fingerprints {
-        if f.tcp_window_size == tcp_window_size && f.tcp_option_pattern.contains(&tcp_option_pattern) {
+        if f.tcp_window_size == tcp_window_size
+            && f.tcp_option_pattern.contains(&tcp_option_pattern)
+        {
             return f.clone();
         }
     }
     // 3. Select OS fingerprint that most closely approximates
     for f in os_fingerprints {
-        if tcp_window_size - 100 < f.tcp_window_size  && f.tcp_window_size < tcp_window_size + 100 && f.tcp_option_pattern.contains(&tcp_option_pattern) {
+        if tcp_window_size - 100 < f.tcp_window_size
+            && f.tcp_window_size < tcp_window_size + 100
+            && f.tcp_option_pattern.contains(&tcp_option_pattern)
+        {
             return f;
         }
     }

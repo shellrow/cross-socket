@@ -9,9 +9,9 @@ pub struct Oui {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TcpService {
-    pub port: u16, 
-    pub service_name: String, 
-    pub service_description: String,   
+    pub port: u16,
+    pub service_name: String,
+    pub service_description: String,
     pub wellknown_flag: u32,
     pub default_flag: u32,
 }
@@ -20,7 +20,7 @@ pub struct TcpService {
 pub struct UdpService {
     pub port: u16,
     pub service_name: String,
-    pub service_description: String,   
+    pub service_description: String,
     pub wellknown_flag: u32,
     pub default_flag: u32,
 }
@@ -39,15 +39,15 @@ pub struct OsFingerprint {
 
 impl OsFingerprint {
     pub fn new() -> OsFingerprint {
-        OsFingerprint { 
-            cpe: String::new(), 
-            os_name: String::new(), 
-            os_vendor: String::new(), 
-            os_family: String::new(), 
-            os_generation: String::new(), 
-            device_type: String::new(), 
-            tcp_window_size: 0, 
-            tcp_option_pattern: String::new() 
+        OsFingerprint {
+            cpe: String::new(),
+            os_name: String::new(),
+            os_vendor: String::new(),
+            os_family: String::new(),
+            os_generation: String::new(),
+            device_type: String::new(),
+            tcp_window_size: 0,
+            tcp_option_pattern: String::new(),
         }
     }
 }

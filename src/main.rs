@@ -1,24 +1,24 @@
 #[macro_use]
 extern crate clap;
 
-mod define;
-mod models;
-mod option;
-mod sys;
-mod network;
-mod process;
 mod db;
-mod validator;
-mod result;
-mod parser;
-mod scan;
+mod define;
 mod handler;
-mod output;
+mod models;
+mod network;
+mod option;
 mod os;
+mod output;
+mod parser;
+mod process;
+mod result;
+mod scan;
+mod sys;
+mod validator;
 
+use chrono::{DateTime, Local};
+use clap::{App, AppSettings, Arg, ArgGroup, Command};
 use std::env;
-use chrono::{Local, DateTime};
-use clap::{Command, AppSettings, Arg, App, ArgGroup};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -32,60 +32,52 @@ fn main() {
     show_banner_with_starttime();
     output::show_options(opt.clone());
     match opt.command_type {
-        option::CommandType::PortScan => {
-            match opt.port_scan_type {
-                option::ScanType::TcpSynScan => {
-                    if process::privileged() {
-                        async_io::block_on(async {
-                            handler::handle_port_scan(opt).await;
-                        })
-                    }else{
-                        exit_with_error_message("Requires administrator privilege");
-                    }
-                },
-                option::ScanType::TcpConnectScan => {
+        option::CommandType::PortScan => match opt.port_scan_type {
+            option::ScanType::TcpSynScan => {
+                if process::privileged() {
                     async_io::block_on(async {
                         handler::handle_port_scan(opt).await;
                     })
-                },
-                _ => {},
+                } else {
+                    exit_with_error_message("Requires administrator privilege");
+                }
             }
+            option::ScanType::TcpConnectScan => async_io::block_on(async {
+                handler::handle_port_scan(opt).await;
+            }),
+            _ => {}
         },
-        option::CommandType::HostScan => {
-            match opt.protocol {
-                option::Protocol::ICMPv4 | option::Protocol::ICMPv6 => {
-                    if process::privileged() {
-                        async_io::block_on(async {
-                            handler::handle_host_scan(opt).await;
-                        })
-                    }else{
-                        exit_with_error_message("Requires administrator privilege");
-                    }
-                },
-                _ => {
+        option::CommandType::HostScan => match opt.protocol {
+            option::Protocol::ICMPv4 | option::Protocol::ICMPv6 => {
+                if process::privileged() {
                     async_io::block_on(async {
                         handler::handle_host_scan(opt).await;
                     })
-                },
+                } else {
+                    exit_with_error_message("Requires administrator privilege");
+                }
             }
+            _ => async_io::block_on(async {
+                handler::handle_host_scan(opt).await;
+            }),
         },
         option::CommandType::Ping => {
             if process::privileged() || sys::get_os_type() == "windows" {
                 handler::handle_ping(opt);
-            }else{
+            } else {
                 exit_with_error_message("Requires administrator privilege");
             }
-        },
+        }
         option::CommandType::Traceroute => {
             if process::privileged() || sys::get_os_type() == "windows" {
                 handler::handle_trace(opt);
-            }else{
+            } else {
                 exit_with_error_message("Requires administrator privilege");
             }
-        },
+        }
         option::CommandType::DomainScan => {
             handler::handle_domain_scan(opt);
-        },
+        }
     }
 }
 
@@ -264,11 +256,17 @@ fn get_app_settings<'a>() -> Command<'a> {
         .group(ArgGroup::new("mode").args(&["port", "host", "ping", "trace", "domain"]))
         .setting(AppSettings::DeriveDisplayOrder)
         ;
-        app
+    app
 }
 
 fn show_app_desc() {
-    println!("{} {} ({}) {}", crate_name!(), crate_version!(), define::CRATE_UPDATE_DATE, sys::get_os_type());
+    println!(
+        "{} {} ({}) {}",
+        crate_name!(),
+        crate_version!(),
+        define::CRATE_UPDATE_DATE,
+        sys::get_os_type()
+    );
     println!("{}", crate_description!());
     println!("{}", crate_authors!());
     println!("{}", define::CRATE_REPOSITORY);
@@ -278,7 +276,12 @@ fn show_app_desc() {
 }
 
 fn show_banner_with_starttime() {
-    println!("{} {} {}", crate_name!(), crate_version!(), sys::get_os_type());
+    println!(
+        "{} {} {}",
+        crate_name!(),
+        crate_version!(),
+        sys::get_os_type()
+    );
     println!("{}", define::CRATE_REPOSITORY);
     println!();
     let local_datetime: DateTime<Local> = Local::now();

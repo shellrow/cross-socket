@@ -1,28 +1,16 @@
-use std::sync::mpsc::{channel ,Sender, Receiver};
-use std::thread;
-use crate::result::{PingStat, TraceResult};
-use crate::{option, scan, result, define, db};
-use indicatif::{ProgressBar, ProgressStyle};
 use super::output;
+use crate::result::{PingStat, TraceResult};
+use crate::{db, define, option, result, scan};
+use indicatif::{ProgressBar, ProgressStyle};
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::thread;
 
 fn get_spinner() -> ProgressBar {
     let pb = ProgressBar::new_spinner();
     pb.enable_steady_tick(120);
     let ps: ProgressStyle = ProgressStyle::default_spinner()
         .template("{spinner:.blue} {msg}")
-        .tick_strings(&[
-            "⠋",
-			"⠙",
-			"⠹",
-			"⠸",
-			"⠼",
-			"⠴",
-			"⠦",
-			"⠧",
-			"⠇",
-			"⠏",
-            "✓",
-        ]);
+        .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "✓"]);
     pb.set_style(ps);
     pb
 }
@@ -30,22 +18,35 @@ fn get_spinner() -> ProgressBar {
 pub async fn handle_port_scan(opt: option::ScanOption) {
     let probe_opt: option::ScanOption = opt.clone();
     let (msg_tx, msg_rx): (Sender<String>, Receiver<String>) = channel();
-    let handle = thread::spawn(move|| {
-        async_io::block_on(async {
-            scan::run_service_scan(probe_opt, &msg_tx).await
-        })
+    let handle = thread::spawn(move || {
+        async_io::block_on(async { scan::run_service_scan(probe_opt, &msg_tx).await })
     });
     let mut pb = get_spinner();
     while let Ok(msg) = msg_rx.recv() {
         if msg.contains("START_") || msg.contains("END_") {
             match msg.as_str() {
-                define::MESSAGE_START_PORTSCAN => {pb.set_message("Scanning ports ...");},
-                define::MESSAGE_END_PORTSCAN => {pb.finish_with_message("Port scan"); pb = get_spinner();},
-                define::MESSAGE_START_SERVICEDETECTION => {pb.set_message("Detecting services ...");},
-                define::MESSAGE_END_SERVICEDETECTION => {pb.finish_with_message("Service detection"); pb = get_spinner();},
-                define::MESSAGE_START_OSDETECTION => {pb.set_message("Detecting OS ...");},
-                define::MESSAGE_END_OSDETECTION => {pb.finish_with_message("OS detection"); pb = get_spinner();},
-                _ => {},
+                define::MESSAGE_START_PORTSCAN => {
+                    pb.set_message("Scanning ports ...");
+                }
+                define::MESSAGE_END_PORTSCAN => {
+                    pb.finish_with_message("Port scan");
+                    pb = get_spinner();
+                }
+                define::MESSAGE_START_SERVICEDETECTION => {
+                    pb.set_message("Detecting services ...");
+                }
+                define::MESSAGE_END_SERVICEDETECTION => {
+                    pb.finish_with_message("Service detection");
+                    pb = get_spinner();
+                }
+                define::MESSAGE_START_OSDETECTION => {
+                    pb.set_message("Detecting OS ...");
+                }
+                define::MESSAGE_END_OSDETECTION => {
+                    pb.finish_with_message("OS detection");
+                    pb = get_spinner();
+                }
+                _ => {}
             }
         }
     }
@@ -54,10 +55,12 @@ pub async fn handle_port_scan(opt: option::ScanOption) {
     output::show_portscan_result(result.clone());
 
     if !opt.save_file_path.is_empty() {
-        output::save_json(serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")), opt.save_file_path.clone());
+        output::save_json(
+            serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")),
+            opt.save_file_path.clone(),
+        );
         println!("Probe result saved to: {}", opt.save_file_path);
     }
-
 }
 
 pub async fn handle_host_scan(opt: option::ScanOption) {
@@ -65,20 +68,28 @@ pub async fn handle_host_scan(opt: option::ScanOption) {
     probe_opt.oui_map = db::get_oui_detail_map();
     probe_opt.ttl_map = db::get_os_ttl_map();
     let (msg_tx, msg_rx): (Sender<String>, Receiver<String>) = channel();
-    let handle = thread::spawn(move|| {
-        async_io::block_on(async {
-            scan::run_node_scan(probe_opt, &msg_tx).await
-        })
+    let handle = thread::spawn(move || {
+        async_io::block_on(async { scan::run_node_scan(probe_opt, &msg_tx).await })
     });
     let mut pb = get_spinner();
     while let Ok(msg) = msg_rx.recv() {
         if msg.contains("START_") || msg.contains("END_") {
             match msg.as_str() {
-                define::MESSAGE_START_HOSTSCAN => {pb.set_message("Scanning hosts ...");},
-                define::MESSAGE_END_HOSTSCAN => {pb.finish_with_message("Host scan"); pb = get_spinner();},
-                define::MESSAGE_START_LOOKUP => {pb.set_message("Lookup ...");},
-                define::MESSAGE_END_LOOKUP => {pb.finish_with_message("Lookup"); pb = get_spinner();},
-                _ => {},
+                define::MESSAGE_START_HOSTSCAN => {
+                    pb.set_message("Scanning hosts ...");
+                }
+                define::MESSAGE_END_HOSTSCAN => {
+                    pb.finish_with_message("Host scan");
+                    pb = get_spinner();
+                }
+                define::MESSAGE_START_LOOKUP => {
+                    pb.set_message("Lookup ...");
+                }
+                define::MESSAGE_END_LOOKUP => {
+                    pb.finish_with_message("Lookup");
+                    pb = get_spinner();
+                }
+                _ => {}
             }
         }
     }
@@ -87,18 +98,18 @@ pub async fn handle_host_scan(opt: option::ScanOption) {
     output::show_hostscan_result(result.clone());
 
     if !opt.save_file_path.is_empty() {
-        output::save_json(serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")), opt.save_file_path.clone());
+        output::save_json(
+            serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")),
+            opt.save_file_path.clone(),
+        );
         println!("Probe result saved to: {}", opt.save_file_path);
     }
-
 }
 
-pub fn handle_ping(opt: option::ScanOption) {    
+pub fn handle_ping(opt: option::ScanOption) {
     let (msg_tx, msg_rx): (Sender<String>, Receiver<String>) = channel();
     let ping_opt: option::ScanOption = opt.clone();
-    let handle = thread::spawn(move||{
-        scan::run_ping(ping_opt, &msg_tx)
-    });
+    let handle = thread::spawn(move || scan::run_ping(ping_opt, &msg_tx));
     while let Ok(msg) = msg_rx.recv() {
         println!("{}", msg);
     }
@@ -106,18 +117,18 @@ pub fn handle_ping(opt: option::ScanOption) {
     output::show_ping_result(result.clone());
 
     if !opt.save_file_path.is_empty() {
-        output::save_json(serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")), opt.save_file_path.clone());
+        output::save_json(
+            serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")),
+            opt.save_file_path.clone(),
+        );
         println!("Probe result saved to: {}", opt.save_file_path);
     }
-
 }
 
 pub fn handle_trace(opt: option::ScanOption) {
     let (msg_tx, msg_rx): (Sender<String>, Receiver<String>) = channel();
     let trace_opt: option::ScanOption = opt.clone();
-    let handle = thread::spawn(move||{
-        scan::run_traceroute(trace_opt, &msg_tx)
-    });
+    let handle = thread::spawn(move || scan::run_traceroute(trace_opt, &msg_tx));
     while let Ok(msg) = msg_rx.recv() {
         println!("{}", msg);
     }
@@ -125,25 +136,30 @@ pub fn handle_trace(opt: option::ScanOption) {
     output::show_trace_result(result.clone());
 
     if !opt.save_file_path.is_empty() {
-        output::save_json(serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")), opt.save_file_path.clone());
+        output::save_json(
+            serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")),
+            opt.save_file_path.clone(),
+        );
         println!("Probe result saved to: {}", opt.save_file_path);
     }
-
 }
 
 pub fn handle_domain_scan(opt: option::ScanOption) {
     let (msg_tx, msg_rx): (Sender<String>, Receiver<String>) = channel();
     let probe_opt: option::ScanOption = opt.clone();
-    let handle = thread::spawn(move||{
-        scan::run_domain_scan(probe_opt, &msg_tx)
-    });
+    let handle = thread::spawn(move || scan::run_domain_scan(probe_opt, &msg_tx));
     let mut pb = get_spinner();
     while let Ok(msg) = msg_rx.recv() {
         if msg.contains("START_") || msg.contains("END_") {
             match msg.as_str() {
-                define::MESSAGE_START_DOMAINSCAN => {pb.set_message("Scanning domains ...");},
-                define::MESSAGE_END_DOMAINSCAN => {pb.finish_with_message("Domain scan"); pb = get_spinner();},
-                _ => {},
+                define::MESSAGE_START_DOMAINSCAN => {
+                    pb.set_message("Scanning domains ...");
+                }
+                define::MESSAGE_END_DOMAINSCAN => {
+                    pb.finish_with_message("Domain scan");
+                    pb = get_spinner();
+                }
+                _ => {}
             }
         }
     }
@@ -152,8 +168,10 @@ pub fn handle_domain_scan(opt: option::ScanOption) {
     output::show_domainscan_result(result.clone());
 
     if !opt.save_file_path.is_empty() {
-        output::save_json(serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")), opt.save_file_path.clone());
+        output::save_json(
+            serde_json::to_string_pretty(&result).unwrap_or(String::from("Serialize Error")),
+            opt.save_file_path.clone(),
+        );
         println!("Probe result saved to: {}", opt.save_file_path);
     }
-
 }

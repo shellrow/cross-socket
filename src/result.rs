@@ -1,10 +1,10 @@
-use std::{time::Duration, vec};
-use std::net::IpAddr;
-use serde::{Serialize, Deserialize};
 use crate::option::Protocol;
+use serde::{Deserialize, Serialize};
+use std::net::IpAddr;
+use std::{time::Duration, vec};
 
 /// Exit status of probe
-#[derive(Clone, Debug ,Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ProbeStatus {
     /// Successfully completed
     Done,
@@ -24,8 +24,8 @@ impl ProbeStatus {
     } */
 }
 
-/// Node type 
-#[derive(Clone, Debug ,Serialize, Deserialize)]
+/// Node type
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum NodeType {
     /// Default gateway
     DefaultGateway,
@@ -46,7 +46,7 @@ impl NodeType {
 }
 
 /// Node structure
-#[derive(Clone, Debug ,Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Node {
     /// Sequence number
     pub seq: u8,
@@ -64,7 +64,7 @@ pub struct Node {
     pub rtt: Duration,
 }
 
-#[derive(Clone, Debug ,Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PortInfo {
     pub port_number: u16,
     pub port_status: String,
@@ -75,17 +75,17 @@ pub struct PortInfo {
 
 impl PortInfo {
     /* pub fn new() -> PortInfo {
-        PortInfo { 
-            port_number: 0, 
-            port_status: String::new(), 
-            service_name: String::new(), 
-            service_version: String::new(), 
-            remark: String::new(), 
+        PortInfo {
+            port_number: 0,
+            port_status: String::new(),
+            service_name: String::new(),
+            service_version: String::new(),
+            remark: String::new(),
         }
     } */
 }
 
-#[derive(Clone, Debug ,Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct HostInfo {
     pub ip_addr: String,
     pub host_name: String,
@@ -97,18 +97,18 @@ pub struct HostInfo {
 
 impl HostInfo {
     pub fn new() -> HostInfo {
-        HostInfo { 
-            ip_addr: String::new(), 
-            host_name: String::new(), 
-            mac_addr: String::new(), 
-            vendor_info: String::new(), 
-            os_name: String::new(), 
-            cpe: String::new() 
+        HostInfo {
+            ip_addr: String::new(),
+            host_name: String::new(),
+            mac_addr: String::new(),
+            vendor_info: String::new(),
+            os_name: String::new(),
+            cpe: String::new(),
         }
     }
 }
 
-#[derive(Clone, Debug ,Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PortScanResult {
     pub ports: Vec<PortInfo>,
     pub host: HostInfo,
@@ -120,18 +120,18 @@ pub struct PortScanResult {
 
 impl PortScanResult {
     pub fn new() -> PortScanResult {
-        PortScanResult { 
-            ports: vec![], 
-            host: HostInfo::new(), 
-            port_scan_time: Duration::from_millis(0), 
-            service_detection_time: Duration::from_millis(0), 
-            os_detection_time: Duration::from_millis(0), 
+        PortScanResult {
+            ports: vec![],
+            host: HostInfo::new(),
+            port_scan_time: Duration::from_millis(0),
+            service_detection_time: Duration::from_millis(0),
+            os_detection_time: Duration::from_millis(0),
             total_scan_time: Duration::from_millis(0),
         }
     }
 }
 
-#[derive(Clone, Debug ,Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct HostScanResult {
     pub hosts: Vec<HostInfo>,
     pub protocol: Protocol,
@@ -143,18 +143,18 @@ pub struct HostScanResult {
 
 impl HostScanResult {
     pub fn new() -> HostScanResult {
-        HostScanResult { 
-            hosts: vec![], 
+        HostScanResult {
+            hosts: vec![],
             protocol: Protocol::ICMPv4,
             port_number: 0,
-            host_scan_time: Duration::from_millis(0), 
-            lookup_time: Duration::from_millis(0), 
+            host_scan_time: Duration::from_millis(0),
+            lookup_time: Duration::from_millis(0),
             total_scan_time: Duration::from_millis(0),
         }
     }
 }
 
-#[derive(Clone, Debug ,Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PingResult {
     /// Sequence number
     pub seq: u8,
@@ -163,7 +163,7 @@ pub struct PingResult {
     /// Host name
     pub host_name: String,
     /// Port
-    pub port_number: Option<u16>, 
+    pub port_number: Option<u16>,
     /// Time To Live
     pub ttl: u8,
     /// Number of hops
@@ -176,7 +176,7 @@ pub struct PingResult {
     pub protocol: String,
 }
 
-#[derive(Clone, Debug ,Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PingStat {
     /// Results
     pub ping_results: Vec<PingResult>,
@@ -196,19 +196,19 @@ pub struct PingStat {
 
 impl PingStat {
     pub fn new() -> PingStat {
-        PingStat { 
-            ping_results: vec![], 
-            probe_time: 0, 
-            transmitted_count: 0, 
-            received_count: 0, 
-            min: 0, 
-            avg: 0, 
-            max: 0 
+        PingStat {
+            ping_results: vec![],
+            probe_time: 0,
+            transmitted_count: 0,
+            received_count: 0,
+            min: 0,
+            avg: 0,
+            max: 0,
         }
     }
 }
 
-#[derive(Clone, Debug ,Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TraceResult {
     /// Nodes to destination
     pub nodes: Vec<Node>,
@@ -221,7 +221,7 @@ pub struct TraceResult {
 impl TraceResult {
     pub fn new() -> TraceResult {
         TraceResult {
-            nodes:vec![],
+            nodes: vec![],
             status: ProbeStatus::Done,
             probe_time: 0,
         }
@@ -237,8 +237,8 @@ pub struct Domain {
 /// Result of domain scan  
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DomainScanResult {
-    /// HashMap of domain. 
-    /// 
+    /// HashMap of domain.
+    ///
     /// (Domain, IP Addresses)
     pub domains: Vec<Domain>,
     /// Time from start to end of scan.  
@@ -250,7 +250,7 @@ pub struct DomainScanResult {
 impl DomainScanResult {
     /* pub fn new() -> DomainScanResult {
         DomainScanResult {
-            domains: vec![], 
+            domains: vec![],
             scan_time: Duration::from_millis(0),
             scan_status: ProbeStatus::Done,
         }
