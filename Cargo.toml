@@ -30,6 +30,6 @@ pnet_packet = "0.31.0"
 pnet_datalink = "0.31.0"
 ipnet = "2.5.0"
 netscan = { version = "0.13.0", features = ["full"] }
-domainscan = "0.1.0"
+domainscan = "0.2.0"
 tracert = "0.4.1"
 tokio = "1.0"
