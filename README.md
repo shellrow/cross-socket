@@ -16,4 +16,6 @@ Cross-platform network mapper
 - Windows
 
 ## Install
-`cargo install nesmap`
+```
+cargo install nesmap
+```
