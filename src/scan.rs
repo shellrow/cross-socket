@@ -505,12 +505,8 @@ pub fn run_domain_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) -> Domain
             domain_scanner.add_word(d.to_string());
         }
     } else {
-        if opt.passive {
-            domain_scanner.set_passive(true);
-        } else {
-            for d in db::get_subdomain() {
-                domain_scanner.add_word(d);
-            }
+        for d in db::get_subdomain() {
+            domain_scanner.add_word(d);
         }
     }
     domain_scanner.set_timeout(opt.timeout);

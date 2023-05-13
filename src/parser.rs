@@ -220,9 +220,6 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
         let base_domain: &str = matches.value_of("domain").unwrap();
         opt.targets
             .push(TargetInfo::new_with_base_domain(base_domain.to_string()));
-        if matches.contains_id("passive") {
-            opt.passive = true;
-        }
     }
     // Flags
     if matches.contains_id("interface") {
