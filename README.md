@@ -1,11 +1,11 @@
 # nesmap 
-Easy and enhanced network mapper.
+Cross-platform network mapper
 
 ## Features
 - Port Scan
 - Host Scan
-- Service detection (Experimental)
-- OS detection (Experimental)
+- Service detection
+- OS detection
 - Ping
 - Traceroute
 - Subdomain scan
@@ -14,3 +14,6 @@ Easy and enhanced network mapper.
 - Linux
 - macOS
 - Windows
+
+## Install
+`cargo install nesmap`
