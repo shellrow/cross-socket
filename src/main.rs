@@ -15,6 +15,7 @@ mod result;
 mod scan;
 mod sys;
 mod validator;
+mod json_models;
 
 use chrono::{DateTime, Local};
 use clap::{App, AppSettings, Arg, ArgGroup, Command};
