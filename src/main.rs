@@ -227,6 +227,7 @@ fn get_app_settings<'a>() -> Command<'a> {
         )
         .arg(Arg::new("wellknown")
             .help("Use well-known ports")
+            .short('W')
             .long("wellknown")
         )
         .arg(Arg::new("save")
