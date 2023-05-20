@@ -32,6 +32,10 @@ pub fn show_options(opt: ScanOption) {
         TableCell::new_with_alignment("Timeout(ms)", 1, Alignment::Left),
         TableCell::new_with_alignment(opt.timeout.as_millis(), 1, Alignment::Left),
     ]));
+    table.add_row(Row::new(vec![
+        TableCell::new_with_alignment("WaitTime(ms)", 1, Alignment::Left),
+        TableCell::new_with_alignment(opt.wait_time.as_millis(), 1, Alignment::Left),
+    ]));
     match opt.command_type {
         CommandType::PortScan => {
             table.add_row(Row::new(vec![

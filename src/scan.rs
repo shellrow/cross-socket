@@ -536,6 +536,7 @@ pub fn run_domain_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) -> Domain
         });
     }
     let result: DomainScanResult = DomainScanResult {
+        base_domain: opt.targets[0].base_domain.clone(),
         domains: domains,
         scan_time: domain_scan_result.scan_time,
         scan_status: match domain_scan_result.scan_status {

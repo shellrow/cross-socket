@@ -15,13 +15,13 @@ pub enum ProbeStatus {
 }
 
 impl ProbeStatus {
-    /* pub fn name(&self) -> String {
+    pub fn name(&self) -> String {
         match *self {
             ProbeStatus::Done => String::from("Done"),
             ProbeStatus::Error => String::from("Error"),
             ProbeStatus::Timeout => String::from("Timeout"),
         }
-    } */
+    }
 }
 
 /// Node type
@@ -237,6 +237,7 @@ pub struct Domain {
 /// Result of domain scan  
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DomainScanResult {
+    pub base_domain: String,
     /// HashMap of domain.
     ///
     /// (Domain, IP Addresses)

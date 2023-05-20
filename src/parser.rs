@@ -224,6 +224,7 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
         let base_domain: &str = matches.value_of("domain").unwrap();
         opt.targets
             .push(TargetInfo::new_with_base_domain(base_domain.to_string()));
+        opt.timeout = Duration::from_millis(60000);
     }
     // Flags
     if matches.contains_id("interface") {
@@ -341,11 +342,6 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
         let v_list: String = matches.get_one::<String>("list").unwrap().to_string();
         opt.use_wordlist = true;
         opt.wordlist_path = v_list;
-    }
-    if matches.contains_id("config") {
-        let v_config: String = matches.get_one::<String>("config").unwrap().to_string();
-        opt.use_config = true;
-        opt.config_path = v_config;
     }
     if matches.contains_id("save") {
         let v_save: String = matches.get_one::<String>("save").unwrap().to_string();
