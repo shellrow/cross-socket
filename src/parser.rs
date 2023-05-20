@@ -342,11 +342,6 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
         opt.use_wordlist = true;
         opt.wordlist_path = v_list;
     }
-    if matches.contains_id("config") {
-        let v_config: String = matches.get_one::<String>("config").unwrap().to_string();
-        opt.use_config = true;
-        opt.config_path = v_config;
-    }
     if matches.contains_id("save") {
         let v_save: String = matches.get_one::<String>("save").unwrap().to_string();
         opt.save_file_path = v_save;
