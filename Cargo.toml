@@ -1,9 +1,9 @@
 [package]
 name = "nesmap"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = ["shellrow <shellrow@protonmail.com>"]
-description = "Network mapper for diagnosis and discovery"
+description = "Network mapper for discovery and management"
 repository = "https://github.com/shellrow/nesmap"
 readme = "README.md"
 keywords = ["network","security","scan","cli","cross-platform"]
