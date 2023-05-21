@@ -35,6 +35,9 @@ fn main() {
     match opt.command_type {
         option::CommandType::PortScan => match opt.port_scan_type {
             option::ScanType::TcpSynScan => {
+                if opt.async_scan && sys::get_os_type() == "windows" {
+                    exit_with_error_message("Async TCP SYN Scan is not supported on Windows");
+                }
                 if process::privileged() {
                     async_io::block_on(async {
                         handler::handle_port_scan(opt).await;
