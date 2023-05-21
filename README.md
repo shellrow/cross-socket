@@ -2,7 +2,7 @@
 [crates-url]: https://crates.io/crates/nesmap
 
 # nesmap [![Crates.io][crates-badge]][crates-url]
-Network mapper for diagnosis and discovery
+Network mapper for discovery and management
 
 ## Features
 - Port Scan
