@@ -54,7 +54,11 @@ pub async fn handle_port_scan(opt: option::ScanOption) {
     pb.finish_and_clear();
     let result: result::PortScanResult = handle.join().unwrap();
     let json_result: JsonPortScanResult = JsonPortScanResult::from_result(sys::get_probe_id(), result.clone());
-    output::show_portscan_result(result.clone());
+    if opt.json_output {
+        println!("{}",serde_json::to_string_pretty(&json_result).unwrap_or(String::from("Serialize Error")));
+    }else{
+        output::show_portscan_result(result.clone());
+    }
 
     if !opt.save_file_path.is_empty() {
         output::save_json(
@@ -98,7 +102,11 @@ pub async fn handle_host_scan(opt: option::ScanOption) {
     pb.finish_and_clear();
     let result: result::HostScanResult = handle.join().unwrap();
     let json_result: JsonHostScanResult = JsonHostScanResult::from_result(sys::get_probe_id(), result.clone());
-    output::show_hostscan_result(result.clone());
+    if opt.json_output {
+        println!("{}",serde_json::to_string_pretty(&json_result).unwrap_or(String::from("Serialize Error")));
+    }else{
+        output::show_hostscan_result(result.clone());
+    }
 
     if !opt.save_file_path.is_empty() {
         output::save_json(
@@ -118,7 +126,11 @@ pub fn handle_ping(opt: option::ScanOption) {
     }
     let result: PingStat = handle.join().unwrap();
     let json_result: JsonPingStat = JsonPingStat::from_result(sys::get_probe_id(), result.clone());
-    output::show_ping_result(result.clone());
+    if opt.json_output {
+        println!("{}",serde_json::to_string_pretty(&json_result).unwrap_or(String::from("Serialize Error")));
+    }else{
+        output::show_ping_result(result.clone());
+    }
 
     if !opt.save_file_path.is_empty() {
         output::save_json(
@@ -138,7 +150,11 @@ pub fn handle_trace(opt: option::ScanOption) {
     }
     let result: TraceResult = handle.join().unwrap();
     let json_result: JsonTracerouteStat = JsonTracerouteStat::from_result(sys::get_probe_id(), result.clone());
-    output::show_trace_result(result.clone());
+    if opt.json_output {
+        println!("{}",serde_json::to_string_pretty(&json_result).unwrap_or(String::from("Serialize Error")));
+    }else{
+        output::show_trace_result(result.clone());
+    }
 
     if !opt.save_file_path.is_empty() {
         output::save_json(
@@ -171,7 +187,11 @@ pub fn handle_domain_scan(opt: option::ScanOption) {
     pb.finish_and_clear();
     let result: result::DomainScanResult = handle.join().unwrap();
     let json_result: JsonDomainScanResult = JsonDomainScanResult::from_result(sys::get_probe_id(), result.clone());
-    output::show_domainscan_result(result.clone());
+    if opt.json_output {
+        println!("{}",serde_json::to_string_pretty(&json_result).unwrap_or(String::from("Serialize Error")));
+    }else{
+        output::show_domainscan_result(result.clone());
+    }
 
     if !opt.save_file_path.is_empty() {
         output::save_json(

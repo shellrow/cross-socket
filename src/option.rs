@@ -229,6 +229,7 @@ pub struct ScanOption {
     pub tcp_map: HashMap<u16, String>,
     pub oui_map: HashMap<String, String>,
     pub ttl_map: HashMap<u8, String>,
+    pub json_output: bool,
 }
 
 impl ScanOption {
@@ -264,6 +265,7 @@ impl ScanOption {
             tcp_map: HashMap::new(),
             oui_map: HashMap::new(),
             ttl_map: HashMap::new(),
+            json_output: false,
         }
     }
     /* pub fn default() -> ScanOption {
