@@ -1,17 +1,17 @@
 [package]
-name = "nesmap"
-version = "0.4.0"
+name = "numap"
+version = "0.1.0"
 edition = "2021"
 authors = ["shellrow <shellrow@protonmail.com>"]
 description = "Network mapper for discovery and management"
-repository = "https://github.com/shellrow/nesmap"
+repository = "https://github.com/shellrow/numap"
 readme = "README.md"
 keywords = ["network","security","scan","cli","cross-platform"]
 categories = ["network-programming"]
 license = "MIT"
 
 [[bin]]
-name = "nesmap"
+name = "numap"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

@@ -1,7 +1,7 @@
-[crates-badge]: https://img.shields.io/crates/v/nesmap.svg
-[crates-url]: https://crates.io/crates/nesmap
+[crates-badge]: https://img.shields.io/crates/v/numap.svg
+[crates-url]: https://crates.io/crates/numap
 
-# nesmap [![Crates.io][crates-badge]][crates-url]
+# numap [![Crates.io][crates-badge]][crates-url]
 Network mapper for discovery and management
 
 ## Features
@@ -20,11 +20,11 @@ Network mapper for discovery and management
 
 ## Install
 ```
-cargo install nesmap
+cargo install numap
 ```
 
 ## Privileges
-`nesmap` uses a raw socket which require elevated privileges.  Execute with administrator privileges.
+`numap` uses a raw socket which require elevated privileges.  Execute with administrator privileges.
 
 ## Note for Windows users
 For Traceroute, you may need to set up firewall rules that allow `ICMP Time-to-live Exceeded` and `ICMP Destination (Port) Unreachable` packets to be received.
