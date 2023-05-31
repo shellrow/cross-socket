@@ -12,7 +12,7 @@ use netscan::async_io::{HostScanner as AsyncHostScanner, PortScanner as AsyncPor
 use netscan::blocking::{HostScanner, PortScanner};
 use netscan::os::{Fingerprinter, ProbeResult, ProbeTarget, ProbeType};
 use netscan::service::{PortDatabase, ServiceDetector};
-use netscan::setting::Destination;
+use netscan::host::HostInfo as NsHostInfo;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::iter::Iterator;
@@ -31,8 +31,8 @@ pub fn run_port_scan(
         Ok(scanner) => scanner,
         Err(e) => panic!("Error creating scanner: {}", e),
     };
-    let dst: Destination = Destination::new(opt.targets[0].ip_addr, opt.targets[0].ports.clone());
-    port_scanner.add_destination(dst);
+    let dst: NsHostInfo = NsHostInfo::new_with_ip_addr(opt.targets[0].ip_addr).with_ports(opt.targets[0].ports.clone()).with_host_name(opt.targets[0].host_name.clone());
+    port_scanner.add_target(dst);
     port_scanner.set_scan_type(opt.port_scan_type.to_netscan_type());
     port_scanner.set_timeout(opt.timeout);
     port_scanner.set_wait_time(opt.wait_time);
@@ -57,8 +57,8 @@ pub async fn run_async_port_scan(
         Ok(scanner) => scanner,
         Err(e) => panic!("Error creating scanner: {}", e),
     };
-    let dst: Destination = Destination::new(opt.targets[0].ip_addr, opt.targets[0].ports.clone());
-    port_scanner.add_destination(dst);
+    let dst: NsHostInfo = NsHostInfo::new_with_ip_addr(opt.targets[0].ip_addr).with_ports(opt.targets[0].ports.clone()).with_host_name(opt.targets[0].host_name.clone());
+    port_scanner.add_target(dst);
     port_scanner.set_scan_type(opt.port_scan_type.to_netscan_type());
     port_scanner.set_timeout(opt.timeout);
     port_scanner.set_wait_time(opt.wait_time);
@@ -84,8 +84,8 @@ pub fn run_host_scan(
         Err(e) => panic!("Error creating scanner: {}", e),
     };
     for target in opt.targets {
-        let dst: Destination = Destination::new(target.ip_addr, target.ports);
-        host_scanner.add_destination(dst);
+        let dst: NsHostInfo = NsHostInfo::new_with_ip_addr(target.ip_addr).with_ports(target.ports).with_host_name(target.host_name);
+        host_scanner.add_target(dst);
     }
     host_scanner.set_scan_type(opt.host_scan_type.to_netscan_type());
     host_scanner.set_timeout(opt.timeout);
@@ -112,8 +112,8 @@ pub async fn run_async_host_scan(
         Err(e) => panic!("Error creating scanner: {}", e),
     };
     for target in opt.targets {
-        let dst: Destination = Destination::new(target.ip_addr, target.ports);
-        host_scanner.add_destination(dst);
+        let dst: NsHostInfo = NsHostInfo::new_with_ip_addr(target.ip_addr).with_ports(target.ports);
+        host_scanner.add_target(dst);
     }
     host_scanner.set_scan_type(opt.host_scan_type.to_netscan_type());
     host_scanner.set_timeout(opt.timeout);
@@ -140,6 +140,7 @@ pub fn run_service_detection(
     for target in targets {
         let mut service_detector = ServiceDetector::new();
         service_detector.set_dst_ip(target.ip_addr);
+        service_detector.set_dst_name(target.host_name);
         service_detector.set_ports(target.ports);
         let service_map: HashMap<u16, String> = service_detector.detect(port_db.clone());
         map.insert(target.ip_addr, service_map);
@@ -194,14 +195,15 @@ pub async fn run_service_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) ->
     // Service Detection
     let mut sd_result: HashMap<IpAddr, HashMap<u16, String>> = HashMap::new();
     let mut sd_time: Duration = Duration::from_millis(0);
-    if opt.service_detection && ps_result.result_map.keys().len() > 0 {
+    if opt.service_detection && ps_result.results.len() > 0 {
         match msg_tx.send(String::from(define::MESSAGE_START_SERVICEDETECTION)) {
             Ok(_) => {}
             Err(_) => {}
         }
         let mut sd_targets: Vec<TargetInfo> = vec![];
-        let ip = ps_result.result_map.keys().last().unwrap().clone();
+        let ip = ps_result.results.first().unwrap().ip_addr;
         let mut target: TargetInfo = TargetInfo::new_with_ip_addr(ip);
+        target.host_name = ps_result.results.first().unwrap().host_name.clone();
         target.ports = ps_result.get_open_ports(ip);
         sd_targets.push(target);
         let port_db: PortDatabase = PortDatabase {
@@ -219,12 +221,12 @@ pub async fn run_service_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) ->
     // OS Fingerprinting
     let mut od_result: Vec<ProbeResult> = vec![];
     let mut od_time: Duration = Duration::from_millis(0);
-    if opt.os_detection && ps_result.result_map.keys().len() > 0 {
+    if opt.os_detection && ps_result.results.len() > 0 {
         match msg_tx.send(String::from(define::MESSAGE_START_OSDETECTION)) {
             Ok(_) => {}
             Err(_) => {}
         }
-        let ip = ps_result.result_map.keys().last().unwrap().clone();
+        let ip = ps_result.results.first().unwrap().ip_addr;
         let mut od_targets: Vec<TargetInfo> = vec![];
         let mut target: TargetInfo = TargetInfo::new_with_ip_addr(ip);
         target.ports = ps_result.get_open_ports(ip);
@@ -238,9 +240,9 @@ pub async fn run_service_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) ->
         }
     }
     // return crate::result::PortScanResult
-    if ps_result.result_map.keys().len() > 0 {
-        let ip = ps_result.result_map.keys().last().unwrap().clone();
-        let mut ports = ps_result.result_map.values().last().unwrap().clone();
+    if ps_result.results.len() > 0 {
+        let ip = ps_result.results.first().unwrap().ip_addr;
+        let mut ports = ps_result.results.first().unwrap().ports.clone();
         // Sort by port number
         ports.sort_by(|a, b| a.port.cmp(&b.port));
         let tcp_map = opt.tcp_map;
@@ -271,7 +273,7 @@ pub async fn run_service_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) ->
         };
         let host_info = crate::result::HostInfo {
             ip_addr: ip.to_string(),
-            host_name: dns_lookup::lookup_addr(&ip).unwrap_or(String::new()),
+            host_name: if let Some(target) = opt.targets.first() { target.host_name.clone() } else { dns_lookup::lookup_addr(&ip).unwrap_or(String::new()) },
             mac_addr: String::new(),
             vendor_info: String::new(),
             os_name: os_fingetprint.os_name,
@@ -324,7 +326,7 @@ pub async fn run_node_scan(opt: ScanOption, msg_tx: &mpsc::Sender<String>) -> Ho
     for host in hs_result.hosts {
         let host_info = HostInfo {
             ip_addr: host.ip_addr.to_string(),
-            host_name: dns_lookup::lookup_addr(&host.ip_addr).unwrap_or(String::new()),
+            host_name: if host.host_name.is_empty() { dns_lookup::lookup_addr(&host.ip_addr).unwrap_or(String::new()) } else { host.host_name },
             mac_addr: mac_map
                 .get(&host.ip_addr)
                 .unwrap_or(&String::new())
