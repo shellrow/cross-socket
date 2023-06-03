@@ -123,7 +123,7 @@ fn get_app_settings<'a>() -> Command<'a> {
             .validator(validator::validate_host_opt)
         )
         .arg(Arg::new("domain")
-            .help("Domain scan. \nExamples: \n--domain example.com")
+            .help("Scan sub-domain . \nExamples: \n--domain example.com")
             .short('d')
             .long("domain")
             .takes_value(true)
