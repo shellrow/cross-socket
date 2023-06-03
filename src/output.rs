@@ -11,7 +11,8 @@ pub fn show_options(opt: ScanOption) {
     table.max_column_width = 60;
     table.separate_rows = false;
     table.style = TableStyle::blank();
-    println!("Options:");
+    println!("[Options]");
+    println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Probe Type", 1, Alignment::Left),
         TableCell::new_with_alignment(opt.command_type.name(), 1, Alignment::Left),
@@ -59,7 +60,8 @@ pub fn show_options(opt: ScanOption) {
             table.max_column_width = 60;
             table.separate_rows = false;
             table.style = TableStyle::blank();
-            println!("Target:");
+            println!("[Target]");
+            println!("────────────────────────────────────────");
             for target in opt.targets {
                 let hostname: String = if target.host_name.is_empty() {
                     network::lookup_ip_addr(target.ip_addr.to_string())
@@ -125,7 +127,8 @@ pub fn show_options(opt: ScanOption) {
             table.max_column_width = 60;
             table.separate_rows = false;
             table.style = TableStyle::blank();
-            println!("Target:");
+            println!("[Target]");
+            println!("────────────────────────────────────────");
             table.add_row(Row::new(vec![
                 TableCell::new_with_alignment("Host", 1, Alignment::Left),
                 TableCell::new_with_alignment(
@@ -154,7 +157,8 @@ pub fn show_options(opt: ScanOption) {
             table.max_column_width = 60;
             table.separate_rows = false;
             table.style = TableStyle::blank();
-            println!("Target:");
+            println!("[Target]");
+            println!("────────────────────────────────────────");
             for target in opt.targets {
                 table.add_row(Row::new(vec![
                     TableCell::new_with_alignment("Host", 1, Alignment::Left),
@@ -173,7 +177,8 @@ pub fn show_options(opt: ScanOption) {
             table.max_column_width = 60;
             table.separate_rows = false;
             table.style = TableStyle::blank();
-            println!("Target:");
+            println!("[Target]");
+            println!("────────────────────────────────────────");
             for target in opt.targets {
                 table.add_row(Row::new(vec![
                     TableCell::new_with_alignment("Host", 1, Alignment::Left),
@@ -194,7 +199,7 @@ pub fn show_options(opt: ScanOption) {
             table.max_column_width = 60;
             table.separate_rows = false;
             table.style = TableStyle::blank();
-            println!("Target:");
+            println!("[Target]");
             for target in opt.targets {
                 table.add_row(Row::new(vec![
                     TableCell::new_with_alignment("Domain", 1, Alignment::Left),
@@ -204,6 +209,8 @@ pub fn show_options(opt: ScanOption) {
             println!("{}", table.render());
         }
     }
+    println!("[Progress]");
+    println!("────────────────────────────────────────");
 }
 
 pub fn show_portscan_result(result: PortScanResult) {
@@ -212,9 +219,10 @@ pub fn show_portscan_result(result: PortScanResult) {
     table.separate_rows = false;
     table.style = TableStyle::blank();
     println!();
-    println!("Scan Result:");
-    println!();
-    println!("Host Info:");
+    println!("[Scan Result]");
+    println!("────────────────────────────────────────");
+    println!("[Host Info]");
+    println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
         TableCell::new_with_alignment(result.host.ip_addr, 1, Alignment::Left),
@@ -244,7 +252,8 @@ pub fn show_portscan_result(result: PortScanResult) {
     table.max_column_width = 60;
     table.separate_rows = false;
     table.style = TableStyle::blank();
-    println!("Port Info:");
+    println!("[Port Info]");
+    println!("────────────────────────────────────────");
     let port_count: usize = result.ports.len();
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Number", 1, Alignment::Left),
@@ -276,25 +285,22 @@ pub fn show_portscan_result(result: PortScanResult) {
     table.max_column_width = 60;
     table.separate_rows = false;
     table.style = TableStyle::blank();
-    println!("Performance:");
+    println!("[Performance]");
+    println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Port Scan Time", 1, Alignment::Left),
-        TableCell::new_with_alignment("Service Detection Time", 1, Alignment::Left),
-        TableCell::new_with_alignment("OS Detection Time", 1, Alignment::Left),
-        TableCell::new_with_alignment("Total Scan Time", 1, Alignment::Left),
+        TableCell::new_with_alignment(format!("{:?}", result.port_scan_time), 1, Alignment::Left),
     ]));
     table.add_row(Row::new(vec![
-        TableCell::new_with_alignment(format!("{:?}", result.port_scan_time), 1, Alignment::Left),
-        TableCell::new_with_alignment(
-            format!("{:?}", result.service_detection_time),
-            1,
-            Alignment::Left,
-        ),
-        TableCell::new_with_alignment(
-            format!("{:?}", result.os_detection_time),
-            1,
-            Alignment::Left,
-        ),
+        TableCell::new_with_alignment("Service Detection Time", 1, Alignment::Left),
+        TableCell::new_with_alignment(format!("{:?}", result.service_detection_time), 1, Alignment::Left),
+    ]));
+    table.add_row(Row::new(vec![
+        TableCell::new_with_alignment("OS Detection Time", 1, Alignment::Left),
+        TableCell::new_with_alignment(format!("{:?}", result.os_detection_time), 1, Alignment::Left),
+    ]));
+    table.add_row(Row::new(vec![
+        TableCell::new_with_alignment("Total Scan Time", 1, Alignment::Left),
         TableCell::new_with_alignment(format!("{:?}", result.total_scan_time), 1, Alignment::Left),
     ]));
     println!("{}", table.render());
@@ -306,7 +312,8 @@ pub fn show_hostscan_result(result: HostScanResult) {
     table.separate_rows = false;
     table.style = TableStyle::blank();
     println!();
-    println!("Scan Result:");
+    println!("[Scan Result]");
+    println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
         TableCell::new_with_alignment("Host Name", 1, Alignment::Left),
@@ -328,15 +335,18 @@ pub fn show_hostscan_result(result: HostScanResult) {
     table.max_column_width = 60;
     table.separate_rows = false;
     table.style = TableStyle::blank();
-    println!("Performance:");
+    println!("[Performance]");
+    println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Host Scan Time", 1, Alignment::Left),
-        TableCell::new_with_alignment("Lookup Time", 1, Alignment::Left),
-        TableCell::new_with_alignment("Total Scan Time", 1, Alignment::Left),
+        TableCell::new_with_alignment(format!("{:?}", result.host_scan_time), 1, Alignment::Left),
     ]));
     table.add_row(Row::new(vec![
-        TableCell::new_with_alignment(format!("{:?}", result.host_scan_time), 1, Alignment::Left),
+        TableCell::new_with_alignment("Lookup Time", 1, Alignment::Left),
         TableCell::new_with_alignment(format!("{:?}", result.lookup_time), 1, Alignment::Left),
+    ]));
+    table.add_row(Row::new(vec![
+        TableCell::new_with_alignment("Total Scan Time", 1, Alignment::Left),
         TableCell::new_with_alignment(format!("{:?}", result.total_scan_time), 1, Alignment::Left),
     ]));
     println!("{}", table.render());
@@ -348,7 +358,8 @@ pub fn show_ping_result(result: PingStat) {
     table.separate_rows = false;
     table.style = TableStyle::blank();
     println!();
-    println!("Ping Result:");
+    println!("[Ping Result]");
+    println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("SEQ", 1, Alignment::Left),
         TableCell::new_with_alignment("Protocol", 1, Alignment::Left),
@@ -377,25 +388,30 @@ pub fn show_ping_result(result: PingStat) {
     table.max_column_width = 60;
     table.separate_rows = false;
     table.style = TableStyle::blank();
-    println!("Ping Stat:");
+    println!("[Ping Stat]");
+    println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Probe Time", 1, Alignment::Left),
-        TableCell::new_with_alignment("Transmitted", 1, Alignment::Left),
-        TableCell::new_with_alignment("Received", 1, Alignment::Left),
-        TableCell::new_with_alignment("Min", 1, Alignment::Left),
-        TableCell::new_with_alignment("Avg", 1, Alignment::Left),
-        TableCell::new_with_alignment("Max", 1, Alignment::Left),
+        TableCell::new_with_alignment(format!("{:?}ms", result.probe_time as f64 / 1000.0), 1, Alignment::Left),
     ]));
     table.add_row(Row::new(vec![
-        TableCell::new_with_alignment(
-            format!("{:?}ms", result.probe_time as f64 / 1000.0),
-            1,
-            Alignment::Left,
-        ),
+        TableCell::new_with_alignment("Transmitted", 1, Alignment::Left),
         TableCell::new_with_alignment(result.transmitted_count, 1, Alignment::Left),
+    ]));
+    table.add_row(Row::new(vec![
+        TableCell::new_with_alignment("Received", 1, Alignment::Left),
         TableCell::new_with_alignment(result.received_count, 1, Alignment::Left),
+    ]));
+    table.add_row(Row::new(vec![
+        TableCell::new_with_alignment("Min", 1, Alignment::Left),
         TableCell::new_with_alignment(format!("{:?}ms", (result.min as f64 / 1000.0) as f64), 1, Alignment::Left),
+    ]));
+    table.add_row(Row::new(vec![
+        TableCell::new_with_alignment("Avg", 1, Alignment::Left),
         TableCell::new_with_alignment(format!("{:?}ms", (result.avg as f64 / 1000.0) as f64), 1, Alignment::Left),
+    ]));
+    table.add_row(Row::new(vec![
+        TableCell::new_with_alignment("Max", 1, Alignment::Left),
         TableCell::new_with_alignment(format!("{:?}ms", (result.max as f64 / 1000.0) as f64), 1, Alignment::Left),
     ]));
     println!("{}", table.render());
@@ -407,7 +423,8 @@ pub fn show_trace_result(result: TraceResult) {
     table.separate_rows = false;
     table.style = TableStyle::blank();
     println!();
-    println!("Trace Result:");
+    println!("[Trace Result]");
+    println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("SEQ", 1, Alignment::Left),
         TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
@@ -437,6 +454,8 @@ pub fn show_trace_result(result: TraceResult) {
         ]));
     }
     println!("{}", table.render());
+    println!("[Performance]");
+    println!("────────────────────────────────────────");
     println!("Probe Time: {:?}ms", (result.probe_time as f64 / 1000.0) as f64);
     println!();
 }
@@ -447,7 +466,8 @@ pub fn show_domainscan_result(result: DomainScanResult) {
     table.separate_rows = false;
     table.style = TableStyle::blank();
     println!();
-    println!("Scan Result:");
+    println!("[Scan Result]");
+    println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Domain Name", 1, Alignment::Left),
         TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
@@ -461,6 +481,8 @@ pub fn show_domainscan_result(result: DomainScanResult) {
         }
     }
     println!("{}", table.render());
+    println!("[Performance]");
+    println!("────────────────────────────────────────");
     println!("Scan Time: {:?}", result.scan_time);
     println!();
 }
