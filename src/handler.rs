@@ -1,20 +1,8 @@
-use super::output;
 use crate::json_models::{JsonPortScanResult, JsonHostScanResult, JsonPingStat, JsonTracerouteStat, JsonDomainScanResult};
 use crate::result::{PingStat, TraceResult};
-use crate::{db, define, option, result, scan, sys};
-use indicatif::{ProgressBar, ProgressStyle};
+use crate::{db, define, option, result, scan, sys, output};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-
-fn get_spinner() -> ProgressBar {
-    let pb = ProgressBar::new_spinner();
-    pb.enable_steady_tick(120);
-    let ps: ProgressStyle = ProgressStyle::default_spinner()
-        .template("{spinner:.blue} {msg}")
-        .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "✓"]);
-    pb.set_style(ps);
-    pb
-}
 
 pub async fn handle_port_scan(opt: option::ScanOption) {
     let probe_opt: option::ScanOption = opt.clone();
@@ -22,7 +10,7 @@ pub async fn handle_port_scan(opt: option::ScanOption) {
     let handle = thread::spawn(move || {
         async_io::block_on(async { scan::run_service_scan(probe_opt, &msg_tx).await })
     });
-    let mut pb = get_spinner();
+    let mut pb = output::get_spinner();
     while let Ok(msg) = msg_rx.recv() {
         if msg.contains("START_") || msg.contains("END_") {
             match msg.as_str() {
@@ -31,21 +19,21 @@ pub async fn handle_port_scan(opt: option::ScanOption) {
                 }
                 define::MESSAGE_END_PORTSCAN => {
                     pb.finish_with_message("Port scan");
-                    pb = get_spinner();
+                    pb = output::get_spinner();
                 }
                 define::MESSAGE_START_SERVICEDETECTION => {
                     pb.set_message("Detecting services ...");
                 }
                 define::MESSAGE_END_SERVICEDETECTION => {
                     pb.finish_with_message("Service detection");
-                    pb = get_spinner();
+                    pb = output::get_spinner();
                 }
                 define::MESSAGE_START_OSDETECTION => {
                     pb.set_message("Detecting OS ...");
                 }
                 define::MESSAGE_END_OSDETECTION => {
                     pb.finish_with_message("OS detection");
-                    pb = get_spinner();
+                    pb = output::get_spinner();
                 }
                 _ => {}
             }
@@ -77,7 +65,7 @@ pub async fn handle_host_scan(opt: option::ScanOption) {
     let handle = thread::spawn(move || {
         async_io::block_on(async { scan::run_node_scan(probe_opt, &msg_tx).await })
     });
-    let mut pb = get_spinner();
+    let mut pb = output::get_spinner();
     while let Ok(msg) = msg_rx.recv() {
         if msg.contains("START_") || msg.contains("END_") {
             match msg.as_str() {
@@ -86,14 +74,14 @@ pub async fn handle_host_scan(opt: option::ScanOption) {
                 }
                 define::MESSAGE_END_HOSTSCAN => {
                     pb.finish_with_message("Host scan");
-                    pb = get_spinner();
+                    pb = output::get_spinner();
                 }
                 define::MESSAGE_START_LOOKUP => {
                     pb.set_message("Lookup ...");
                 }
                 define::MESSAGE_END_LOOKUP => {
                     pb.finish_with_message("Lookup");
-                    pb = get_spinner();
+                    pb = output::get_spinner();
                 }
                 _ => {}
             }
@@ -169,7 +157,7 @@ pub fn handle_domain_scan(opt: option::ScanOption) {
     let (msg_tx, msg_rx): (Sender<String>, Receiver<String>) = channel();
     let probe_opt: option::ScanOption = opt.clone();
     let handle = thread::spawn(move || scan::run_domain_scan(probe_opt, &msg_tx));
-    let mut pb = get_spinner();
+    let mut pb = output::get_spinner();
     while let Ok(msg) = msg_rx.recv() {
         if msg.contains("START_") || msg.contains("END_") {
             match msg.as_str() {
@@ -178,7 +166,7 @@ pub fn handle_domain_scan(opt: option::ScanOption) {
                 }
                 define::MESSAGE_END_DOMAINSCAN => {
                     pb.finish_with_message("Domain scan");
-                    pb = get_spinner();
+                    pb = output::get_spinner();
                 }
                 _ => {}
             }

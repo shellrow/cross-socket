@@ -1,10 +1,20 @@
-use crate::network;
 use crate::option::{CommandType, ScanOption};
 use crate::result::{DomainScanResult, HostScanResult, PingStat, PortScanResult, TraceResult};
 use std::fs;
 use term_table::row::Row;
 use term_table::table_cell::{Alignment, TableCell};
 use term_table::{Table, TableStyle};
+use indicatif::{ProgressBar, ProgressStyle};
+
+pub fn get_spinner() -> ProgressBar {
+    let pb = ProgressBar::new_spinner();
+    pb.enable_steady_tick(120);
+    let ps: ProgressStyle = ProgressStyle::default_spinner()
+        .template("{spinner:.blue} {msg}")
+        .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "✓"]);
+    pb.set_style(ps);
+    pb
+}
 
 pub fn show_options(opt: ScanOption) {
     let mut table = Table::new();
@@ -63,12 +73,7 @@ pub fn show_options(opt: ScanOption) {
             println!("[Target]");
             println!("────────────────────────────────────────");
             for target in opt.targets {
-                let hostname: String = if target.host_name.is_empty() {
-                    network::lookup_ip_addr(target.ip_addr.to_string())
-                } else {
-                    target.host_name
-                };
-                if target.ip_addr.to_string() == hostname {
+                if target.ip_addr.to_string() == target.host_name || target.host_name.is_empty() {
                     table.add_row(Row::new(vec![
                         TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
                         TableCell::new_with_alignment(target.ip_addr, 1, Alignment::Left),
@@ -80,7 +85,7 @@ pub fn show_options(opt: ScanOption) {
                     ]));
                     table.add_row(Row::new(vec![
                         TableCell::new_with_alignment("Host Name", 1, Alignment::Left),
-                        TableCell::new_with_alignment(hostname, 1, Alignment::Left),
+                        TableCell::new_with_alignment(target.host_name, 1, Alignment::Left),
                     ]));
                 }
                 if target.ports.len() > 10 {
@@ -160,19 +165,14 @@ pub fn show_options(opt: ScanOption) {
             println!("[Target]");
             println!("────────────────────────────────────────");
             for target in opt.targets {
-                let hostname: String = if target.host_name.is_empty() {
-                    network::lookup_ip_addr(target.ip_addr.to_string())
-                } else {
-                    target.host_name
-                };
                 table.add_row(Row::new(vec![
                     TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
                     TableCell::new_with_alignment(target.ip_addr, 1, Alignment::Left),
                 ]));
-                if !hostname.is_empty() {
+                if !target.host_name.is_empty() {
                     table.add_row(Row::new(vec![
                         TableCell::new_with_alignment("Host Name", 1, Alignment::Left),
-                        TableCell::new_with_alignment(hostname, 1, Alignment::Left),
+                        TableCell::new_with_alignment(target.host_name, 1, Alignment::Left),
                     ]));
                 }
             }
@@ -191,19 +191,14 @@ pub fn show_options(opt: ScanOption) {
             println!("[Target]");
             println!("────────────────────────────────────────");
             for target in opt.targets {
-                let hostname: String = if target.host_name.is_empty() {
-                    network::lookup_ip_addr(target.ip_addr.to_string())
-                } else {
-                    target.host_name
-                };
                 table.add_row(Row::new(vec![
                     TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
                     TableCell::new_with_alignment(target.ip_addr, 1, Alignment::Left),
                 ]));
-                if !hostname.is_empty() {
+                if !target.host_name.is_empty() {
                     table.add_row(Row::new(vec![
                         TableCell::new_with_alignment("Host Name", 1, Alignment::Left),
-                        TableCell::new_with_alignment(hostname, 1, Alignment::Left),
+                        TableCell::new_with_alignment(target.host_name, 1, Alignment::Left),
                     ]));
                 }
             }
