@@ -79,7 +79,7 @@ pub fn show_options(opt: ScanOption) {
                         TableCell::new_with_alignment(target.ip_addr, 1, Alignment::Left),
                     ]));
                     table.add_row(Row::new(vec![
-                        TableCell::new_with_alignment("HostName", 1, Alignment::Left),
+                        TableCell::new_with_alignment("Host Name", 1, Alignment::Left),
                         TableCell::new_with_alignment(hostname, 1, Alignment::Left),
                     ]));
                 }
@@ -160,10 +160,21 @@ pub fn show_options(opt: ScanOption) {
             println!("[Target]");
             println!("────────────────────────────────────────");
             for target in opt.targets {
+                let hostname: String = if target.host_name.is_empty() {
+                    network::lookup_ip_addr(target.ip_addr.to_string())
+                } else {
+                    target.host_name
+                };
                 table.add_row(Row::new(vec![
-                    TableCell::new_with_alignment("Host", 1, Alignment::Left),
+                    TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
                     TableCell::new_with_alignment(target.ip_addr, 1, Alignment::Left),
                 ]));
+                if !hostname.is_empty() {
+                    table.add_row(Row::new(vec![
+                        TableCell::new_with_alignment("Host Name", 1, Alignment::Left),
+                        TableCell::new_with_alignment(hostname, 1, Alignment::Left),
+                    ]));
+                }
             }
             println!("{}", table.render());
         }
@@ -180,10 +191,21 @@ pub fn show_options(opt: ScanOption) {
             println!("[Target]");
             println!("────────────────────────────────────────");
             for target in opt.targets {
+                let hostname: String = if target.host_name.is_empty() {
+                    network::lookup_ip_addr(target.ip_addr.to_string())
+                } else {
+                    target.host_name
+                };
                 table.add_row(Row::new(vec![
-                    TableCell::new_with_alignment("Host", 1, Alignment::Left),
+                    TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
                     TableCell::new_with_alignment(target.ip_addr, 1, Alignment::Left),
                 ]));
+                if !hostname.is_empty() {
+                    table.add_row(Row::new(vec![
+                        TableCell::new_with_alignment("Host Name", 1, Alignment::Left),
+                        TableCell::new_with_alignment(hostname, 1, Alignment::Left),
+                    ]));
+                }
             }
             println!("{}", table.render());
         }
@@ -219,8 +241,6 @@ pub fn show_portscan_result(result: PortScanResult) {
     table.separate_rows = false;
     table.style = TableStyle::blank();
     println!();
-    println!("[Scan Result]");
-    println!("────────────────────────────────────────");
     println!("[Host Info]");
     println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
@@ -231,14 +251,18 @@ pub fn show_portscan_result(result: PortScanResult) {
         TableCell::new_with_alignment("Host Name", 1, Alignment::Left),
         TableCell::new_with_alignment(result.host.host_name, 1, Alignment::Left),
     ]));
-    table.add_row(Row::new(vec![
-        TableCell::new_with_alignment("MAC Address", 1, Alignment::Left),
-        TableCell::new_with_alignment(result.host.mac_addr, 1, Alignment::Left),
-    ]));
-    table.add_row(Row::new(vec![
-        TableCell::new_with_alignment("Vendor Info", 1, Alignment::Left),
-        TableCell::new_with_alignment(result.host.vendor_info, 1, Alignment::Left),
-    ]));
+    if !result.host.mac_addr.is_empty() {
+        table.add_row(Row::new(vec![
+            TableCell::new_with_alignment("MAC Address", 1, Alignment::Left),
+            TableCell::new_with_alignment(result.host.mac_addr, 1, Alignment::Left),
+        ]));
+    }
+    if !result.host.vendor_info.is_empty() {
+        table.add_row(Row::new(vec![
+            TableCell::new_with_alignment("Vendor Info", 1, Alignment::Left),
+            TableCell::new_with_alignment(result.host.vendor_info, 1, Alignment::Left),
+        ]));
+    }
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("OS Name", 1, Alignment::Left),
         TableCell::new_with_alignment(result.host.os_name, 1, Alignment::Left),
@@ -312,7 +336,7 @@ pub fn show_hostscan_result(result: HostScanResult) {
     table.separate_rows = false;
     table.style = TableStyle::blank();
     println!();
-    println!("[Scan Result]");
+    println!("[Host Scan Result]");
     println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
