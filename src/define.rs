@@ -1,5 +1,5 @@
 // APP information
-pub const CRATE_UPDATE_DATE: &str = "2023-05-23";
+pub const CRATE_UPDATE_DATE: &str = "2023-06-04";
 pub const CRATE_REPOSITORY: &str = "https://github.com/shellrow/numap";
 
 // Setting
