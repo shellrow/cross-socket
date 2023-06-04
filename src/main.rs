@@ -29,8 +29,13 @@ fn main() {
     }
     let app = get_app_settings();
     let matches = app.get_matches();
-    let opt: option::ScanOption = parser::parse_args(matches);
     show_banner_with_starttime();
+    
+    let pb = output::get_spinner();
+    pb.set_message("Initializing ...");
+    let opt: option::ScanOption = parser::parse_args(matches);
+    pb.finish_and_clear();
+
     output::show_options(opt.clone());
     match opt.command_type {
         option::CommandType::PortScan => match opt.port_scan_type {
@@ -123,7 +128,7 @@ fn get_app_settings<'a>() -> Command<'a> {
             .validator(validator::validate_host_opt)
         )
         .arg(Arg::new("domain")
-            .help("Domain scan. \nExamples: \n--domain example.com")
+            .help("Scan sub-domain . \nExamples: \n--domain example.com")
             .short('d')
             .long("domain")
             .takes_value(true)

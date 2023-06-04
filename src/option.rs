@@ -154,6 +154,10 @@ impl TargetInfo {
             base_domain: String::new(),
         }
     }
+    pub fn with_host_name(&mut self, host_name: String) -> TargetInfo {
+        self.host_name = host_name;
+        self.clone()
+    }
     pub fn new_with_base_domain(base_domain: String) -> TargetInfo {
         TargetInfo {
             ip_addr: IpAddr::V4(Ipv4Addr::LOCALHOST),

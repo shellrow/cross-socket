@@ -54,18 +54,16 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
         let mut target_info: TargetInfo = TargetInfo::new();
         if validator::is_ipaddr(host.clone()) {
             target_info.ip_addr = host.parse::<IpAddr>().unwrap();
+            target_info.host_name = network::lookup_ip_addr(host);
         } else {
-            match dns_lookup::lookup_host(&host) {
-                Ok(addrs) => {
-                    for addr in addrs {
-                        if addr.is_ipv4() {
-                            target_info.ip_addr = addr;
-                            target_info.host_name = host.clone();
-                            break;
-                        }
+            match network::lookup_host_name(host.clone()) {
+                Some(ip) => {
+                    if ip.is_ipv4() {
+                        target_info.ip_addr = ip;
+                        target_info.host_name = host;
                     }
                 }
-                Err(_) => {}
+                None => {}
             }
         }
         if socketaddr_vec.len() > 1 {
@@ -176,7 +174,7 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
         let target: &str = matches.value_of("ping").unwrap();
         match target.parse::<IpAddr>() {
             Ok(ip) => {
-                opt.targets.push(TargetInfo::new_with_ip_addr(ip));
+                opt.targets.push(TargetInfo::new_with_ip_addr(ip).with_host_name(network::lookup_ip_addr(ip.to_string())));
             }
             Err(_) => match SocketAddr::from_str(&target) {
                 Ok(socket_addr) => {
@@ -185,16 +183,13 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
                         socket_addr.port(),
                     ));
                 }
-                Err(_) => match dns_lookup::lookup_host(target) {
-                    Ok(ips) => {
-                        for ip in ips {
-                            if ip.is_ipv4() {
-                                opt.targets.push(TargetInfo::new_with_ip_addr(ip));
-                                break;
-                            }
+                Err(_) => match network::lookup_host_name(target.to_string()) {
+                    Some(ip) => {
+                        if ip.is_ipv4() {
+                            opt.targets.push(TargetInfo::new_with_ip_addr(ip).with_host_name(target.to_string()));
                         }
                     }
-                    Err(_) => {}
+                    None => {}
                 },
             },
         }
@@ -204,18 +199,15 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
         let target: &str = matches.value_of("trace").unwrap();
         match target.parse::<IpAddr>() {
             Ok(ip) => {
-                opt.targets.push(TargetInfo::new_with_ip_addr(ip));
+                opt.targets.push(TargetInfo::new_with_ip_addr(ip).with_host_name(network::lookup_ip_addr(ip.to_string())));
             }
-            Err(_) => match dns_lookup::lookup_host(target) {
-                Ok(ips) => {
-                    for ip in ips {
-                        if ip.is_ipv4() {
-                            opt.targets.push(TargetInfo::new_with_ip_addr(ip));
-                            break;
-                        }
+            Err(_) => match network::lookup_host_name(target.to_string()) {
+                Some(ip) => {
+                    if ip.is_ipv4() {
+                        opt.targets.push(TargetInfo::new_with_ip_addr(ip).with_host_name(target.to_string()));
                     }
                 }
-                Err(_) => {}
+                None => {}
             },
         }
     } else if matches.contains_id("domain") {
