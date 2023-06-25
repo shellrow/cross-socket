@@ -1,6 +1,6 @@
 [package]
 name = "numap"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["shellrow <shellrow@protonmail.com>"]
 description = "Network mapper for discovery and management"
