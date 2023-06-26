@@ -178,10 +178,8 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
             }
             Err(_) => match SocketAddr::from_str(&target) {
                 Ok(socket_addr) => {
-                    opt.targets.push(TargetInfo::new_with_socket(
-                        socket_addr.ip(),
-                        socket_addr.port(),
-                    ));
+                    opt.targets.push(TargetInfo::new_with_socket(socket_addr.ip(),socket_addr.port())
+                    .with_host_name(network::lookup_ip_addr(socket_addr.ip().to_string())));
                 }
                 Err(_) => match network::lookup_host_name(target.to_string()) {
                     Some(ip) => {

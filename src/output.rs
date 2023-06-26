@@ -142,6 +142,16 @@ pub fn show_options(opt: ScanOption) {
                     Alignment::Left,
                 ),
             ]));
+            if opt.targets.len() > 0 && opt.protocol == crate::option::Protocol::TCP {
+                if opt.targets[0].ports.len() > 0 {
+                    if opt.targets[0].ports[0] > 0 {
+                        table.add_row(Row::new(vec![
+                            TableCell::new_with_alignment("Port", 1, Alignment::Left),
+                            TableCell::new_with_alignment(opt.targets[0].ports[0].to_string(), 1, Alignment::Left),
+                        ]));
+                    }
+                }
+            }
             println!("{}", table.render());
         }
         CommandType::Ping => {
@@ -173,6 +183,12 @@ pub fn show_options(opt: ScanOption) {
                     table.add_row(Row::new(vec![
                         TableCell::new_with_alignment("Host Name", 1, Alignment::Left),
                         TableCell::new_with_alignment(target.host_name, 1, Alignment::Left),
+                    ]));
+                }
+                if target.ports.len() > 0 && opt.protocol == crate::option::Protocol::TCP {
+                    table.add_row(Row::new(vec![
+                        TableCell::new_with_alignment("Port", 1, Alignment::Left),
+                        TableCell::new_with_alignment(target.ports[0].to_string(), 1, Alignment::Left),
                     ]));
                 }
             }
@@ -336,17 +352,17 @@ pub fn show_hostscan_result(result: HostScanResult) {
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("IP Address", 1, Alignment::Left),
         TableCell::new_with_alignment("Host Name", 1, Alignment::Left),
+        TableCell::new_with_alignment("TTL", 1, Alignment::Left),
         TableCell::new_with_alignment("MAC Address", 1, Alignment::Left),
         TableCell::new_with_alignment("Vendor Info", 1, Alignment::Left),
-        TableCell::new_with_alignment("OS (Guess)", 1, Alignment::Left),
     ]));
     for host in result.hosts {
         table.add_row(Row::new(vec![
             TableCell::new_with_alignment(host.ip_addr, 1, Alignment::Left),
             TableCell::new_with_alignment(host.host_name, 1, Alignment::Left),
+            TableCell::new_with_alignment(host.ttl, 1, Alignment::Left),
             TableCell::new_with_alignment(host.mac_addr, 1, Alignment::Left),
             TableCell::new_with_alignment(host.vendor_info, 1, Alignment::Left),
-            TableCell::new_with_alignment(host.os_name, 1, Alignment::Left),
         ]));
     }
     println!("{}", table.render());
@@ -390,12 +406,21 @@ pub fn show_ping_result(result: PingStat) {
         TableCell::new_with_alignment("RTT", 1, Alignment::Left),
     ]));
     for r in result.ping_results {
+        let port_data: String = if let Some(port_number) = r.port_number {
+            if r.protocol == crate::option::Protocol::TCP.name() {
+                port_number.to_string()
+            } else {
+                "None".to_string()
+            }
+        } else {
+            "None".to_string()
+        };
         table.add_row(Row::new(vec![
             TableCell::new_with_alignment(r.seq, 1, Alignment::Left),
             TableCell::new_with_alignment(r.protocol, 1, Alignment::Left),
             TableCell::new_with_alignment(r.ip_addr, 1, Alignment::Left),
             TableCell::new_with_alignment(r.host_name, 1, Alignment::Left),
-            TableCell::new_with_alignment(format!("{:?}", r.port_number), 1, Alignment::Left),
+            TableCell::new_with_alignment(port_data, 1, Alignment::Left),
             TableCell::new_with_alignment(r.ttl, 1, Alignment::Left),
             TableCell::new_with_alignment(r.hop, 1, Alignment::Left),
             TableCell::new_with_alignment(format!("{:?}ms", (r.rtt as f64 / 1000.0) as f64), 1, Alignment::Left),
