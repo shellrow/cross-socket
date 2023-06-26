@@ -80,15 +80,17 @@ pub fn validate_hostscan_opt(v: &str) -> Result<(), String> {
 }
 
 pub fn validate_host_opt(v: &str) -> Result<(), String> {
-    if is_ipaddr(v.to_string()) {
+    if is_ipaddr(v.to_string()) || is_socketaddr(v.to_string()) || is_valid_hostname(v.to_string()) {
         return Ok(());
-    } else {
-        if is_valid_hostname(v.to_string()) {
-            return Ok(());
-        } else {
-            return Err(String::from("Please specify ip address or host name"));
-        }
     }
+    return Err(String::from("Please specify IP Address or Host Name"));
+}
+
+pub fn validate_trace_opt(v: &str) -> Result<(), String> {
+    if is_ipaddr(v.to_string()) || is_valid_hostname(v.to_string()) {
+        return Ok(());
+    }
+    return Err(String::from("Please specify IP Address or Host Name"));
 }
 
 pub fn validate_filepath(v: &str) -> Result<(), String> {

@@ -125,7 +125,7 @@ fn get_app_settings<'a>() -> Command<'a> {
             .long("trace")
             .takes_value(true)
             .value_name("target")
-            .validator(validator::validate_host_opt)
+            .validator(validator::validate_trace_opt)
         )
         .arg(Arg::new("domain")
             .help("Scan sub-domain . \nExamples: \n--domain example.com")
