@@ -1,14 +1,14 @@
+use futures::stream::{self, StreamExt};
 use ipnet::{Ipv4Net, Ipv6Net};
 use pnet_packet::{MutablePacket, Packet};
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr};
 use std::str::FromStr;
-use std::time::Duration;
 use std::thread;
-use futures::stream::{self, StreamExt};
-use trust_dns_resolver::{Resolver, AsyncResolver};
+use std::time::Duration;
 #[cfg(not(any(unix, target_os = "windows")))]
 use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
+use trust_dns_resolver::{AsyncResolver, Resolver};
 
 pub fn get_network_address(ip_addr: IpAddr) -> Result<String, String> {
     match ip_addr {
@@ -171,8 +171,8 @@ fn resolve_domain(host_name: String) -> Vec<IpAddr> {
             for ip in lip.iter() {
                 ips.push(ip);
             }
-        },
-        Err(_) => {},
+        }
+        Err(_) => {}
     }
     ips
 }
@@ -186,8 +186,8 @@ fn resolve_domain(host_name: String) -> Vec<IpAddr> {
             for ip in lip.iter() {
                 ips.push(ip);
             }
-        },
-        Err(_) => {},
+        }
+        Err(_) => {}
     }
     ips
 }
@@ -199,7 +199,7 @@ fn resolve_ip(ip_addr: String) -> Vec<String> {
     let mut system_conf = trust_dns_resolver::system_conf::read_system_conf().unwrap();
     if is_global_addr(ip_addr) {
         system_conf.1.timeout = Duration::from_millis(1000);
-    }else{
+    } else {
         system_conf.1.timeout = Duration::from_millis(200);
     }
     let resolver = Resolver::new(system_conf.0, system_conf.1).unwrap();
@@ -210,19 +210,19 @@ fn resolve_ip(ip_addr: String) -> Vec<String> {
                     Some(data) => {
                         let name = data.to_string();
                         if name.ends_with(".") {
-                            names.push(name[0..name.len()-1].to_string());
-                        }else {
+                            names.push(name[0..name.len() - 1].to_string());
+                        } else {
                             names.push(name);
                         }
-                    },
-                    None => {},
+                    }
+                    None => {}
                 }
             }
             names
-        },
+        }
         Err(_) => {
             return names;
-        },
+        }
     }
 }
 
@@ -237,22 +237,21 @@ fn resolve_ip(ip_addr: String) -> Vec<String> {
                     Some(data) => {
                         let name = data.to_string();
                         if name.ends_with(".") {
-                            names.push(name[0..name.len()-1].to_string());
-                        }else {
+                            names.push(name[0..name.len() - 1].to_string());
+                        } else {
                             names.push(name);
                         }
-                    },
-                    None => {},
+                    }
+                    None => {}
                 }
             }
             names
-        },
+        }
         Err(_) => {
             return names;
-        },
+        }
     }
 }
-
 
 #[cfg(any(unix, target_os = "windows"))]
 #[allow(dead_code)]
@@ -264,8 +263,8 @@ async fn resolve_domain_async(host_name: String) -> Vec<IpAddr> {
             for ip in lip.iter() {
                 ips.push(ip);
             }
-        },
-        Err(_) => {},
+        }
+        Err(_) => {}
     }
     ips
 }
@@ -274,14 +273,15 @@ async fn resolve_domain_async(host_name: String) -> Vec<IpAddr> {
 #[allow(dead_code)]
 async fn resolve_domain_async(host_name: String) -> Vec<IpAddr> {
     let mut ips: Vec<IpAddr> = vec![];
-    let resolver = AsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default()).unwrap();
+    let resolver =
+        AsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default()).unwrap();
     match resolver.lookup_ip(host_name).await {
         Ok(lip) => {
             for ip in lip.iter() {
                 ips.push(ip);
             }
-        },
-        Err(_) => {},
+        }
+        Err(_) => {}
     }
     ips
 }
@@ -293,7 +293,7 @@ async fn resolve_ip_async(ip_addr: String) -> Vec<String> {
     let mut system_conf = trust_dns_resolver::system_conf::read_system_conf().unwrap();
     if is_global_addr(ip_addr) {
         system_conf.1.timeout = Duration::from_millis(1000);
-    }else{
+    } else {
         system_conf.1.timeout = Duration::from_millis(200);
     }
     let resolver = AsyncResolver::tokio(system_conf.0, system_conf.1).unwrap();
@@ -304,59 +304,66 @@ async fn resolve_ip_async(ip_addr: String) -> Vec<String> {
                     Some(data) => {
                         let name = data.to_string();
                         if name.ends_with(".") {
-                            names.push(name[0..name.len()-1].to_string());
-                        }else {
+                            names.push(name[0..name.len() - 1].to_string());
+                        } else {
                             names.push(name);
                         }
-                    },
-                    None => {},
+                    }
+                    None => {}
                 }
             }
             names
-        },
+        }
         Err(_) => {
             return names;
-        },
+        }
     }
 }
 
 #[cfg(not(any(unix, target_os = "windows")))]
 async fn resolve_ip_async(ip_addr: String) -> Vec<String> {
     let mut names: Vec<String> = vec![];
-    let resolver = AsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default()).unwrap();
-    match resolver.reverse_lookup(IpAddr::from_str(ip_addr.as_str()).unwrap()).await {
+    let resolver =
+        AsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default()).unwrap();
+    match resolver
+        .reverse_lookup(IpAddr::from_str(ip_addr.as_str()).unwrap())
+        .await
+    {
         Ok(rlookup) => {
             for record in rlookup.as_lookup().record_iter() {
                 match record.data() {
                     Some(data) => {
                         let name = data.to_string();
                         if name.ends_with(".") {
-                            names.push(name[0..name.len()-1].to_string());
-                        }else {
+                            names.push(name[0..name.len() - 1].to_string());
+                        } else {
                             names.push(name);
                         }
-                    },
-                    None => {},
+                    }
+                    None => {}
                 }
             }
             names
-        },
+        }
         Err(_) => {
             return names;
-        },
+        }
     }
 }
 
 pub async fn lookup_ips_async(ips: Vec<IpAddr>) -> HashMap<IpAddr, String> {
-    let mut tasks = stream::iter(ips).map(|ip| {
-        async move {
+    let mut tasks = stream::iter(ips)
+        .map(|ip| async move {
             let names = resolve_ip_async(ip.to_string()).await;
             (ip, names)
-        }
-    }).buffer_unordered(10);
+        })
+        .buffer_unordered(10);
     let mut results: HashMap<IpAddr, String> = HashMap::new();
     while let Some(result) = tasks.next().await {
-        results.insert(result.0, result.1.first().unwrap_or(&String::new()).to_string());
+        results.insert(
+            result.0,
+            result.1.first().unwrap_or(&String::new()).to_string(),
+        );
     }
     results
 }

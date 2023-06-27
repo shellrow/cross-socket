@@ -1,10 +1,10 @@
 use crate::option::{CommandType, ScanOption};
 use crate::result::{DomainScanResult, HostScanResult, PingStat, PortScanResult, TraceResult};
+use indicatif::{ProgressBar, ProgressStyle};
 use std::fs;
 use term_table::row::Row;
 use term_table::table_cell::{Alignment, TableCell};
 use term_table::{Table, TableStyle};
-use indicatif::{ProgressBar, ProgressStyle};
 
 pub fn get_spinner() -> ProgressBar {
     let pb = ProgressBar::new_spinner();
@@ -147,7 +147,11 @@ pub fn show_options(opt: ScanOption) {
                     if opt.targets[0].ports[0] > 0 {
                         table.add_row(Row::new(vec![
                             TableCell::new_with_alignment("Port", 1, Alignment::Left),
-                            TableCell::new_with_alignment(opt.targets[0].ports[0].to_string(), 1, Alignment::Left),
+                            TableCell::new_with_alignment(
+                                opt.targets[0].ports[0].to_string(),
+                                1,
+                                Alignment::Left,
+                            ),
                         ]));
                     }
                 }
@@ -188,7 +192,11 @@ pub fn show_options(opt: ScanOption) {
                 if target.ports.len() > 0 && opt.protocol == crate::option::Protocol::TCP {
                     table.add_row(Row::new(vec![
                         TableCell::new_with_alignment("Port", 1, Alignment::Left),
-                        TableCell::new_with_alignment(target.ports[0].to_string(), 1, Alignment::Left),
+                        TableCell::new_with_alignment(
+                            target.ports[0].to_string(),
+                            1,
+                            Alignment::Left,
+                        ),
                     ]));
                 }
             }
@@ -328,11 +336,19 @@ pub fn show_portscan_result(result: PortScanResult) {
     ]));
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Service Detection Time", 1, Alignment::Left),
-        TableCell::new_with_alignment(format!("{:?}", result.service_detection_time), 1, Alignment::Left),
+        TableCell::new_with_alignment(
+            format!("{:?}", result.service_detection_time),
+            1,
+            Alignment::Left,
+        ),
     ]));
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("OS Detection Time", 1, Alignment::Left),
-        TableCell::new_with_alignment(format!("{:?}", result.os_detection_time), 1, Alignment::Left),
+        TableCell::new_with_alignment(
+            format!("{:?}", result.os_detection_time),
+            1,
+            Alignment::Left,
+        ),
     ]));
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Total Scan Time", 1, Alignment::Left),
@@ -423,7 +439,11 @@ pub fn show_ping_result(result: PingStat) {
             TableCell::new_with_alignment(port_data, 1, Alignment::Left),
             TableCell::new_with_alignment(r.ttl, 1, Alignment::Left),
             TableCell::new_with_alignment(r.hop, 1, Alignment::Left),
-            TableCell::new_with_alignment(format!("{:?}ms", (r.rtt as f64 / 1000.0) as f64), 1, Alignment::Left),
+            TableCell::new_with_alignment(
+                format!("{:?}ms", (r.rtt as f64 / 1000.0) as f64),
+                1,
+                Alignment::Left,
+            ),
         ]));
     }
     println!("{}", table.render());
@@ -436,7 +456,11 @@ pub fn show_ping_result(result: PingStat) {
     println!("────────────────────────────────────────");
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Probe Time", 1, Alignment::Left),
-        TableCell::new_with_alignment(format!("{:?}ms", result.probe_time as f64 / 1000.0), 1, Alignment::Left),
+        TableCell::new_with_alignment(
+            format!("{:?}ms", result.probe_time as f64 / 1000.0),
+            1,
+            Alignment::Left,
+        ),
     ]));
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Transmitted", 1, Alignment::Left),
@@ -448,15 +472,27 @@ pub fn show_ping_result(result: PingStat) {
     ]));
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Min", 1, Alignment::Left),
-        TableCell::new_with_alignment(format!("{:?}ms", (result.min as f64 / 1000.0) as f64), 1, Alignment::Left),
+        TableCell::new_with_alignment(
+            format!("{:?}ms", (result.min as f64 / 1000.0) as f64),
+            1,
+            Alignment::Left,
+        ),
     ]));
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Avg", 1, Alignment::Left),
-        TableCell::new_with_alignment(format!("{:?}ms", (result.avg as f64 / 1000.0) as f64), 1, Alignment::Left),
+        TableCell::new_with_alignment(
+            format!("{:?}ms", (result.avg as f64 / 1000.0) as f64),
+            1,
+            Alignment::Left,
+        ),
     ]));
     table.add_row(Row::new(vec![
         TableCell::new_with_alignment("Max", 1, Alignment::Left),
-        TableCell::new_with_alignment(format!("{:?}ms", (result.max as f64 / 1000.0) as f64), 1, Alignment::Left),
+        TableCell::new_with_alignment(
+            format!("{:?}ms", (result.max as f64 / 1000.0) as f64),
+            1,
+            Alignment::Left,
+        ),
     ]));
     println!("{}", table.render());
 }
@@ -500,7 +536,10 @@ pub fn show_trace_result(result: TraceResult) {
     println!("{}", table.render());
     println!("[Performance]");
     println!("────────────────────────────────────────");
-    println!("Probe Time: {:?}ms", (result.probe_time as f64 / 1000.0) as f64);
+    println!(
+        "Probe Time: {:?}ms",
+        (result.probe_time as f64 / 1000.0) as f64
+    );
     println!();
 }
 

@@ -1,7 +1,12 @@
-use serde::{Deserialize, Serialize};
-use chrono::{Local};
-use crate::{result::{DomainScanResult, HostScanResult, PingStat, PortScanResult, TraceResult, PingResult, Node}, option};
 use crate::db;
+use crate::{
+    option,
+    result::{
+        DomainScanResult, HostScanResult, Node, PingResult, PingStat, PortScanResult, TraceResult,
+    },
+};
+use chrono::Local;
+use serde::{Deserialize, Serialize};
 
 // Shared model
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -330,7 +335,6 @@ impl JsonTracerouteStat {
         json_result
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JsonDomain {
