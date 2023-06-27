@@ -2,11 +2,11 @@ use super::define;
 use super::process;
 use super::validator;
 use crate::db;
-use crate::sys;
 use crate::network;
 use crate::option;
 use crate::option::Protocol;
 use crate::option::TargetInfo;
+use crate::sys;
 use clap::ArgMatches;
 use ipnet::IpNet;
 use std::net::IpAddr;
@@ -174,19 +174,24 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
         let target: &str = matches.value_of("ping").unwrap();
         match target.parse::<IpAddr>() {
             Ok(ip) => {
-                opt.targets.push(TargetInfo::new_with_ip_addr(ip).with_host_name(network::lookup_ip_addr(ip.to_string())));
+                opt.targets.push(
+                    TargetInfo::new_with_ip_addr(ip)
+                        .with_host_name(network::lookup_ip_addr(ip.to_string())),
+                );
             }
             Err(_) => match SocketAddr::from_str(&target) {
                 Ok(socket_addr) => {
-                    opt.targets.push(TargetInfo::new_with_socket(
-                        socket_addr.ip(),
-                        socket_addr.port(),
-                    ));
+                    opt.targets.push(
+                        TargetInfo::new_with_socket(socket_addr.ip(), socket_addr.port())
+                            .with_host_name(network::lookup_ip_addr(socket_addr.ip().to_string())),
+                    );
                 }
                 Err(_) => match network::lookup_host_name(target.to_string()) {
                     Some(ip) => {
                         if ip.is_ipv4() {
-                            opt.targets.push(TargetInfo::new_with_ip_addr(ip).with_host_name(target.to_string()));
+                            opt.targets.push(
+                                TargetInfo::new_with_ip_addr(ip).with_host_name(target.to_string()),
+                            );
                         }
                     }
                     None => {}
@@ -199,12 +204,17 @@ pub fn parse_args(matches: ArgMatches) -> option::ScanOption {
         let target: &str = matches.value_of("trace").unwrap();
         match target.parse::<IpAddr>() {
             Ok(ip) => {
-                opt.targets.push(TargetInfo::new_with_ip_addr(ip).with_host_name(network::lookup_ip_addr(ip.to_string())));
+                opt.targets.push(
+                    TargetInfo::new_with_ip_addr(ip)
+                        .with_host_name(network::lookup_ip_addr(ip.to_string())),
+                );
             }
             Err(_) => match network::lookup_host_name(target.to_string()) {
                 Some(ip) => {
                     if ip.is_ipv4() {
-                        opt.targets.push(TargetInfo::new_with_ip_addr(ip).with_host_name(target.to_string()));
+                        opt.targets.push(
+                            TargetInfo::new_with_ip_addr(ip).with_host_name(target.to_string()),
+                        );
                     }
                 }
                 None => {}

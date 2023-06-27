@@ -1,7 +1,12 @@
-use serde::{Deserialize, Serialize};
-use chrono::{Local};
-use crate::{result::{DomainScanResult, HostScanResult, PingStat, PortScanResult, TraceResult, PingResult, Node}, option};
 use crate::db;
+use crate::{
+    option,
+    result::{
+        DomainScanResult, HostScanResult, Node, PingResult, PingStat, PortScanResult, TraceResult,
+    },
+};
+use chrono::Local;
+use serde::{Deserialize, Serialize};
 
 // Shared model
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -115,6 +120,7 @@ impl JsonPortScanResult {
 pub struct JsonHostResult {
     pub ip_addr: String,
     pub hostname: String,
+    pub ttl: u16,
     pub os_info: String,
     pub mac_addr: String,
     pub vendor: String,
@@ -125,6 +131,7 @@ impl JsonHostResult {
         JsonHostResult {
             ip_addr: String::new(),
             hostname: String::new(),
+            ttl: 0,
             os_info: String::new(),
             mac_addr: String::new(),
             vendor: String::new(),
@@ -163,6 +170,7 @@ impl JsonHostScanResult {
                 let mut json_host = JsonHostResult::new();
                 json_host.ip_addr = host.ip_addr.clone();
                 json_host.hostname = host.host_name.clone();
+                json_host.ttl = host.ttl as u16;
                 json_host.os_info = host.os_name.clone();
                 json_host.mac_addr = host.mac_addr.clone();
                 json_host.vendor = host.vendor_info.clone();
@@ -327,7 +335,6 @@ impl JsonTracerouteStat {
         json_result
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JsonDomain {

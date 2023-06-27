@@ -4,6 +4,7 @@ extern crate clap;
 mod db;
 mod define;
 mod handler;
+mod json_models;
 mod models;
 mod network;
 mod option;
@@ -15,7 +16,6 @@ mod result;
 mod scan;
 mod sys;
 mod validator;
-mod json_models;
 
 use chrono::{DateTime, Local};
 use clap::{App, AppSettings, Arg, ArgGroup, Command};
@@ -30,7 +30,7 @@ fn main() {
     let app = get_app_settings();
     let matches = app.get_matches();
     show_banner_with_starttime();
-    
+
     let pb = output::get_spinner();
     pb.set_message("Initializing ...");
     let opt: option::ScanOption = parser::parse_args(matches);
@@ -125,7 +125,7 @@ fn get_app_settings<'a>() -> Command<'a> {
             .long("trace")
             .takes_value(true)
             .value_name("target")
-            .validator(validator::validate_host_opt)
+            .validator(validator::validate_trace_opt)
         )
         .arg(Arg::new("domain")
             .help("Scan sub-domain . \nExamples: \n--domain example.com")

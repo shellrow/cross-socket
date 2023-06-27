@@ -1,6 +1,6 @@
 use crate::network;
-use regex::Regex;
 use ipnet::IpNet;
+use regex::Regex;
 use std::net::{IpAddr, SocketAddr};
 use std::path::Path;
 use std::str::FromStr;
@@ -37,23 +37,19 @@ pub fn validate_port_opt(v: &str) -> Result<(), String> {
 pub fn validate_network_opt(v: &str) -> Result<(), String> {
     match v.parse::<IpNet>() {
         Ok(_) => return Ok(()),
-        Err(_) => {
-            match IpAddr::from_str(&v) {
-                Ok(_) => {
-                    return Ok(())
-                },
-                Err(_) => {
-                    return Err(String::from("Please specify network address"));
-                }
+        Err(_) => match IpAddr::from_str(&v) {
+            Ok(_) => return Ok(()),
+            Err(_) => {
+                return Err(String::from("Please specify network address"));
             }
-        }
+        },
     }
 }
 
 pub fn validate_hostscan_opt(v: &str) -> Result<(), String> {
     match validate_network_opt(v) {
         Ok(_) => return Ok(()),
-        Err(_) => {},
+        Err(_) => {}
     }
     let re_host = Regex::new(r"[\w\-._]+\.[A-Za-z]+").unwrap();
     if Path::new(&v).exists() {
@@ -80,15 +76,18 @@ pub fn validate_hostscan_opt(v: &str) -> Result<(), String> {
 }
 
 pub fn validate_host_opt(v: &str) -> Result<(), String> {
-    if is_ipaddr(v.to_string()) {
+    if is_ipaddr(v.to_string()) || is_socketaddr(v.to_string()) || is_valid_hostname(v.to_string())
+    {
         return Ok(());
-    } else {
-        if is_valid_hostname(v.to_string()) {
-            return Ok(());
-        } else {
-            return Err(String::from("Please specify ip address or host name"));
-        }
     }
+    return Err(String::from("Please specify IP Address or Host Name"));
+}
+
+pub fn validate_trace_opt(v: &str) -> Result<(), String> {
+    if is_ipaddr(v.to_string()) || is_valid_hostname(v.to_string()) {
+        return Ok(());
+    }
+    return Err(String::from("Please specify IP Address or Host Name"));
 }
 
 pub fn validate_filepath(v: &str) -> Result<(), String> {
