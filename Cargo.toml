@@ -29,7 +29,7 @@ regex = "1.6.0"
 pnet_packet = "0.33.0"
 pnet_datalink = "0.33.0"
 ipnet = "2.5.0"
-netscan = { version = "0.15.1", features = ["full"] }
+netscan = { version = "0.15.2", features = ["full"] }
 domainscan = "0.2.0"
 tracert = "0.5.1"
 tokio = "1.0"
