@@ -23,6 +23,11 @@ High-performance Network Mapper for discovery and management
 cargo install netprobe-cli
 ```
 
+## Usage
+```
+np --help
+```
+
 ## Privileges
 `netprobe-cli` uses a raw socket which require elevated privileges.  Execute with administrator privileges.
 
