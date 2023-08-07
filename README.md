@@ -1,7 +1,7 @@
-[crates-badge]: https://img.shields.io/crates/v/numap.svg
-[crates-url]: https://crates.io/crates/numap
+[crates-badge]: https://img.shields.io/crates/v/netprobe-cli.svg
+[crates-url]: https://crates.io/crates/netprobe-cli
 
-# numap [![Crates.io][crates-badge]][crates-url]
+# netprobe-cli(np) [![Crates.io][crates-badge]][crates-url]
 High-performance Network Mapper for discovery and management
 
 ## Features
@@ -20,11 +20,11 @@ High-performance Network Mapper for discovery and management
 
 ## Install
 ```
-cargo install numap
+cargo install netprobe-cli
 ```
 
 ## Privileges
-`numap` uses a raw socket which require elevated privileges.  Execute with administrator privileges.
+`netprobe-cli` uses a raw socket which require elevated privileges.  Execute with administrator privileges.
 
 ## Note for Windows users
 - You must have WinPcap or npcap installed.

@@ -1,17 +1,18 @@
 [package]
-name = "numap"
-version = "0.4.2"
+name = "netprobe-cli"
+version = "0.4.4"
 edition = "2021"
 authors = ["shellrow <shellrow@protonmail.com>"]
-description = "Network mapper for discovery and management"
-repository = "https://github.com/shellrow/numap"
+description = "High-performance Network Mapper for discovery and management"
+repository = "https://github.com/shellrow/netprobe-cli"
 readme = "README.md"
 keywords = ["network","security","scan","cli","cross-platform"]
 categories = ["network-programming"]
 license = "MIT"
 
 [[bin]]
-name = "numap"
+name = "np"
+path = "src/main.rs"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
