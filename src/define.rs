@@ -1,4 +1,5 @@
 // APP information
+pub const CRATE_BIN_NAME: &str = "np";
 pub const CRATE_UPDATE_DATE: &str = "2023-08-07";
 pub const CRATE_REPOSITORY: &str = "https://github.com/shellrow/netprobe-cli";
 

@@ -264,8 +264,9 @@ fn get_app_settings<'a>() -> Command<'a> {
 
 fn show_app_desc() {
     println!(
-        "{} {} ({}) {}",
+        "{}({}) {} ({}) {}",
         crate_name!(),
+        define::CRATE_BIN_NAME,
         crate_version!(),
         define::CRATE_UPDATE_DATE,
         sys::get_os_type()
@@ -274,14 +275,15 @@ fn show_app_desc() {
     println!("{}", crate_authors!());
     println!("{}", define::CRATE_REPOSITORY);
     println!();
-    println!("'{} --help' for more information.", crate_name!());
+    println!("'{} --help' for more information.", define::CRATE_BIN_NAME);
     println!();
 }
 
 fn show_banner_with_starttime() {
     println!(
-        "{} {} {}",
+        "{}({}) {} {}",
         crate_name!(),
+        define::CRATE_BIN_NAME,
         crate_version!(),
         sys::get_os_type()
     );
