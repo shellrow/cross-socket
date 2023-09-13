@@ -23,3 +23,8 @@ cross-socket-deps = { path = "deps", version = "0.0.1", optional = true }
 [features]
 default = ["setup"]
 setup = ["cross-socket-deps"]
+
+[[example]]
+name = "setup_win_deps"
+path = "examples/setup_win_deps.rs"
+required-features = ["setup"]
