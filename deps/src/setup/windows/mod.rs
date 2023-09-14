@@ -1,15 +1,20 @@
-pub mod define;
-pub mod sys;
+pub(crate) mod define;
+pub(crate) mod sys;
 pub mod npcap;
 
 use inquire::Confirm;
 
-pub fn check_dependencies() -> bool {
-    // check if npcap is installed
+// Resolve dependencies
+pub fn resolve_dependencies(interactive: bool) -> bool {
+    // Check if npcap is installed
     if !npcap::is_npcap_installed() {
-        let ans: bool = Confirm::new("Npcap is not installed, would you like to install it ?")
-        .prompt()
-        .unwrap();
+        let ans: bool = if interactive { 
+            Confirm::new("Npcap is not installed, would you like to install it ?")
+            .prompt()
+            .unwrap()
+        }else{
+            true
+        };
         if ans == false {
             println!("Exiting...");
             return false;
@@ -21,6 +26,27 @@ pub fn check_dependencies() -> bool {
         }
     } else {
         println!("Npcap is already installed !");
+    }
+    // Check if npcap sdk is installed
+    if !npcap::is_npcap_sdk_installed() {
+        let ans: bool = if interactive { 
+            Confirm::new("Npcap SDK is not installed, would you like to install it ?")
+            .prompt()
+            .unwrap()
+        } else { 
+            true 
+        };
+        if ans == false {
+            println!("Exiting...");
+            return false;
+        }
+        println!("Installing Npcap SDK...");
+        match npcap::install_npcap_sdk() {
+            Ok(_) => println!("Npcap SDK installed successfully !"),
+            Err(e) => println!("{}", e),
+        }
+    } else {
+        println!("Npcap SDK is already installed !");
     }
     true
 }

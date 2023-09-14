@@ -99,6 +99,7 @@ pub fn app_installed(app_name: String) -> bool {
     false
 }
 
+#[allow(dead_code)]
 pub fn check_env_path(dir_path: &str) -> bool {
     let reg_key: winreg::RegKey = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)
         .open_subkey_with_flags("Environment", winreg::enums::KEY_READ)
@@ -107,6 +108,7 @@ pub fn check_env_path(dir_path: &str) -> bool {
     reg_value.contains(dir_path)
 }
 
+#[allow(dead_code)]
 pub fn add_env_path(dir_path: &str) {
     let hkcu: winreg::RegKey = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
     let (path, _): (winreg::RegKey, RegDisposition) = hkcu.create_subkey("Environment").unwrap();
@@ -137,4 +139,12 @@ pub fn add_env_lib_path(dir_path: &str) {
     path_value.push_str(&std::path::Path::new(dir_path).to_str().unwrap());
     println!("{}", path_value);
     path.set_value("LIB", &path_value).unwrap();
+}
+
+pub fn get_env_lib() -> String {
+    let reg_key: winreg::RegKey = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)
+        .open_subkey_with_flags("Environment", winreg::enums::KEY_READ)
+        .unwrap();
+    let reg_value: String = reg_key.get_value("LIB").unwrap_or(String::new());
+    reg_value
 }

@@ -10,6 +10,25 @@ pub fn is_npcap_installed() -> bool {
     sys::software_installed(define::NPCAP_SOFTWARE_NAME.to_owned())
 }
 
+// Check if npcap sdk is installed
+pub fn is_npcap_sdk_installed() -> bool {
+    let env_lib_value: String = sys::get_env_lib();
+    if env_lib_value.is_empty() {
+        return false;
+    }
+    // Split env_lib_value by ;
+    let lib_path_list: Vec<&str> = env_lib_value.split(";").collect();
+    // Check if npcap sdk is in env_lib_value
+    // Search for Packet.lib
+    for lib_path in lib_path_list {
+        let packet_lib_path: String = format!("{}\\{}", lib_path, "Packet.lib");
+        if std::path::Path::new(&packet_lib_path).exists() {
+            return true;
+        }
+    }
+    false
+}
+
 // Download and Run npcap installer
 pub fn install_npcap() -> Result<(), Box<dyn Error>> {
     let npcap_installer_url = format!("{}{}", define::NPCAP_DIST_BASE_URL, define::NPCAP_INSTALLER_FILENAME);
@@ -19,7 +38,7 @@ pub fn install_npcap() -> Result<(), Box<dyn Error>> {
         std::fs::create_dir_all(&install_dir)?;
     }
     let npcap_target_path: String = format!("{}\\{}", sys::get_install_path(define::NPCAP_INSTALL_DIR_NAME), define::NPCAP_INSTALLER_FILENAME);
-    println!("Npcap installer path: {}", npcap_target_path);
+    //println!("Npcap installer path: {}", npcap_target_path);
     // Download npcap installer if not exists
     if !std::path::Path::new(&npcap_target_path).exists() {
         let mut response: reqwest::blocking::Response = reqwest::blocking::get(&npcap_installer_url)?;
@@ -36,7 +55,7 @@ pub fn install_npcap() -> Result<(), Box<dyn Error>> {
     let hash_result: String = format!("{:X}", hash_result);
 
     if hash_result != define::NPCAP_INSTALLER_HASH {
-        println!("Downloaded file hash: {}", hash_result);
+        //println!("Downloaded file hash: {}", hash_result);
         return Err("Error: checksum failed...".into());
     }
 
@@ -64,7 +83,7 @@ pub fn install_npcap_sdk() -> Result<(), Box<dyn Error>> {
         std::fs::create_dir_all(&install_dir)?;
     }
     let npcap_sdk_target_path: String = format!("{}\\{}", sys::get_install_path(define::NPCAP_INSTALL_DIR_NAME), define::NPCAP_SDK_FILENAME);
-    println!("Npcap sdk path: {}", npcap_sdk_target_path);
+    //println!("Npcap sdk path: {}", npcap_sdk_target_path);
     // Download npcap sdk if not exists
     if !std::path::Path::new(&npcap_sdk_target_path).exists() {
         let mut response: reqwest::blocking::Response = reqwest::blocking::get(&npcap_sdk_url)?;
@@ -79,7 +98,7 @@ pub fn install_npcap_sdk() -> Result<(), Box<dyn Error>> {
     let hash_result: String = format!("{:X}", hash_result);
 
     if hash_result != define::NPCAP_SDK_HASH {
-        println!("Downloaded file hash: {}", hash_result);
+        //println!("Downloaded file hash: {}", hash_result);
         return Err("Error: checksum failed...".into());
     }
 
@@ -110,12 +129,12 @@ pub fn install_npcap_sdk() -> Result<(), Box<dyn Error>> {
         format!("{}\\{}", npcap_sdk_extract_dir, "Lib\\x64")
     };
     if !sys::check_env_lib_path(&lib_dir_path) {
-        println!("Adding {} to LIB env var", lib_dir_path);
+        //println!("Adding {} to LIB env var", lib_dir_path);
         sys::add_env_lib_path(&lib_dir_path);
     }
 
     // Remove npcap sdk zip
     std::fs::remove_file(&npcap_sdk_target_path)?;
-    
+
     Ok(())
 }
