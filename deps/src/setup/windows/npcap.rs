@@ -40,6 +40,7 @@ pub fn install_npcap() -> Result<(), Box<dyn Error>> {
         return Err("Error: checksum failed...".into());
     }
 
+    // Run npcap installer
     let exit_status: std::process::ExitStatus = RunasCommand::new(&npcap_target_path)
         .arg("/loopback_support=yes")
         .arg("/winpcap_mode=yes")
@@ -47,6 +48,9 @@ pub fn install_npcap() -> Result<(), Box<dyn Error>> {
     if !exit_status.success() {
         return Err("Error: Npcap installation failed !".into());
     }
+
+    // Remove npcap installer
+    std::fs::remove_file(&npcap_target_path)?;
 
     Ok(())
 }
@@ -109,5 +113,9 @@ pub fn install_npcap_sdk() -> Result<(), Box<dyn Error>> {
         println!("Adding {} to LIB env var", lib_dir_path);
         sys::add_env_lib_path(&lib_dir_path);
     }
+
+    // Remove npcap sdk zip
+    std::fs::remove_file(&npcap_sdk_target_path)?;
+    
     Ok(())
 }
