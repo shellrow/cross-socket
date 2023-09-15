@@ -1,17 +1,17 @@
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use crate::option::PacketCaptureOptions;
-use crate::packet::TcpIpFingerprint;
+use crate::packet::PacketFrame;
 use crate::pcap::start_capture;
 
 /// Listner
 #[derive(Debug)]
 pub struct Listner {
     pub options: PacketCaptureOptions,
-    pub tx: Arc<Mutex<Sender<TcpIpFingerprint>>>,
-    pub rx: Arc<Mutex<Receiver<TcpIpFingerprint>>>,
+    pub tx: Arc<Mutex<Sender<PacketFrame>>>,
+    pub rx: Arc<Mutex<Receiver<PacketFrame>>>,
     pub stop: Arc<Mutex<bool>>,
-    pub fingerprints: Arc<Mutex<Vec<TcpIpFingerprint>>>,
+    pub fingerprints: Arc<Mutex<Vec<PacketFrame>>>,
 }
 
 impl Listner {
@@ -29,7 +29,7 @@ impl Listner {
     }
 
     /// Get progress receiver
-    pub fn get_receiver(&self) -> Arc<Mutex<Receiver<TcpIpFingerprint>>> {
+    pub fn get_receiver(&self) -> Arc<Mutex<Receiver<PacketFrame>>> {
         self.rx.clone()
     }
     
@@ -39,14 +39,14 @@ impl Listner {
     }
 
     // Get fingerprints
-    pub fn get_fingerprints(&self) -> Vec<TcpIpFingerprint> {
+    pub fn get_fingerprints(&self) -> Vec<PacketFrame> {
         self.fingerprints.lock().unwrap().clone()
     }
     
     /// Start capture
     pub fn start(&self) {
         let options = self.options.clone();
-        let fingerprints: Vec<TcpIpFingerprint> = start_capture(options, &self.tx, &self.stop);
+        let fingerprints: Vec<PacketFrame> = start_capture(options, &self.tx, &self.stop);
         for fingerprint in fingerprints {
             self.fingerprints.lock().unwrap().push(fingerprint);
         }

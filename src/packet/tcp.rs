@@ -1,7 +1,9 @@
+use pnet::packet::Packet;
+
 /// TCP Option Kind
 /// <https://www.iana.org/assignments/tcp-parameters/tcp-parameters.xhtml#tcp-parameters-1>
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum TcpOptionKind {
+pub enum TcpOption {
     Eol,
     Nop,
     Mss,
@@ -11,48 +13,60 @@ pub enum TcpOptionKind {
     Timestamp,
 }
 
-impl TcpOptionKind {
+impl TcpOption {
+    pub fn from_u8(n: u8) -> TcpOption {
+        match n {
+            0 => TcpOption::Eol,
+            1 => TcpOption::Nop,
+            2 => TcpOption::Mss,
+            3 => TcpOption::Wscale,
+            4 => TcpOption::SackParmitted,
+            5 => TcpOption::Sack,
+            8 => TcpOption::Timestamp,
+            _ => panic!("Unknown TCP option kind: {}", n),
+        }
+    }
     /// Get the number of the TCP option kind
     pub fn number(&self) -> u8 {
         match *self {
-            TcpOptionKind::Eol => 0,
-            TcpOptionKind::Nop => 1,
-            TcpOptionKind::Mss => 2,
-            TcpOptionKind::Wscale => 3,
-            TcpOptionKind::SackParmitted => 4,
-            TcpOptionKind::Sack => 5,
-            TcpOptionKind::Timestamp => 8,
+            TcpOption::Eol => 0,
+            TcpOption::Nop => 1,
+            TcpOption::Mss => 2,
+            TcpOption::Wscale => 3,
+            TcpOption::SackParmitted => 4,
+            TcpOption::Sack => 5,
+            TcpOption::Timestamp => 8,
         }
     }
     /// Get the ID of the TCP option kind
     pub fn id(&self) -> String {
         match *self {
-            TcpOptionKind::Eol => String::from("eol"),
-            TcpOptionKind::Nop => String::from("nop"),
-            TcpOptionKind::Mss => String::from("mss"),
-            TcpOptionKind::Wscale => String::from("wscale"),
-            TcpOptionKind::SackParmitted => String::from("sack_permitted"),
-            TcpOptionKind::Sack => String::from("sack"),
-            TcpOptionKind::Timestamp => String::from("timestamp"),
+            TcpOption::Eol => String::from("EOL"),
+            TcpOption::Nop => String::from("NOP"),
+            TcpOption::Mss => String::from("MSS"),
+            TcpOption::Wscale => String::from("WSCALE"),
+            TcpOption::SackParmitted => String::from("SACK_PERMITTED"),
+            TcpOption::Sack => String::from("SACK"),
+            TcpOption::Timestamp => String::from("TIMESTAMPS"),
         }
     }
     /// Get the name of the TCP option kind
     pub fn name(&self) -> String {
         match *self {
-            TcpOptionKind::Eol => String::from("EOL"),
-            TcpOptionKind::Nop => String::from("NOP"),
-            TcpOptionKind::Mss => String::from("MSS"),
-            TcpOptionKind::Wscale => String::from("WSCALE"),
-            TcpOptionKind::SackParmitted => String::from("SACK_PERMITTED"),
-            TcpOptionKind::Sack => String::from("SACK"),
-            TcpOptionKind::Timestamp => String::from("TIMESTAMPS"),
+            TcpOption::Eol => String::from("EOL"),
+            TcpOption::Nop => String::from("NOP"),
+            TcpOption::Mss => String::from("MSS"),
+            TcpOption::Wscale => String::from("WSCALE"),
+            TcpOption::SackParmitted => String::from("SACK_PERMITTED"),
+            TcpOption::Sack => String::from("SACK"),
+            TcpOption::Timestamp => String::from("TIMESTAMPS"),
         }
     }
 }
 
 /// TCP Flag Kind
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum TcpFlagKind {
+pub enum TcpFlag {
     Syn,
     Fin,
     Rst,
@@ -61,57 +75,127 @@ pub enum TcpFlagKind {
     Urg,
     Ece,
     Cwr,
+    Unknown(u8),
 }
 
-impl TcpFlagKind {
+impl TcpFlag {
+    pub fn from_u8(n: u8) -> TcpFlag {
+        match n {
+            pnet::packet::tcp::TcpFlags::SYN => TcpFlag::Syn,
+            pnet::packet::tcp::TcpFlags::FIN => TcpFlag::Fin,
+            pnet::packet::tcp::TcpFlags::RST => TcpFlag::Rst,
+            pnet::packet::tcp::TcpFlags::PSH => TcpFlag::Psh,
+            pnet::packet::tcp::TcpFlags::ACK => TcpFlag::Ack,
+            pnet::packet::tcp::TcpFlags::URG => TcpFlag::Urg,
+            pnet::packet::tcp::TcpFlags::ECE => TcpFlag::Ece,
+            pnet::packet::tcp::TcpFlags::CWR => TcpFlag::Cwr,
+            _ => TcpFlag::Unknown(n),
+        }
+    }
     /// Get the number of the TCP flag kind
     pub fn number(&self) -> u8 {
         match *self {
-            TcpFlagKind::Syn => pnet::packet::tcp::TcpFlags::SYN,
-            TcpFlagKind::Fin => pnet::packet::tcp::TcpFlags::FIN,
-            TcpFlagKind::Rst => pnet::packet::tcp::TcpFlags::RST,
-            TcpFlagKind::Psh => pnet::packet::tcp::TcpFlags::PSH,
-            TcpFlagKind::Ack => pnet::packet::tcp::TcpFlags::ACK,
-            TcpFlagKind::Urg => pnet::packet::tcp::TcpFlags::URG,
-            TcpFlagKind::Ece => pnet::packet::tcp::TcpFlags::ECE,
-            TcpFlagKind::Cwr => pnet::packet::tcp::TcpFlags::CWR,
+            TcpFlag::Syn => pnet::packet::tcp::TcpFlags::SYN,
+            TcpFlag::Fin => pnet::packet::tcp::TcpFlags::FIN,
+            TcpFlag::Rst => pnet::packet::tcp::TcpFlags::RST,
+            TcpFlag::Psh => pnet::packet::tcp::TcpFlags::PSH,
+            TcpFlag::Ack => pnet::packet::tcp::TcpFlags::ACK,
+            TcpFlag::Urg => pnet::packet::tcp::TcpFlags::URG,
+            TcpFlag::Ece => pnet::packet::tcp::TcpFlags::ECE,
+            TcpFlag::Cwr => pnet::packet::tcp::TcpFlags::CWR,
+            TcpFlag::Unknown(n) => n,
         }
     }
     /// Get the ID of the TCP flag kind
     pub fn id(&self) -> String {
         match *self {
-            TcpFlagKind::Syn => String::from("syn"),
-            TcpFlagKind::Fin => String::from("fin"),
-            TcpFlagKind::Rst => String::from("rst"),
-            TcpFlagKind::Psh => String::from("psh"),
-            TcpFlagKind::Ack => String::from("ack"),
-            TcpFlagKind::Urg => String::from("urg"),
-            TcpFlagKind::Ece => String::from("ece"),
-            TcpFlagKind::Cwr => String::from("cwr"),
+            TcpFlag::Syn => String::from("SYN"),
+            TcpFlag::Fin => String::from("FIN"),
+            TcpFlag::Rst => String::from("RST"),
+            TcpFlag::Psh => String::from("PSH"),
+            TcpFlag::Ack => String::from("ACK"),
+            TcpFlag::Urg => String::from("URG"),
+            TcpFlag::Ece => String::from("ECE"),
+            TcpFlag::Cwr => String::from("CWR"),
+            TcpFlag::Unknown(n) => format!("UNKNOWN_{}", n),
         }
     }
     /// Get the name of the TCP flag kind
     pub fn name(&self) -> String {
         match *self {
-            TcpFlagKind::Syn => String::from("SYN"),
-            TcpFlagKind::Fin => String::from("FIN"),
-            TcpFlagKind::Rst => String::from("RST"),
-            TcpFlagKind::Psh => String::from("PSH"),
-            TcpFlagKind::Ack => String::from("ACK"),
-            TcpFlagKind::Urg => String::from("URG"),
-            TcpFlagKind::Ece => String::from("ECE"),
-            TcpFlagKind::Cwr => String::from("CWR"),
+            TcpFlag::Syn => String::from("SYN"),
+            TcpFlag::Fin => String::from("FIN"),
+            TcpFlag::Rst => String::from("RST"),
+            TcpFlag::Psh => String::from("PSH"),
+            TcpFlag::Ack => String::from("ACK"),
+            TcpFlag::Urg => String::from("URG"),
+            TcpFlag::Ece => String::from("ECE"),
+            TcpFlag::Cwr => String::from("CWR"),
+            TcpFlag::Unknown(n) => format!("Unknown({})", n),
         }
     }
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct TcpFingerprint {
-    pub source_port: u16,
-    pub destination_port: u16,
-    pub flags: Vec<TcpFlagKind>,
-    pub window_size: u16,
-    pub options: Vec<TcpOptionKind>,
-    pub payload_length: u16,
+pub struct TcpPacket {
+    pub source: u16,
+    pub destination: u16,
+    pub sequence: u32,
+    pub acknowledgement: u32,
+    pub data_offset: u8,
+    pub reserved: u8,
+    pub flags: Vec<TcpFlag>,
+    pub window: u16,
+    pub checksum: u16,
+    pub urgent_ptr: u16,
+    pub options: Vec<TcpOption>,
     pub payload: Vec<u8>,
+}
+
+impl TcpPacket {
+    pub fn from_pnet_packet(packet: &pnet::packet::tcp::TcpPacket) -> TcpPacket {
+        let mut tcp_options: Vec<TcpOption> = vec![];
+        for opt in packet.get_options_iter() {
+            tcp_options.push(TcpOption::from_u8(opt.get_number().0));
+        }
+        let mut tcp_flags: Vec<TcpFlag> = vec![];
+        if packet.get_flags() & TcpFlag::Syn.number() == TcpFlag::Syn.number() {
+            tcp_flags.push(TcpFlag::Syn);
+        }
+        if packet.get_flags() & TcpFlag::Fin.number() == TcpFlag::Fin.number() {
+            tcp_flags.push(TcpFlag::Fin);
+        }
+        if packet.get_flags() & TcpFlag::Rst.number() == TcpFlag::Rst.number() {
+            tcp_flags.push(TcpFlag::Rst);
+        }
+        if packet.get_flags() & TcpFlag::Psh.number() == TcpFlag::Psh.number() {
+            tcp_flags.push(TcpFlag::Psh);
+        }
+        if packet.get_flags() & TcpFlag::Ack.number() == TcpFlag::Ack.number() {
+            tcp_flags.push(TcpFlag::Ack);
+        }
+        if packet.get_flags() & TcpFlag::Urg.number() == TcpFlag::Urg.number() {
+            tcp_flags.push(TcpFlag::Urg);
+        }
+        if packet.get_flags() & TcpFlag::Ece.number() == TcpFlag::Ece.number() {
+            tcp_flags.push(TcpFlag::Ece);
+        }
+        if packet.get_flags() & TcpFlag::Cwr.number() == TcpFlag::Cwr.number() {
+            tcp_flags.push(TcpFlag::Cwr);
+        }
+        TcpPacket {
+            source: packet.get_source(),
+            destination: packet.get_destination(),
+            sequence: packet.get_sequence(),
+            acknowledgement: packet.get_acknowledgement(),
+            data_offset: packet.get_data_offset(),
+            reserved: packet.get_reserved(),
+            flags: tcp_flags,
+            window: packet.get_window(),
+            checksum: packet.get_checksum(),
+            urgent_ptr: packet.get_urgent_ptr(),
+            options: tcp_options,
+            payload: packet.payload().to_vec(),
+        }
+    }
 }
