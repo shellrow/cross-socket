@@ -9,6 +9,10 @@ pub mod tcp;
 pub mod udp;
 pub mod icmp;
 pub mod icmpv6;
+pub mod builder;
+
+use std::net::IpAddr;
+use crate::datalink;
 
 /// Packet Capture information
 #[derive(Clone, Debug, PartialEq)]
@@ -36,4 +40,17 @@ pub struct PacketFrame {
     pub icmpv6_packet: Option<icmpv6::Icmpv6Packet>,
     pub tcp_packet: Option<tcp::TcpPacket>,
     pub udp_packet: Option<udp::UdpPacket>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct PacketInfo {
+    pub src_mac: datalink::MacAddr,
+    pub dst_mac: datalink::MacAddr,
+    pub ether_type: ethernet::EtherType,
+    pub src_ip: IpAddr,
+    pub dst_ip: IpAddr,
+    pub src_port: Option<u16>,
+    pub dst_port: Option<u16>,
+    pub ip_protocol: Option<ip::IpNextLevelProtocol>,
+    pub payload: Vec<u8>,
 }

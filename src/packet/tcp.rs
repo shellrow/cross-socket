@@ -1,4 +1,8 @@
+use std::net::IpAddr;
 use pnet::packet::Packet;
+
+pub const TCP_HEADER_LEN: usize = pnet::packet::tcp::MutableTcpPacket::minimum_packet_size();
+pub const TCP_DEFAULT_OPTION_LEN: usize = 12;
 
 /// TCP Option Kind
 /// <https://www.iana.org/assignments/tcp-parameters/tcp-parameters.xhtml#tcp-parameters-1>
@@ -197,5 +201,46 @@ impl TcpPacket {
             options: tcp_options,
             payload: packet.payload().to_vec(),
         }
+    }
+}
+
+pub fn build_tcp_packet(
+    tcp_packet: &mut pnet::packet::tcp::MutableTcpPacket,
+    src_ip: IpAddr,
+    src_port: u16,
+    dst_ip: IpAddr,
+    dst_port: u16,
+) {
+    tcp_packet.set_source(src_port);
+    tcp_packet.set_destination(dst_port);
+    tcp_packet.set_window(64240);
+    tcp_packet.set_data_offset(8);
+    tcp_packet.set_urgent_ptr(0);
+    tcp_packet.set_sequence(0);
+    tcp_packet.set_options(&[
+        pnet::packet::tcp::TcpOption::mss(1460),
+        pnet::packet::tcp::TcpOption::sack_perm(),
+        pnet::packet::tcp::TcpOption::nop(),
+        pnet::packet::tcp::TcpOption::nop(),
+        pnet::packet::tcp::TcpOption::wscale(7),
+    ]);
+    tcp_packet.set_flags(pnet::packet::tcp::TcpFlags::SYN);
+    match src_ip {
+        IpAddr::V4(src_ip) => match dst_ip {
+            IpAddr::V4(dst_ip) => {
+                let checksum =
+                    pnet::packet::tcp::ipv4_checksum(&tcp_packet.to_immutable(), &src_ip, &dst_ip);
+                tcp_packet.set_checksum(checksum);
+            }
+            IpAddr::V6(_) => {}
+        },
+        IpAddr::V6(src_ip) => match dst_ip {
+            IpAddr::V4(_) => {}
+            IpAddr::V6(dst_ip) => {
+                let checksum =
+                    pnet::packet::tcp::ipv6_checksum(&tcp_packet.to_immutable(), &src_ip, &dst_ip);
+                tcp_packet.set_checksum(checksum);
+            }
+        },
     }
 }

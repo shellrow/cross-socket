@@ -3,6 +3,8 @@ use pnet::packet::Packet;
 use crate::datalink::MacAddr;
 use crate::packet::ethernet::EtherType;
 
+pub const ARP_HEADER_LEN: usize = 28;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ArpOperation{
     Request = 1,
@@ -181,4 +183,22 @@ impl ArpPacket {
             payload: packet.payload().to_vec(),
         }
     }
+}
+
+pub fn build_arp_packet(
+    arp_packet: &mut pnet::packet::arp::MutableArpPacket,
+    src_mac: MacAddr,
+    dst_mac: MacAddr,
+    src_ip: Ipv4Addr,
+    dst_ip: Ipv4Addr,
+) {
+    arp_packet.set_hardware_type(pnet::packet::arp::ArpHardwareTypes::Ethernet);
+    arp_packet.set_protocol_type(pnet::packet::ethernet::EtherTypes::Ipv4);
+    arp_packet.set_hw_addr_len(6);
+    arp_packet.set_proto_addr_len(4);
+    arp_packet.set_operation(pnet::packet::arp::ArpOperations::Request);
+    arp_packet.set_sender_hw_addr(pnet::datalink::MacAddr::from(src_mac.octets()));
+    arp_packet.set_sender_proto_addr(src_ip);
+    arp_packet.set_target_hw_addr(pnet::datalink::MacAddr::from(dst_mac.octets()));
+    arp_packet.set_target_proto_addr(dst_ip);
 }

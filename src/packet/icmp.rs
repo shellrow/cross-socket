@@ -1,5 +1,8 @@
 use pnet::packet::Packet;
 
+pub const ICMPV4_HEADER_LEN: usize =
+    pnet::packet::icmp::echo_request::MutableEchoRequestPacket::minimum_packet_size();
+
 /// ICMP types
 /// <https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml>
 #[derive(Clone, Debug, PartialEq)]
@@ -237,4 +240,12 @@ impl IcmpPacket {
             payload: packet.payload().to_vec(),
         }
     }
+}
+
+pub fn build_icmp_echo_packet(icmp_packet: &mut pnet::packet::icmp::echo_request::MutableEchoRequestPacket) {
+    icmp_packet.set_icmp_type(pnet::packet::icmp::IcmpTypes::EchoRequest);
+    icmp_packet.set_sequence_number(rand::random::<u16>());
+    icmp_packet.set_identifier(rand::random::<u16>());
+    let icmp_check_sum = pnet::packet::util::checksum(&icmp_packet.packet(), 1);
+    icmp_packet.set_checksum(icmp_check_sum);
 }

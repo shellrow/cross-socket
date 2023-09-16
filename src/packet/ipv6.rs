@@ -2,6 +2,8 @@ use std::net::Ipv6Addr;
 use pnet::packet::Packet;
 use super::ip::IpNextLevelProtocol;
 
+pub const IPV6_HEADER_LEN: usize = pnet::packet::ipv6::MutableIpv6Packet::minimum_packet_size();
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Ipv6Packet {
     pub version: u8,
@@ -28,5 +30,32 @@ impl Ipv6Packet {
             destination: packet.get_destination(),
             payload: packet.payload().to_vec(),
         }
+    }
+}
+
+pub fn build_ipv6_packet(
+    ipv6_packet: &mut pnet::packet::ipv6::MutableIpv6Packet,
+    src_ip: Ipv6Addr,
+    dst_ip: Ipv6Addr,
+    next_protocol: IpNextLevelProtocol,
+) {
+    ipv6_packet.set_source(src_ip);
+    ipv6_packet.set_destination(dst_ip);
+    ipv6_packet.set_version(6);
+    ipv6_packet.set_hop_limit(64);
+    match next_protocol {
+        IpNextLevelProtocol::Tcp => {
+            ipv6_packet.set_next_header(pnet::packet::ip::IpNextHeaderProtocols::Tcp);
+            ipv6_packet.set_payload_length(32);
+        }
+        IpNextLevelProtocol::Udp => {
+            ipv6_packet.set_next_header(pnet::packet::ip::IpNextHeaderProtocols::Udp);
+            ipv6_packet.set_payload_length(8);
+        }
+        IpNextLevelProtocol::Icmpv6 => {
+            ipv6_packet.set_next_header(pnet::packet::ip::IpNextHeaderProtocols::Icmpv6);
+            ipv6_packet.set_payload_length(8);
+        }
+        _ => {}
     }
 }

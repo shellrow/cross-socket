@@ -1,9 +1,20 @@
+#[cfg(not(target_os = "windows"))]
+mod unix;
+#[cfg(not(target_os = "windows"))]
+pub(crate) use unix::*;
+
+#[cfg(target_os = "windows")]
+mod windows;
+#[cfg(target_os = "windows")]
+pub(crate) use windows::*;
+
 use async_io::Async;
 use socket2::{Domain, SockAddr, Socket as SystemSocket, Type};
 use std::io;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
 
+use crate::packet::PacketInfo;
 use crate::packet::ip::IpNextLevelProtocol;
 
 #[derive(Clone, Debug)]
@@ -157,6 +168,81 @@ impl Socket {
                 Ok(result) => return Ok(result),
                 Err(_) => continue,
             }
+        }
+    }
+}
+
+pub struct DataLinkSocket {
+    pub interface: crate::interface::Interface,
+    sender: Box<dyn pnet::datalink::DataLinkSender>,
+    receiver: Box<dyn pnet::datalink::DataLinkReceiver>,
+}
+
+impl DataLinkSocket {
+    pub fn new(interface: crate::interface::Interface, promiscuous: bool) -> io::Result<DataLinkSocket> {
+        let interfaces = pnet::datalink::interfaces();
+        let network_interface = match interfaces
+        .into_iter()
+        .filter(|network_interface: &pnet::datalink::NetworkInterface| {
+            network_interface.index == interface.index
+        })
+        .next()
+        {
+            Some(network_interface) => network_interface,
+            None => return Err(io::Error::new(io::ErrorKind::Other, "Network Interface not found")),
+        };
+        let config = pnet::datalink::Config {
+            write_buffer_size: 4096,
+            read_buffer_size: 4096,
+            read_timeout: None,
+            write_timeout: None,
+            channel_type: pnet::datalink::ChannelType::Layer2,
+            bpf_fd_attempts: 1000,
+            linux_fanout: None,
+            promiscuous: promiscuous,
+        };
+        let (tx, rx) = match pnet::datalink::channel(&network_interface, config) {
+            Ok(pnet::datalink::Channel::Ethernet(sender, receiver)) => (sender, receiver),
+            Ok(_) => return Err(io::Error::new(io::ErrorKind::Other, "Not an Ethernet interface")),
+            Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
+        };
+        Ok(DataLinkSocket {
+            interface: interface,
+            sender: tx,
+            receiver: rx,
+        })
+    }
+    pub fn send(&mut self, packet_frame: PacketInfo) -> io::Result<()> {
+        build_and_send_packet(&mut self.sender, packet_frame)
+    }
+    pub fn send_to(&mut self, buf: &[u8]) -> io::Result<usize> {
+        match self.sender.send_to(buf, None) {
+            Some(res) => {
+                match res {
+                    Ok(_) => return Ok(buf.len()),
+                    Err(_) => return Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
+                }
+            },
+            None => Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
+        }
+    }
+    pub fn build_and_send(&mut self, num_packets: usize, packet_size: usize, func: &mut dyn FnMut(&mut [u8])) -> io::Result<()> {
+        match self.sender.build_and_send(num_packets, packet_size, func) {
+            Some(res) => {
+                match res {
+                    Ok(_) => return Ok(()),
+                    Err(_) => return Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
+                }
+            },
+            None => Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
+        }
+    }
+    pub fn receive(&mut self) -> io::Result<&[u8]> {
+        match self.receiver.next() {
+            Ok(packet) => {
+                Ok(packet)
+            },
+            Err(_) => Err(io::Error::new(io::ErrorKind::Other, "Failed to receive packet")),
         }
     }
 }

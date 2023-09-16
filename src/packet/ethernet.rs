@@ -1,6 +1,8 @@
 use pnet::packet::Packet;
 use crate::datalink::MacAddr;
 
+pub const ETHERNET_HEADER_LEN: usize = 14;
+
 // define the EtherType enum from avove as a const
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub enum EtherType {
@@ -132,6 +134,30 @@ impl EthernetPacket {
             source: MacAddr::new(packet.get_source().octets()),
             ethertype: EtherType::from_u16(packet.get_ethertype().0).unwrap(),
             payload: packet.payload().to_vec(),
+        }
+    }
+}
+
+pub fn build_ethernet_packet(
+    eth_packet: &mut pnet::packet::ethernet::MutableEthernetPacket,
+    src_mac: MacAddr,
+    dst_mac: MacAddr,
+    ether_type: EtherType,
+) {
+    eth_packet.set_source(pnet::datalink::MacAddr::from(src_mac.octets()));
+    eth_packet.set_destination(pnet::datalink::MacAddr::from(dst_mac.octets()));
+    match ether_type {
+        EtherType::Arp => {
+            eth_packet.set_ethertype(pnet::packet::ethernet::EtherTypes::Arp);
+        }
+        EtherType::IPv4 => {
+            eth_packet.set_ethertype(pnet::packet::ethernet::EtherTypes::Ipv4);
+        }
+        EtherType::IPv6 => {
+            eth_packet.set_ethertype(pnet::packet::ethernet::EtherTypes::Ipv6);
+        }
+        _ => {
+            // TODO
         }
     }
 }
