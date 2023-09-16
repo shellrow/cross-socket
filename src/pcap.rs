@@ -10,7 +10,8 @@ use crate::packet::{
     icmp::IcmpPacket, 
     icmpv6::Icmpv6Packet, 
     ipv4::Ipv4Packet,
-    ipv6::Ipv6Packet};
+    ipv6::Ipv6Packet,
+    arp::ArpPacket};
 use chrono::Local;
 use pnet::packet::Packet;
 use std::net::IpAddr;
@@ -89,25 +90,20 @@ fn receive_packets(
                                 ipv6_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &fingerprints);
                             }
                         }
-                        /* pnet::packet::ethernet::EtherTypes::Vlan => {
-                            if capture_options.default {
-                                vlan_handler(&frame, &capture_options, capture_info);
+                        pnet::packet::ethernet::EtherTypes::Arp => {
+                            if filter_ether_type(EtherType::Arp, &capture_options) {
+                                arp_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &fingerprints);
                             }
-                        } */
-                        /* pnet::packet::ethernet::EtherTypes::Arp => {
-                            if filter_protocol("ARP", &capture_options) {
-                                arp_handler(&frame, &capture_options, capture_info);
+                        }
+                        pnet::packet::ethernet::EtherTypes::Rarp => {
+                            if filter_ether_type(EtherType::Rarp, &capture_options) {
+                                rarp_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &fingerprints);
                             }
-                        } */
-                        /* pnet::packet::ethernet::EtherTypes::Rarp => {
-                            if filter_protocol("RARP", &capture_options) {
-                                rarp_handler(&frame, &capture_options, capture_info);
-                            }
-                        } */
+                        }
                         _ => {
-                            /* if capture_options.default {
-                                eth_handler(&frame, &capture_options, capture_info);
-                            } */
+                            if capture_options.receive_undefined {
+                                eth_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &fingerprints);
+                            }
                         }
                     }
                 }
@@ -198,42 +194,25 @@ fn ipv6_handler(
     }
 }
 
-/* fn eth_handler(
-    ethernet: &pnet::packet::ethernet::EthernetPacket,
-    _capture_options: &PacketCaptureOptions,
-    capture_info: CaptureInfo,
+fn eth_handler(
+    _ethernet: &pnet::packet::ethernet::EthernetPacket,
+    capture_options: &PacketCaptureOptions,
+    packet_frame: &mut PacketFrame,
+    msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
+    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
-    print!("[{}] [{}] ", capture_info.capture_no, capture_info.datatime);
-    println!(
-        "[{}, {} -> {}, Length {}]",
-        packet::get_ethertype_string(ethernet.get_ethertype()),
-        ethernet.get_source(),
-        ethernet.get_destination(),
-        ethernet.payload().len()
-    );
-} */
-
-/* fn vlan_handler(
-    ethernet: &pnet::packet::ethernet::EthernetPacket,
-    _capture_options: &PacketCaptureOptions,
-    capture_info: CaptureInfo,
-) {
-    if let Some(vlan) = pnet::packet::vlan::VlanPacket::new(ethernet.payload()) {
-        print!("[{}] [{}] ", capture_info.capture_no, capture_info.datatime);
-        println!(
-            "[VLAN, {} -> {}, ID {}, Length {}]",
-            ethernet.get_source(),
-            ethernet.get_destination(),
-            vlan.get_vlan_identifier(),
-            vlan.payload().len()
-        );
+    msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
+    if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
+        fingerprints.lock().unwrap().push(packet_frame.clone());
     }
-} */
+}
 
-/* fn arp_handler(
+fn arp_handler(
     ethernet: &pnet::packet::ethernet::EthernetPacket,
     capture_options: &PacketCaptureOptions,
-    capture_info: CaptureInfo,
+    packet_frame: &mut PacketFrame,
+    msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
+    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     if let Some(arp) = pnet::packet::arp::ArpPacket::new(ethernet.payload()) {
         if filter_host(
@@ -241,36 +220,36 @@ fn ipv6_handler(
             IpAddr::V4(arp.get_target_proto_addr()),
             capture_options,
         ) {
-            print!("[{}] [{}] ", capture_info.capture_no, capture_info.datatime);
-            println!(
-                "[ARP, {}({}) -> {}({}), Length {}]",
-                arp.get_sender_proto_addr().to_string(),
-                arp.get_sender_hw_addr().to_string(),
-                arp.get_target_proto_addr().to_string(),
-                arp.get_target_hw_addr().to_string(),
-                arp.payload().len()
-            );
+            packet_frame.arp_packet = Some(ArpPacket::from_pnet_packet(arp));
+            msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
+            if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
+                fingerprints.lock().unwrap().push(packet_frame.clone());
+            }
         }
     }
-} */
+}
 
-/* fn rarp_handler(
+fn rarp_handler(
     ethernet: &pnet::packet::ethernet::EthernetPacket,
-    _capture_options: &PacketCaptureOptions,
-    capture_info: CaptureInfo,
+    capture_options: &PacketCaptureOptions,
+    packet_frame: &mut PacketFrame,
+    msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
+    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     if let Some(arp) = pnet::packet::arp::ArpPacket::new(ethernet.payload()) {
-        print!("[{}] [{}] ", capture_info.capture_no, capture_info.datatime);
-        println!(
-            "[RARP, {}({}) -> {}({}), Length {}]",
-            arp.get_sender_proto_addr().to_string(),
-            arp.get_sender_hw_addr().to_string(),
-            arp.get_target_proto_addr().to_string(),
-            arp.get_target_hw_addr().to_string(),
-            arp.payload().len()
-        );
+        if filter_host(
+            IpAddr::V4(arp.get_sender_proto_addr()),
+            IpAddr::V4(arp.get_target_proto_addr()),
+            capture_options,
+        ) {
+            packet_frame.arp_packet = Some(ArpPacket::from_pnet_packet(arp));
+            msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
+            if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
+                fingerprints.lock().unwrap().push(packet_frame.clone());
+            }
+        }
     }
-} */
+}
 
 fn tcp_handler(
     packet: &pnet::packet::ipv4::Ipv4Packet,

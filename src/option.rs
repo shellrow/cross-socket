@@ -18,6 +18,7 @@ pub struct PacketCaptureOptions {
     pub promiscuous: bool,
     pub store: bool,
     pub store_limit: u32,
+    pub receive_undefined: bool,
 }
 
 impl PacketCaptureOptions {
@@ -35,6 +36,7 @@ impl PacketCaptureOptions {
             promiscuous: false,
             store: false,
             store_limit: u32::MAX,
+            receive_undefined: false,
         }
     }
     pub fn with_interface_index(mut self, interface_index: u32) -> PacketCaptureOptions {

@@ -25,6 +25,18 @@ default = ["setup"]
 setup = ["cross-socket-deps"]
 
 [[example]]
-name = "setup_win_deps"
-path = "examples/setup_win_deps.rs"
+name = "dump"
+path = "examples/dump.rs"
+
+[[example]]
+name = "handle"
+path = "examples/handle.rs"
+
+[[example]]
+name = "store"
+path = "examples/store.rs"
+
+[[example]]
+name = "resolve_deps"
+path = "examples/resolve_deps.rs"
 required-features = ["setup"]

@@ -135,7 +135,7 @@ pub struct Ipv4Packet {
 }
 
 impl Ipv4Packet {
-    pub fn from_pnet_packet(packet: &pnet::packet::ipv4::Ipv4Packet) -> Ipv4Packet {
+    pub(crate) fn from_pnet_packet(packet: &pnet::packet::ipv4::Ipv4Packet) -> Ipv4Packet {
         Ipv4Packet {
             version: packet.get_version(),
             header_length: packet.get_header_length(),

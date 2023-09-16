@@ -387,7 +387,7 @@ pub struct Icmpv6Packet {
 }
 
 impl Icmpv6Packet {
-    pub fn from_pnet_packet(packet: &pnet::packet::icmpv6::Icmpv6Packet) -> Icmpv6Packet {
+    pub(crate) fn from_pnet_packet(packet: &pnet::packet::icmpv6::Icmpv6Packet) -> Icmpv6Packet {
         Icmpv6Packet {
             icmpv6_type: Icmpv6Type::from_pnet_type(packet.get_icmpv6_type()),
             icmpv6_code: Icmpv6Code::from_u8(packet.get_icmpv6_code().0),

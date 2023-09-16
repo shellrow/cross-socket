@@ -126,7 +126,7 @@ pub struct EthernetPacket {
 }
 
 impl EthernetPacket {
-    pub fn from_pnet_packet(packet: &pnet::packet::ethernet::EthernetPacket) -> EthernetPacket {
+    pub(crate) fn from_pnet_packet(packet: &pnet::packet::ethernet::EthernetPacket) -> EthernetPacket {
         EthernetPacket {
             destination: MacAddr::new(packet.get_destination().octets()),
             source: MacAddr::new(packet.get_source().octets()),

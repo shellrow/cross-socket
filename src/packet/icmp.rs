@@ -229,7 +229,7 @@ pub struct IcmpPacket {
 }
 
 impl IcmpPacket {
-    pub fn from_pnet_packet(packet: &pnet::packet::icmp::IcmpPacket) -> IcmpPacket {
+    pub(crate) fn from_pnet_packet(packet: &pnet::packet::icmp::IcmpPacket) -> IcmpPacket {
         IcmpPacket {
             icmp_type: IcmpType::from_pnet_type(packet.get_icmp_type()),
             icmp_code: IcmpCode::from_u8(packet.get_icmp_code().0),

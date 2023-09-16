@@ -10,7 +10,7 @@ pub struct UdpPacket {
 }
 
 impl UdpPacket {
-    pub fn from_pnet_packet(packet: &pnet::packet::udp::UdpPacket) -> UdpPacket {
+    pub(crate) fn from_pnet_packet(packet: &pnet::packet::udp::UdpPacket) -> UdpPacket {
         UdpPacket {
             source: packet.get_source(),
             destination: packet.get_destination(),

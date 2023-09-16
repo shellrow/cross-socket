@@ -153,7 +153,7 @@ pub struct TcpPacket {
 }
 
 impl TcpPacket {
-    pub fn from_pnet_packet(packet: &pnet::packet::tcp::TcpPacket) -> TcpPacket {
+    pub(crate) fn from_pnet_packet(packet: &pnet::packet::tcp::TcpPacket) -> TcpPacket {
         let mut tcp_options: Vec<TcpOption> = vec![];
         for opt in packet.get_options_iter() {
             tcp_options.push(TcpOption::from_u8(opt.get_number().0));

@@ -1,5 +1,3 @@
-use std::net::IpAddr;
-
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub enum IpNextLevelProtocol {
     Hopopt,
@@ -292,7 +290,8 @@ impl IpNextLevelProtocol {
             _ => IpNextLevelProtocol::Reserved,
         }
     }
-    pub fn from_pnet_packet_protocol(n: pnet::packet::ip::IpNextHeaderProtocol) -> IpNextLevelProtocol {
+    #[allow(dead_code)]
+    pub(crate) fn from_pnet_packet_protocol(n: pnet::packet::ip::IpNextHeaderProtocol) -> IpNextLevelProtocol {
         match n {
             pnet::packet::ip::IpNextHeaderProtocols::Hopopt => IpNextLevelProtocol::Hopopt,
             pnet::packet::ip::IpNextHeaderProtocols::Icmp => IpNextLevelProtocol::Icmp,
@@ -438,20 +437,4 @@ impl IpNextLevelProtocol {
             _ => IpNextLevelProtocol::Reserved,
         }
     }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct IpFingerprint {
-    pub source_ip: IpAddr,
-    pub destination_ip: IpAddr,
-    pub version: u8,
-    pub ttl: u8,
-    pub tos: u8,
-    pub id: u16,
-    pub df: bool,
-    pub flags: u8,
-    pub fragment_offset: u16,
-    pub header_length: u8,
-    pub total_length: u16,
-    pub next_level_protocol: IpNextLevelProtocol,
 }

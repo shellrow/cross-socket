@@ -16,7 +16,7 @@ pub struct Ipv6Packet {
 }
 
 impl Ipv6Packet {
-    pub fn from_pnet_packet(packet: &pnet::packet::ipv6::Ipv6Packet) -> Ipv6Packet {
+    pub(crate) fn from_pnet_packet(packet: &pnet::packet::ipv6::Ipv6Packet) -> Ipv6Packet {
         Ipv6Packet {
             version: packet.get_version(),
             traffic_class: packet.get_traffic_class(),

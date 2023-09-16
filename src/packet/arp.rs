@@ -1,4 +1,5 @@
 use std::net::Ipv4Addr;
+use pnet::packet::Packet;
 use crate::datalink::MacAddr;
 use crate::packet::ethernet::EtherType;
 
@@ -165,4 +166,19 @@ pub struct ArpPacket {
     pub target_hw_addr: MacAddr,
     pub target_proto_addr: Ipv4Addr,
     pub payload: Vec<u8>,
+}
+
+impl ArpPacket {
+    pub(crate) fn from_pnet_packet(packet: pnet::packet::arp::ArpPacket) -> ArpPacket {
+        ArpPacket {
+            hardware_type: ArpHardwareType::from_u16(packet.get_hardware_type().0).unwrap(),
+            protocol_type: EtherType::from_u16(packet.get_protocol_type().0).unwrap(),
+            operation: ArpOperation::from_u16(packet.get_operation().0).unwrap(),
+            sender_hw_addr: MacAddr::new(packet.get_sender_hw_addr().octets()),
+            sender_proto_addr: packet.get_sender_proto_addr(),
+            target_hw_addr: MacAddr::new(packet.get_target_hw_addr().octets()),
+            target_proto_addr: packet.get_target_proto_addr(),
+            payload: packet.payload().to_vec(),
+        }
+    }
 }
