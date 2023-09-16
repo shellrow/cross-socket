@@ -437,4 +437,14 @@ impl IpNextLevelProtocol {
             _ => IpNextLevelProtocol::Reserved,
         }
     }
+
+    pub(crate) fn to_socket_protocol(&self) -> socket2::Protocol {
+        match *self {
+            IpNextLevelProtocol::Tcp => socket2::Protocol::TCP,
+            IpNextLevelProtocol::Udp => socket2::Protocol::UDP,
+            IpNextLevelProtocol::Icmp => socket2::Protocol::ICMPV4,
+            IpNextLevelProtocol::Icmpv6 => socket2::Protocol::ICMPV6,
+            _ => socket2::Protocol::TCP,
+        }
+    }
 }
