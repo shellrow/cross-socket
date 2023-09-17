@@ -1,3 +1,6 @@
+mod shared;
+pub(crate) use shared::*;
+
 #[cfg(not(target_os = "windows"))]
 mod unix;
 #[cfg(not(target_os = "windows"))]
@@ -91,6 +94,10 @@ pub struct AsyncSocket {
 
 impl AsyncSocket {
     pub fn new(socket_option: SocketOption) -> io::Result<AsyncSocket> {
+        match check_socket_option(socket_option.clone()) {
+            Ok(_) => (),
+            Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
+        }
         let socket: SystemSocket = SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), Some(socket_option.protocol.to_socket_protocol()))?;
         socket.set_nonblocking(true)?;
         Ok(AsyncSocket {
@@ -140,6 +147,10 @@ pub struct Socket {
 
 impl Socket {
     pub fn new(socket_option: SocketOption) -> io::Result<Socket> {
+        match check_socket_option(socket_option.clone()) {
+            Ok(_) => (),
+            Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
+        }
         let socket: SystemSocket = SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), Some(socket_option.protocol.to_socket_protocol()))?;
         socket.set_nonblocking(true)?;
         Ok(Socket {

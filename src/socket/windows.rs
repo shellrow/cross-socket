@@ -1,129 +1,58 @@
-use std::io;
-use crate::packet::{self, PacketInfo, builder};
+use crate::packet::ip::IpNextLevelProtocol;
 
-fn build_packet(packet_info: PacketInfo, tmp_packet: &mut [u8]) {
-    match packet_info.ether_type {
-        packet::ethernet::EtherType::Arp => {
-            let packet = builder::build_arp_packet(packet_info);
-            tmp_packet.copy_from_slice(&packet);
-            return;
-        }
-        packet::ethernet::EtherType::Ipv4 => {
-            match packet_info.ip_protocol {
-                Some(packet::ip::IpNextLevelProtocol::Icmp) => {
-                    let packet = builder::build_icmp_packet(packet_info);
-                    tmp_packet.copy_from_slice(&packet);
-                    return;
+use super::{SocketOption, IpVersion, SocketType};
+
+pub fn check_socket_option(socket_option: SocketOption) -> Result<(), String> {
+    match socket_option.ip_version {
+        IpVersion::V4 => {
+            match socket_option.socket_type {
+                SocketType::Raw => {
+                    match socket_option.protocol {
+                        IpNextLevelProtocol::Icmp => Ok(()),
+                        IpNextLevelProtocol::Tcp => Err(String::from("TCP is not supported on IPv4 raw socket on Windows(Due to Winsock2 limitation))")),
+                        IpNextLevelProtocol::Udp => Ok(()),
+                        _ => Err(String::from("Invalid protocol")),
+                    }
                 }
-                Some(packet::ip::IpNextLevelProtocol::Tcp) => {
-                    let packet = builder::build_tcp_syn_packet(packet_info);
-                    tmp_packet.copy_from_slice(&packet);
-                    return;
+                SocketType::Dgram => {
+                    match socket_option.protocol {
+                        IpNextLevelProtocol::Icmp => Ok(()),
+                        IpNextLevelProtocol::Udp => Ok(()),
+                        _ => Err(String::from("Invalid protocol")),
+                    }
                 }
-                Some(packet::ip::IpNextLevelProtocol::Udp) => {
-                    // TODO
-                }
-                _ => {
-                    return;
-                }
-            }
-        }
-        packet::ethernet::EtherType::Ipv6 => {
-            match packet_info.ip_protocol {
-                Some(packet::ip::IpNextLevelProtocol::Icmpv6) => {
-                    let packet = builder::build_icmpv6_packet(packet_info);
-                    tmp_packet.copy_from_slice(&packet);
-                    return;
-                }
-                Some(packet::ip::IpNextLevelProtocol::Tcp) => {
-                    let packet = builder::build_tcp_syn_packet(packet_info);
-                    tmp_packet.copy_from_slice(&packet);
-                    return;
-                }
-                Some(packet::ip::IpNextLevelProtocol::Udp) => {
-                    // TODO
-                }
-                _ => {
-                    return;
+                SocketType::Stream => {
+                    match socket_option.protocol {
+                        IpNextLevelProtocol::Tcp => Ok(()),
+                        _ => Err(String::from("Invalid protocol")),
+                    }
                 }
             }
         }
-        _ => {
-            return;
+        IpVersion::V6 => {
+            match socket_option.socket_type {
+                SocketType::Raw => {
+                    match socket_option.protocol {
+                        IpNextLevelProtocol::Icmpv6 => Ok(()),
+                        IpNextLevelProtocol::Tcp => Err(String::from("TCP is not supported on IPv4 raw socket on Windows(Due to Winsock2 limitation))")),
+                        IpNextLevelProtocol::Udp => Ok(()),
+                        _ => Err(String::from("Invalid protocol")),
+                    }
+                }
+                SocketType::Dgram => {
+                    match socket_option.protocol {
+                        IpNextLevelProtocol::Icmpv6 => Ok(()),
+                        IpNextLevelProtocol::Udp => Ok(()),
+                        _ => Err(String::from("Invalid protocol")),
+                    }
+                }
+                SocketType::Stream => {
+                    match socket_option.protocol {
+                        IpNextLevelProtocol::Tcp => Ok(()),
+                        _ => Err(String::from("Invalid protocol")),
+                    }
+                }
+            }
         }
     }
-}
-
-pub(crate) fn build_and_send_packet(tx: &mut Box<dyn pnet::datalink::DataLinkSender>, packet_info: PacketInfo) -> io::Result<usize> {
-    match packet_info.ether_type {
-        packet::ethernet::EtherType::Arp => {
-            let packet_size: usize = packet::ethernet::ETHERNET_HEADER_LEN + packet::arp::ARP_HEADER_LEN;
-            tx.build_and_send(1, packet_size, &mut |packet: &mut [u8]| {
-                build_packet(packet_info.clone(), packet);
-            });
-            return Ok(packet_size);
-        }
-        packet::ethernet::EtherType::Ipv4 => {
-            match packet_info.ip_protocol {
-                Some(packet::ip::IpNextLevelProtocol::Icmp) => {
-                    let packet_size: usize = packet::ethernet::ETHERNET_HEADER_LEN
-                        + packet::ipv4::IPV4_HEADER_LEN
-                        + packet::icmp::ICMPV4_HEADER_LEN;
-                    tx.build_and_send(1, packet_size, &mut |packet: &mut [u8]| {
-                        build_packet(packet_info.clone(), packet);
-                    });
-                    return Ok(packet_size);
-                }
-                Some(packet::ip::IpNextLevelProtocol::Tcp) => {
-                    let packet_size: usize = packet::ethernet::ETHERNET_HEADER_LEN
-                    + packet::ipv4::IPV4_HEADER_LEN
-                    + packet::tcp::TCP_HEADER_LEN
-                    + packet::tcp::TCP_DEFAULT_OPTION_LEN;
-                    tx.build_and_send(1, packet_size, &mut |packet: &mut [u8]| {
-                        build_packet(packet_info.clone(), packet);
-                    });
-                    return Ok(packet_size);
-                }
-                Some(packet::ip::IpNextLevelProtocol::Udp) => {
-                    // TODO
-                }
-                _ => {
-                    return Err(io::Error::new(io::ErrorKind::Other, "Invalid IP Protocol"));
-                }
-            }
-        }
-        packet::ethernet::EtherType::Ipv6 => {
-            match packet_info.ip_protocol {
-                Some(packet::ip::IpNextLevelProtocol::Icmpv6) => {
-                    let packet_size: usize = packet::ethernet::ETHERNET_HEADER_LEN
-                        + packet::ipv6::IPV6_HEADER_LEN
-                        + packet::icmpv6::ICMPV6_HEADER_LEN;
-                    tx.build_and_send(1, packet_size, &mut |packet: &mut [u8]| {
-                        build_packet(packet_info.clone(), packet);
-                    });
-                    return Ok(packet_size);
-                }
-                Some(packet::ip::IpNextLevelProtocol::Tcp) => {
-                    let packet_size: usize = packet::ethernet::ETHERNET_HEADER_LEN
-                        + packet::ipv6::IPV6_HEADER_LEN
-                        + packet::tcp::TCP_HEADER_LEN
-                        + packet::tcp::TCP_DEFAULT_OPTION_LEN;
-                    tx.build_and_send(1, packet_size, &mut |packet: &mut [u8]| {
-                        build_packet(packet_info.clone(), packet);
-                    });
-                    return Ok(packet_size);
-                }
-                Some(packet::ip::IpNextLevelProtocol::Udp) => {
-                    // TODO
-                }
-                _ => {
-                    return Err(io::Error::new(io::ErrorKind::Other, "Invalid IP Protocol"));
-                }
-            }
-        }
-        _ => {
-            return Err(io::Error::new(io::ErrorKind::Other, "Invalid EtherType"));
-        }
-    }
-    Ok(0)
 }
