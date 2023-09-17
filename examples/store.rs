@@ -9,7 +9,7 @@ use cross_socket::packet::ip::IpNextLevelProtocol;
 // Start capturing TCP packets on the default interface
 // Filter: Protocol: TCP only, Ports: 22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443
 // Stop after 10 seconds using the stop handle
-// Store captured packets (fingerprints) in memory and print them after capturing
+// Store captured packets in memory and print them after capturing
 fn main() {
     // Get default interface information
     let default_interface: Interface =
@@ -42,7 +42,7 @@ fn main() {
     println!("Capturing packets...");
     listener.start();
     // Print captured packets
-    for fingerprint in listener.get_fingerprints() {
-        println!("{:?}", fingerprint);
+    for packet in listener.get_packets() {
+        println!("{:?}", packet);
     }
 }

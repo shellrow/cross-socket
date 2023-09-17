@@ -43,8 +43,8 @@ pub fn start_capture(capture_options: PacketCaptureOptions, msg_tx: &Arc<Mutex<S
         Ok(_) => panic!("Unknown channel type"),
         Err(e) => panic!("Error happened {}", e),
     };
-    let fingerprints: Vec<PacketFrame> = receive_packets(&mut rx, capture_options, msg_tx, stop);
-    fingerprints
+    let packets: Vec<PacketFrame> = receive_packets(&mut rx, capture_options, msg_tx, stop);
+    packets
 }
 
 fn receive_packets(
@@ -53,7 +53,7 @@ fn receive_packets(
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
     stop: &Arc<Mutex<bool>>
 ) -> Vec<PacketFrame> {
-    let fingerprints: Arc<Mutex<Vec<PacketFrame>>> = Arc::new(Mutex::new(Vec::new()));
+    let packets: Arc<Mutex<Vec<PacketFrame>>> = Arc::new(Mutex::new(Vec::new()));
     let start_time = Instant::now();
     let mut cnt = 1;
     loop {
@@ -82,27 +82,27 @@ fn receive_packets(
                     match frame.get_ethertype() {
                         pnet::packet::ethernet::EtherTypes::Ipv4 => {
                             if filter_ether_type(EtherType::IPv4, &capture_options) {
-                                ipv4_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &fingerprints);
+                                ipv4_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &packets);
                             }
                         }
                         pnet::packet::ethernet::EtherTypes::Ipv6 => {
                             if filter_ether_type(EtherType::IPv6, &capture_options) {
-                                ipv6_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &fingerprints);
+                                ipv6_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &packets);
                             }
                         }
                         pnet::packet::ethernet::EtherTypes::Arp => {
                             if filter_ether_type(EtherType::Arp, &capture_options) {
-                                arp_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &fingerprints);
+                                arp_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &packets);
                             }
                         }
                         pnet::packet::ethernet::EtherTypes::Rarp => {
                             if filter_ether_type(EtherType::Rarp, &capture_options) {
-                                rarp_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &fingerprints);
+                                rarp_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &packets);
                             }
                         }
                         _ => {
                             if capture_options.receive_undefined {
-                                eth_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &fingerprints);
+                                eth_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &packets);
                             }
                         }
                     }
@@ -113,10 +113,10 @@ fn receive_packets(
             }
         }
         if *stop.lock().unwrap() {
-            return fingerprints.lock().unwrap().clone();
+            return packets.lock().unwrap().clone();
         }
         if Instant::now().duration_since(start_time) > capture_options.duration {
-            return fingerprints.lock().unwrap().clone();
+            return packets.lock().unwrap().clone();
         }
         cnt += 1;
     }
@@ -127,7 +127,7 @@ fn ipv4_handler(
     capture_options: &PacketCaptureOptions,
     packet_frame: &mut PacketFrame,
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
-    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
+    packets: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     if let Some(packet) = pnet::packet::ipv4::Ipv4Packet::new(ethernet.payload()) {
         packet_frame.ipv4_packet = Some(Ipv4Packet::from_pnet_packet(&packet));
@@ -139,17 +139,17 @@ fn ipv4_handler(
             match packet.get_next_level_protocol() {
                 pnet::packet::ip::IpNextHeaderProtocols::Tcp => {
                     if filter_ip_protocol(IpNextLevelProtocol::Tcp, &capture_options) {
-                        tcp_handler(&packet, &capture_options, packet_frame, msg_tx, &fingerprints);
+                        tcp_handler(&packet, &capture_options, packet_frame, msg_tx, &packets);
                     }
                 }
                 pnet::packet::ip::IpNextHeaderProtocols::Udp => {
                     if filter_ip_protocol(IpNextLevelProtocol::Udp, &capture_options) {
-                        udp_handler(&packet, &capture_options, packet_frame, msg_tx, &fingerprints);
+                        udp_handler(&packet, &capture_options, packet_frame, msg_tx, &packets);
                     }
                 }
                 pnet::packet::ip::IpNextHeaderProtocols::Icmp => {
                     if filter_ip_protocol(IpNextLevelProtocol::Icmp, &capture_options) {
-                        icmp_handler(&packet, &capture_options, packet_frame, msg_tx, &fingerprints);
+                        icmp_handler(&packet, &capture_options, packet_frame, msg_tx, &packets);
                     }
                 }
                 _ => {}
@@ -163,7 +163,7 @@ fn ipv6_handler(
     capture_options: &PacketCaptureOptions,
     packet_frame: &mut PacketFrame,
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
-    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
+    packets: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     if let Some(packet) = pnet::packet::ipv6::Ipv6Packet::new(ethernet.payload()) {
         packet_frame.ipv6_packet = Some(Ipv6Packet::from_pnet_packet(&packet));
@@ -175,17 +175,17 @@ fn ipv6_handler(
             match packet.get_next_header() {
                 pnet::packet::ip::IpNextHeaderProtocols::Tcp => {
                     if filter_ip_protocol(IpNextLevelProtocol::Tcp, &capture_options) {
-                        tcp_handler_v6(&packet, &capture_options, packet_frame, msg_tx, &fingerprints);
+                        tcp_handler_v6(&packet, &capture_options, packet_frame, msg_tx, &packets);
                     }
                 }
                 pnet::packet::ip::IpNextHeaderProtocols::Udp => {
                     if filter_ip_protocol(IpNextLevelProtocol::Udp, &capture_options) {
-                        udp_handler_v6(&packet, &capture_options, packet_frame, msg_tx, &fingerprints);
+                        udp_handler_v6(&packet, &capture_options, packet_frame, msg_tx, &packets);
                     }
                 }
                 pnet::packet::ip::IpNextHeaderProtocols::Icmpv6 => {
                     if filter_ip_protocol(IpNextLevelProtocol::Icmpv6, &capture_options) {
-                        icmpv6_handler(&packet, &capture_options, packet_frame, msg_tx, &fingerprints);
+                        icmpv6_handler(&packet, &capture_options, packet_frame, msg_tx, &packets);
                     }
                 }
                 _ => {}
@@ -199,11 +199,11 @@ fn eth_handler(
     capture_options: &PacketCaptureOptions,
     packet_frame: &mut PacketFrame,
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
-    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
+    packets: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
-    if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
-        fingerprints.lock().unwrap().push(packet_frame.clone());
+    if capture_options.store && packets.lock().unwrap().len() < capture_options.store_limit as usize {
+        packets.lock().unwrap().push(packet_frame.clone());
     }
 }
 
@@ -212,7 +212,7 @@ fn arp_handler(
     capture_options: &PacketCaptureOptions,
     packet_frame: &mut PacketFrame,
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
-    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
+    packets: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     if let Some(arp) = pnet::packet::arp::ArpPacket::new(ethernet.payload()) {
         if filter_host(
@@ -222,8 +222,8 @@ fn arp_handler(
         ) {
             packet_frame.arp_packet = Some(ArpPacket::from_pnet_packet(arp));
             msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
-            if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
-                fingerprints.lock().unwrap().push(packet_frame.clone());
+            if capture_options.store && packets.lock().unwrap().len() < capture_options.store_limit as usize {
+                packets.lock().unwrap().push(packet_frame.clone());
             }
         }
     }
@@ -234,7 +234,7 @@ fn rarp_handler(
     capture_options: &PacketCaptureOptions,
     packet_frame: &mut PacketFrame,
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
-    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
+    packets: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     if let Some(arp) = pnet::packet::arp::ArpPacket::new(ethernet.payload()) {
         if filter_host(
@@ -244,8 +244,8 @@ fn rarp_handler(
         ) {
             packet_frame.arp_packet = Some(ArpPacket::from_pnet_packet(arp));
             msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
-            if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
-                fingerprints.lock().unwrap().push(packet_frame.clone());
+            if capture_options.store && packets.lock().unwrap().len() < capture_options.store_limit as usize {
+                packets.lock().unwrap().push(packet_frame.clone());
             }
         }
     }
@@ -256,15 +256,15 @@ fn tcp_handler(
     capture_options: &PacketCaptureOptions,
     packet_frame: &mut PacketFrame,
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
-    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
+    packets: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     let tcp = pnet::packet::tcp::TcpPacket::new(packet.payload());
     if let Some(tcp) = tcp {
         if filter_port(tcp.get_source(), tcp.get_destination(), capture_options) {
             packet_frame.tcp_packet = Some(TcpPacket::from_pnet_packet(&tcp));
             msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
-            if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
-                fingerprints.lock().unwrap().push(packet_frame.clone());
+            if capture_options.store && packets.lock().unwrap().len() < capture_options.store_limit as usize {
+                packets.lock().unwrap().push(packet_frame.clone());
             }
         }
     }
@@ -275,15 +275,15 @@ fn tcp_handler_v6(
     capture_options: &PacketCaptureOptions,
     packet_frame: &mut PacketFrame,
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
-    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
+    packets: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     let tcp = pnet::packet::tcp::TcpPacket::new(packet.payload());
     if let Some(tcp) = tcp {
         if filter_port(tcp.get_source(), tcp.get_destination(), capture_options) {
             packet_frame.tcp_packet = Some(TcpPacket::from_pnet_packet(&tcp));
             msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
-            if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
-                fingerprints.lock().unwrap().push(packet_frame.clone());
+            if capture_options.store && packets.lock().unwrap().len() < capture_options.store_limit as usize {
+                packets.lock().unwrap().push(packet_frame.clone());
             }
         }
     }
@@ -294,15 +294,15 @@ fn udp_handler(
     capture_options: &PacketCaptureOptions,
     packet_frame: &mut PacketFrame,
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
-    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
+    packets: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     let udp = pnet::packet::udp::UdpPacket::new(packet.payload());
     if let Some(udp) = udp {
         if filter_port(udp.get_source(), udp.get_destination(), capture_options) {
             packet_frame.udp_packet = Some(UdpPacket::from_pnet_packet(&udp));
             msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
-            if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
-                fingerprints.lock().unwrap().push(packet_frame.clone());
+            if capture_options.store && packets.lock().unwrap().len() < capture_options.store_limit as usize {
+                packets.lock().unwrap().push(packet_frame.clone());
             }
         }
     }
@@ -313,15 +313,15 @@ fn udp_handler_v6(
     capture_options: &PacketCaptureOptions,
     packet_frame: &mut PacketFrame,
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
-    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
+    packets: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     let udp = pnet::packet::udp::UdpPacket::new(packet.payload());
     if let Some(udp) = udp {
         if filter_port(udp.get_source(), udp.get_destination(), capture_options) {
             packet_frame.udp_packet = Some(UdpPacket::from_pnet_packet(&udp));
             msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
-            if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
-                fingerprints.lock().unwrap().push(packet_frame.clone());
+            if capture_options.store && packets.lock().unwrap().len() < capture_options.store_limit as usize {
+                packets.lock().unwrap().push(packet_frame.clone());
             }
         }
     }
@@ -332,13 +332,13 @@ fn icmp_handler(
     capture_options: &PacketCaptureOptions,
     packet_frame: &mut PacketFrame,
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
-    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
+    packets: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     if let Some(icmp) = pnet::packet::icmp::IcmpPacket::new(packet.payload()) {
         packet_frame.icmp_packet = Some(IcmpPacket::from_pnet_packet(&icmp));
         msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
-        if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
-            fingerprints.lock().unwrap().push(packet_frame.clone());
+        if capture_options.store && packets.lock().unwrap().len() < capture_options.store_limit as usize {
+            packets.lock().unwrap().push(packet_frame.clone());
         }
     }
 }
@@ -348,13 +348,13 @@ fn icmpv6_handler(
     capture_options: &PacketCaptureOptions,
     packet_frame: &mut PacketFrame,
     msg_tx: &Arc<Mutex<Sender<PacketFrame>>>,
-    fingerprints: &Arc<Mutex<Vec<PacketFrame>>>
+    packets: &Arc<Mutex<Vec<PacketFrame>>>
 ) {
     if let Some(icmp) = pnet::packet::icmpv6::Icmpv6Packet::new(packet.payload()) {
         packet_frame.icmpv6_packet = Some(Icmpv6Packet::from_pnet_packet(&icmp));
         msg_tx.lock().unwrap().send(packet_frame.clone()).unwrap();
-        if capture_options.store && fingerprints.lock().unwrap().len() < capture_options.store_limit as usize {
-            fingerprints.lock().unwrap().push(packet_frame.clone());
+        if capture_options.store && packets.lock().unwrap().len() < capture_options.store_limit as usize {
+            packets.lock().unwrap().push(packet_frame.clone());
         }
     }
 }
@@ -400,127 +400,3 @@ fn filter_ip_protocol(protocol: IpNextLevelProtocol, capture_options: &PacketCap
         return false;
     }
 }
-
-/* fn parse_ip_packet(packet: &pnet::packet::ipv4::Ipv4Packet, next_level_protocol: IpNextLevelProtocol) -> IpFingerprint {
-    let ip_fingerprint = IpFingerprint {
-        source_ip: IpAddr::V4(packet.get_source()),
-        destination_ip: IpAddr::V4(packet.get_destination()),
-        version: packet.get_version(),
-        ttl: packet.get_ttl(),
-        tos: packet.get_dscp(),
-        id: packet.get_identification(),
-        df: packet.get_flags() & 0b010 == 0b010,
-        flags: packet.get_flags() & 0b111,
-        fragment_offset: packet.get_fragment_offset(),
-        header_length: packet.get_header_length(),
-        total_length: packet.get_total_length(),
-        next_level_protocol: next_level_protocol,
-    };
-    ip_fingerprint
-} */
-
-/* fn parse_ipv6_packet(packet: &pnet::packet::ipv6::Ipv6Packet, next_level_protocol: IpNextLevelProtocol) -> IpFingerprint {
-    let ip_fingerprint = IpFingerprint {
-        source_ip: IpAddr::V6(packet.get_source()),
-        destination_ip: IpAddr::V6(packet.get_destination()),
-        version: packet.get_version(),
-        ttl: packet.get_hop_limit(),
-        tos: packet.get_traffic_class(),
-        id: 0,
-        df: false,
-        flags: 0,
-        fragment_offset: 0,
-        header_length: 0,
-        total_length: packet.get_payload_length(),
-        next_level_protocol: next_level_protocol,
-    };
-    ip_fingerprint
-} */
-
-/* fn parse_tcp_packet(packet: &pnet::packet::tcp::TcpPacket) -> TcpPacket {
-    let mut tcp_options: Vec<TcpOption> = vec![];
-    for opt in packet.get_options_iter() {
-        match opt.get_number() {
-            TcpOptionNumbers::EOL => tcp_options.push(TcpOption::Eol),
-            TcpOptionNumbers::NOP => tcp_options.push(TcpOption::Nop),
-            TcpOptionNumbers::MSS => tcp_options.push(TcpOption::Mss),
-            TcpOptionNumbers::WSCALE => tcp_options.push(TcpOption::Wscale),
-            TcpOptionNumbers::SACK_PERMITTED => tcp_options.push(TcpOption::SackParmitted),
-            TcpOptionNumbers::SACK => tcp_options.push(TcpOption::Sack),
-            TcpOptionNumbers::TIMESTAMPS => tcp_options.push(TcpOption::Timestamp),
-            _ => {}
-        }
-    }
-    let mut tcp_flags: Vec<TcpFlag> = vec![];
-    if packet.get_flags() & TcpFlag::Syn.number() == TcpFlag::Syn.number() {
-        tcp_flags.push(TcpFlag::Syn);
-    }
-    if packet.get_flags() & TcpFlag::Fin.number() == TcpFlag::Fin.number() {
-        tcp_flags.push(TcpFlag::Fin);
-    }
-    if packet.get_flags() & TcpFlag::Rst.number() == TcpFlag::Rst.number() {
-        tcp_flags.push(TcpFlag::Rst);
-    }
-    if packet.get_flags() & TcpFlag::Psh.number() == TcpFlag::Psh.number() {
-        tcp_flags.push(TcpFlag::Psh);
-    }
-    if packet.get_flags() & TcpFlag::Ack.number() == TcpFlag::Ack.number() {
-        tcp_flags.push(TcpFlag::Ack);
-    }
-    if packet.get_flags() & TcpFlag::Urg.number() == TcpFlag::Urg.number() {
-        tcp_flags.push(TcpFlag::Urg);
-    }
-    if packet.get_flags() & TcpFlag::Ece.number() == TcpFlag::Ece.number() {
-        tcp_flags.push(TcpFlag::Ece);
-    }
-    if packet.get_flags() & TcpFlag::Cwr.number() == TcpFlag::Cwr.number() {
-        tcp_flags.push(TcpFlag::Cwr);
-    }
-    let tcp_fingerprint = TcpPacket {
-        source: packet.get_source(),
-        destination: packet.get_destination(),
-        flags: tcp_flags,
-        window: packet.get_window(),
-        options: tcp_options,
-        sequence: packet.get_sequence(),
-        acknowledgement: packet.get_acknowledgement(),
-        checksum: packet.get_checksum(),
-        data_offset: packet.get_data_offset(),
-        reserved: packet.get_reserved(),
-        urgent_ptr: packet.get_urgent_ptr(),
-        payload: packet.payload().to_vec(),
-    };
-    tcp_fingerprint
-} */
-
-/* fn parse_udp_packet(packet: &pnet::packet::udp::UdpPacket) -> UdpPacket {
-    let udp_fingerprint = UdpPacket {
-        source: packet.get_source(),
-        destination: packet.get_destination(),
-        length: packet.get_length(),
-        checksum: packet.get_checksum(),
-        payload: packet.payload().to_vec(),
-    };
-    udp_fingerprint
-} */
-
-/* fn parse_icmp_packet(packet: &pnet::packet::icmp::IcmpPacket) -> IcmpPacket {
-    let icmp_fingerprint: IcmpPacket = IcmpPacket {
-        icmp_type: IcmpType::from_pnet_type(packet.get_icmp_type()),
-        icmp_code: crate::packet::icmp::IcmpCode::from_u8(packet.get_icmp_code().0),
-        checksum: packet.get_checksum(),
-        payload: packet.payload().to_vec(),
-    };
-    icmp_fingerprint
-} */
-
-/* fn parse_icmpv6_packet(packet: &pnet::packet::icmpv6::Icmpv6Packet) -> Icmpv6Packet {
-    let icmp_fingerprint: Icmpv6Packet = Icmpv6Packet {
-        icmpv6_type: Icmpv6Type::from_pnet_type(packet.get_icmpv6_type()),
-        icmpv6_code: crate::packet::icmpv6::Icmpv6Code::from_u8(packet.get_icmpv6_code().0),
-        checksum: packet.get_checksum(),
-        payload: packet.payload().to_vec(),
-    };
-    icmp_fingerprint
-}
- */
