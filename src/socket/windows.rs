@@ -10,6 +10,11 @@ fn build_packet(packet_info: PacketInfo, tmp_packet: &mut [u8]) {
         }
         packet::ethernet::EtherType::Ipv4 => {
             match packet_info.ip_protocol {
+                Some(packet::ip::IpNextLevelProtocol::Icmp) => {
+                    let packet = builder::build_icmp_packet(packet_info);
+                    tmp_packet.copy_from_slice(&packet);
+                    return;
+                }
                 Some(packet::ip::IpNextLevelProtocol::Tcp) => {
                     let packet = builder::build_tcp_syn_packet(packet_info);
                     tmp_packet.copy_from_slice(&packet);
@@ -25,6 +30,11 @@ fn build_packet(packet_info: PacketInfo, tmp_packet: &mut [u8]) {
         }
         packet::ethernet::EtherType::Ipv6 => {
             match packet_info.ip_protocol {
+                Some(packet::ip::IpNextLevelProtocol::Icmpv6) => {
+                    let packet = builder::build_icmpv6_packet(packet_info);
+                    tmp_packet.copy_from_slice(&packet);
+                    return;
+                }
                 Some(packet::ip::IpNextLevelProtocol::Tcp) => {
                     let packet = builder::build_tcp_syn_packet(packet_info);
                     tmp_packet.copy_from_slice(&packet);
@@ -55,6 +65,15 @@ pub(crate) fn build_and_send_packet(tx: &mut Box<dyn pnet::datalink::DataLinkSen
         }
         packet::ethernet::EtherType::Ipv4 => {
             match packet_info.ip_protocol {
+                Some(packet::ip::IpNextLevelProtocol::Icmp) => {
+                    let packet_size: usize = packet::ethernet::ETHERNET_HEADER_LEN
+                        + packet::ipv4::IPV4_HEADER_LEN
+                        + packet::icmp::ICMPV4_HEADER_LEN;
+                    tx.build_and_send(1, packet_size, &mut |packet: &mut [u8]| {
+                        build_packet(packet_info.clone(), packet);
+                    });
+                    return Ok(packet_size);
+                }
                 Some(packet::ip::IpNextLevelProtocol::Tcp) => {
                     let packet_size: usize = packet::ethernet::ETHERNET_HEADER_LEN
                     + packet::ipv4::IPV4_HEADER_LEN
@@ -75,6 +94,15 @@ pub(crate) fn build_and_send_packet(tx: &mut Box<dyn pnet::datalink::DataLinkSen
         }
         packet::ethernet::EtherType::Ipv6 => {
             match packet_info.ip_protocol {
+                Some(packet::ip::IpNextLevelProtocol::Icmpv6) => {
+                    let packet_size: usize = packet::ethernet::ETHERNET_HEADER_LEN
+                        + packet::ipv6::IPV6_HEADER_LEN
+                        + packet::icmpv6::ICMPV6_HEADER_LEN;
+                    tx.build_and_send(1, packet_size, &mut |packet: &mut [u8]| {
+                        build_packet(packet_info.clone(), packet);
+                    });
+                    return Ok(packet_size);
+                }
                 Some(packet::ip::IpNextLevelProtocol::Tcp) => {
                     let packet_size: usize = packet::ethernet::ETHERNET_HEADER_LEN
                         + packet::ipv6::IPV6_HEADER_LEN

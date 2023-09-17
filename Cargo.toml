@@ -31,6 +31,10 @@ name = "arp"
 path = "examples/arp.rs"
 
 [[example]]
+name = "icmp_ping"
+path = "examples/icmp_ping.rs"
+
+[[example]]
 name = "tcp_ping"
 path = "examples/tcp_ping.rs"
 

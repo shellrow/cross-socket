@@ -156,77 +156,10 @@ impl IcmpType {
     }
 }
 
-/// Represents the "ICMP code" header field.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum IcmpCode {
-    NetworkUnreachable,
-    HostUnreachable,
-    ProtocolUnreachable,
-    PortUnreachable,
-    FragmentationNeeded,
-    SourceRouteFailed,
-    DestinationNetworkUnknown,
-    DestinationHostUnknown,
-    SourceHostIsolated,
-    NetworkAdministrativelyProhibited,
-    HostAdministrativelyProhibited,
-    NetworkUnreachableForTos,
-    HostUnreachableForTos,
-    CommunicationAdministrativelyProhibited,
-    HostPrecedenceViolation,
-    PrecedenceCutoffInEffect,
-    Unknown(u8),
-}
-
-impl IcmpCode {
-    pub fn from_u8(n: u8) ->IcmpCode {
-        match n {
-            0 => IcmpCode::NetworkUnreachable,
-            1 => IcmpCode::HostUnreachable,
-            2 => IcmpCode::ProtocolUnreachable,
-            3 => IcmpCode::PortUnreachable,
-            4 => IcmpCode::FragmentationNeeded,
-            5 => IcmpCode::SourceRouteFailed,
-            6 => IcmpCode::DestinationNetworkUnknown,
-            7 => IcmpCode::DestinationHostUnknown,
-            8 => IcmpCode::SourceHostIsolated,
-            9 => IcmpCode::NetworkAdministrativelyProhibited,
-            10 => IcmpCode::HostAdministrativelyProhibited,
-            11 => IcmpCode::NetworkUnreachableForTos,
-            12 => IcmpCode::HostUnreachableForTos,
-            13 => IcmpCode::CommunicationAdministrativelyProhibited,
-            14 => IcmpCode::HostPrecedenceViolation,
-            15 => IcmpCode::PrecedenceCutoffInEffect,
-            _ => IcmpCode::Unknown(n),
-        }
-    }
-    pub fn number(&self) -> u8 {
-        match *self {
-            IcmpCode::NetworkUnreachable => 0,
-            IcmpCode::HostUnreachable => 1,
-            IcmpCode::ProtocolUnreachable => 2,
-            IcmpCode::PortUnreachable => 3,
-            IcmpCode::FragmentationNeeded => 4,
-            IcmpCode::SourceRouteFailed => 5,
-            IcmpCode::DestinationNetworkUnknown => 6,
-            IcmpCode::DestinationHostUnknown => 7,
-            IcmpCode::SourceHostIsolated => 8,
-            IcmpCode::NetworkAdministrativelyProhibited => 9,
-            IcmpCode::HostAdministrativelyProhibited => 10,
-            IcmpCode::NetworkUnreachableForTos => 11,
-            IcmpCode::HostUnreachableForTos => 12,
-            IcmpCode::CommunicationAdministrativelyProhibited => 13,
-            IcmpCode::HostPrecedenceViolation => 14,
-            IcmpCode::PrecedenceCutoffInEffect => 15,
-            IcmpCode::Unknown(n) => n,
-        }
-    }
-}
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct IcmpPacket {
     pub icmp_type: IcmpType,
-    pub icmp_code: IcmpCode,
+    pub icmp_code: u8,
     pub checksum: u16,
     pub payload: Vec<u8>,
 }
@@ -235,7 +168,7 @@ impl IcmpPacket {
     pub(crate) fn from_pnet_packet(packet: &pnet::packet::icmp::IcmpPacket) -> IcmpPacket {
         IcmpPacket {
             icmp_type: IcmpType::from_pnet_type(packet.get_icmp_type()),
-            icmp_code: IcmpCode::from_u8(packet.get_icmp_code().0),
+            icmp_code: packet.get_icmp_code().0,
             checksum: packet.get_checksum(),
             payload: packet.payload().to_vec(),
         }
