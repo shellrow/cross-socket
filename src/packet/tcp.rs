@@ -3,6 +3,7 @@ use pnet::packet::Packet;
 
 pub const TCP_HEADER_LEN: usize = pnet::packet::tcp::MutableTcpPacket::minimum_packet_size();
 pub const TCP_DEFAULT_OPTION_LEN: usize = 12;
+pub const DEFAULT_SRC_PORT: u16 = 53443;
 
 /// TCP Option Kind
 /// <https://www.iana.org/assignments/tcp-parameters/tcp-parameters.xhtml#tcp-parameters-1>

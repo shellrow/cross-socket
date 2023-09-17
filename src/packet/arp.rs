@@ -158,7 +158,7 @@ impl ArpHardwareType {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct ArpPacket {
     pub hardware_type: ArpHardwareType,
     pub protocol_type: EtherType,

@@ -29,7 +29,7 @@ pub struct CaptureInfo {
     pub interface_name: String,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct PacketFrame {
     pub capture_info: CaptureInfo,
     pub ethernet_packet: Option<ethernet::EthernetPacket>,
@@ -42,7 +42,7 @@ pub struct PacketFrame {
     pub udp_packet: Option<udp::UdpPacket>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct PacketInfo {
     pub src_mac: datalink::MacAddr,
     pub dst_mac: datalink::MacAddr,
@@ -53,4 +53,20 @@ pub struct PacketInfo {
     pub dst_port: Option<u16>,
     pub ip_protocol: Option<ip::IpNextLevelProtocol>,
     pub payload: Vec<u8>,
+}
+
+impl PacketInfo {
+    pub fn new() -> Self {
+        PacketInfo {
+            src_mac: datalink::MacAddr::zero(),
+            dst_mac: datalink::MacAddr::zero(),
+            ether_type: ethernet::EtherType::IPv4,
+            src_ip: IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
+            dst_ip: IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
+            src_port: None,
+            dst_port: None,
+            ip_protocol: None,
+            payload: Vec::new(),
+        }
+    }
 }

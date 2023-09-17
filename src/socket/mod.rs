@@ -212,8 +212,8 @@ impl DataLinkSocket {
             receiver: rx,
         })
     }
-    pub fn send(&mut self, packet_frame: PacketInfo) -> io::Result<()> {
-        build_and_send_packet(&mut self.sender, packet_frame)
+    pub fn send(&mut self, packet_info: PacketInfo) -> io::Result<usize> {
+        build_and_send_packet(&mut self.sender, packet_info)
     }
     pub fn send_to(&mut self, buf: &[u8]) -> io::Result<usize> {
         match self.sender.send_to(buf, None) {

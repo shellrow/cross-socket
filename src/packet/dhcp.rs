@@ -155,7 +155,7 @@ impl DhcpHardwareType {
 }
 
 /// Represents an DHCP Packet.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct DhcpPacket {
     pub op: DhcpOperation,
     pub htype: DhcpHardwareType,

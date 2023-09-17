@@ -74,17 +74,16 @@ pub fn build_icmpv6_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
 }
 
 pub fn build_tcp_syn_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
-    let mut ethernet_buffer = [0u8; packet::ethernet::ETHERNET_HEADER_LEN + packet::ipv4::IPV4_HEADER_LEN + packet::tcp::TCP_HEADER_LEN];
-    let mut ethernet_packet:pnet::packet::ethernet::MutableEthernetPacket = pnet::packet::ethernet::MutableEthernetPacket::new(&mut ethernet_buffer).unwrap();
-    packet::ethernet::build_ethernet_packet(&mut ethernet_packet, packet_info.src_mac.clone(), packet_info.dst_mac.clone(), packet_info.ether_type);
-    
     match packet_info.src_ip {
         IpAddr::V4(src_ip) => match packet_info.dst_ip {
             IpAddr::V4(dst_ip) => {
-                let mut ipv4_buffer = [0u8; packet::ipv4::IPV4_HEADER_LEN + packet::tcp::TCP_HEADER_LEN];
+                let mut ethernet_buffer = [0u8; packet::ethernet::ETHERNET_HEADER_LEN + packet::ipv4::IPV4_HEADER_LEN + packet::tcp::TCP_HEADER_LEN + packet::tcp::TCP_DEFAULT_OPTION_LEN];
+                let mut ethernet_packet:pnet::packet::ethernet::MutableEthernetPacket = pnet::packet::ethernet::MutableEthernetPacket::new(&mut ethernet_buffer).unwrap();
+                packet::ethernet::build_ethernet_packet(&mut ethernet_packet, packet_info.src_mac.clone(), packet_info.dst_mac.clone(), packet_info.ether_type);
+                let mut ipv4_buffer = [0u8; packet::ipv4::IPV4_HEADER_LEN + packet::tcp::TCP_HEADER_LEN + packet::tcp::TCP_DEFAULT_OPTION_LEN];
                 let mut ipv4_packet = pnet::packet::ipv4::MutableIpv4Packet::new(&mut ipv4_buffer).unwrap();
                 packet::ipv4::build_ipv4_packet(&mut ipv4_packet, src_ip, dst_ip, packet_info.ip_protocol.unwrap());
-                let mut tcp_buffer = [0u8; packet::tcp::TCP_HEADER_LEN];
+                let mut tcp_buffer = [0u8; packet::tcp::TCP_HEADER_LEN + packet::tcp::TCP_DEFAULT_OPTION_LEN];
                 let mut tcp_packet = pnet::packet::tcp::MutableTcpPacket::new(&mut tcp_buffer).unwrap();
                 packet::tcp::build_tcp_packet(&mut tcp_packet, packet_info.src_ip, packet_info.src_port.unwrap(), packet_info.dst_ip, packet_info.dst_port.unwrap());
                 ipv4_packet.set_payload(tcp_packet.packet());
@@ -100,10 +99,13 @@ pub fn build_tcp_syn_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
                 return Vec::new()
             }
             IpAddr::V6(dst_ip) => {
-                let mut ipv6_buffer = [0u8; packet::ipv6::IPV6_HEADER_LEN + packet::tcp::TCP_HEADER_LEN];
+                let mut ethernet_buffer = [0u8; packet::ethernet::ETHERNET_HEADER_LEN + packet::ipv6::IPV6_HEADER_LEN + packet::tcp::TCP_HEADER_LEN + packet::tcp::TCP_DEFAULT_OPTION_LEN];
+                let mut ethernet_packet:pnet::packet::ethernet::MutableEthernetPacket = pnet::packet::ethernet::MutableEthernetPacket::new(&mut ethernet_buffer).unwrap();
+                packet::ethernet::build_ethernet_packet(&mut ethernet_packet, packet_info.src_mac.clone(), packet_info.dst_mac.clone(), packet_info.ether_type);
+                let mut ipv6_buffer = [0u8; packet::ipv6::IPV6_HEADER_LEN + packet::tcp::TCP_HEADER_LEN + packet::tcp::TCP_DEFAULT_OPTION_LEN];
                 let mut ipv6_packet = pnet::packet::ipv6::MutableIpv6Packet::new(&mut ipv6_buffer).unwrap();
                 packet::ipv6::build_ipv6_packet(&mut ipv6_packet, src_ip, dst_ip, packet_info.ip_protocol.unwrap());
-                let mut tcp_buffer = [0u8; packet::tcp::TCP_HEADER_LEN];
+                let mut tcp_buffer = [0u8; packet::tcp::TCP_HEADER_LEN + packet::tcp::TCP_DEFAULT_OPTION_LEN];
                 let mut tcp_packet = pnet::packet::tcp::MutableTcpPacket::new(&mut tcp_buffer).unwrap();
                 packet::tcp::build_tcp_packet(&mut tcp_packet, packet_info.src_ip, packet_info.src_port.unwrap(), packet_info.dst_ip, packet_info.dst_port.unwrap());
                 ipv6_packet.set_payload(tcp_packet.packet());

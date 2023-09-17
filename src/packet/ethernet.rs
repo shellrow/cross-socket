@@ -119,7 +119,7 @@ impl EtherType {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct EthernetPacket {
     pub destination: MacAddr,
     pub source: MacAddr,
