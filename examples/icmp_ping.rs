@@ -5,7 +5,7 @@ use cross_socket::packet::ethernet::EtherType;
 use cross_socket::packet::ip::IpNextLevelProtocol;
 use cross_socket::packet::PacketInfo;
 use cross_socket::interface::Interface;
-// Send TCP SYN packets to 1.1.1.1:80 and check if the port is open
+// Send ICMP Echo Request packets to 1.1.1.1 and check reply
 fn main() {
     let interface: Interface = cross_socket::interface::get_default_interface().unwrap();
     // Create new socket
