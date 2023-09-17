@@ -136,6 +136,10 @@ impl EthernetPacket {
             payload: packet.payload().to_vec(),
         }
     }
+    pub fn from_bytes(packet: &[u8]) -> EthernetPacket {
+        let ethernet_packet = pnet::packet::ethernet::EthernetPacket::new(packet).unwrap();
+        EthernetPacket::from_pnet_packet(&ethernet_packet)
+    }
 }
 
 pub fn build_ethernet_packet(
@@ -146,6 +150,29 @@ pub fn build_ethernet_packet(
 ) {
     eth_packet.set_source(pnet::datalink::MacAddr::from(src_mac.octets()));
     eth_packet.set_destination(pnet::datalink::MacAddr::from(dst_mac.octets()));
+    match ether_type {
+        EtherType::Arp => {
+            eth_packet.set_ethertype(pnet::packet::ethernet::EtherTypes::Arp);
+        }
+        EtherType::Ipv4 => {
+            eth_packet.set_ethertype(pnet::packet::ethernet::EtherTypes::Ipv4);
+        }
+        EtherType::Ipv6 => {
+            eth_packet.set_ethertype(pnet::packet::ethernet::EtherTypes::Ipv6);
+        }
+        _ => {
+            // TODO
+        }
+    }
+}
+
+pub fn build_ethernet_arp_packet(
+    eth_packet: &mut pnet::packet::ethernet::MutableEthernetPacket,
+    src_mac: MacAddr,
+    ether_type: EtherType,
+) {
+    eth_packet.set_source(pnet::datalink::MacAddr::from(src_mac.octets()));
+    eth_packet.set_destination(pnet::datalink::MacAddr::broadcast());
     match ether_type {
         EtherType::Arp => {
             eth_packet.set_ethertype(pnet::packet::ethernet::EtherTypes::Arp);

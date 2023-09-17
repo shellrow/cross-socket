@@ -160,6 +160,10 @@ impl Ipv4Packet {
             payload: packet.payload().to_vec(),
         }
     }
+    pub fn from_bytes(packet: &[u8]) -> Ipv4Packet {
+        let ipv4_packet = pnet::packet::ipv4::Ipv4Packet::new(packet).unwrap();
+        Ipv4Packet::from_pnet_packet(&ipv4_packet)
+    }
 }
 
 pub fn build_ipv4_packet(

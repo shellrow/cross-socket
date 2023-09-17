@@ -183,6 +183,10 @@ impl ArpPacket {
             payload: packet.payload().to_vec(),
         }
     }
+    pub fn from_bytes(packet: &[u8]) -> ArpPacket {
+        let arp_packet = pnet::packet::arp::ArpPacket::new(packet).unwrap();
+        ArpPacket::from_pnet_packet(arp_packet)
+    }
 }
 
 pub fn build_arp_packet(
