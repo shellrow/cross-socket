@@ -31,6 +31,10 @@ impl Ipv6Packet {
             payload: packet.payload().to_vec(),
         }
     }
+    pub fn from_bytes(packet: &[u8]) -> Ipv6Packet {
+        let ipv6_packet = pnet::packet::ipv6::Ipv6Packet::new(packet).unwrap();
+        Ipv6Packet::from_pnet_packet(&ipv6_packet)
+    }
 }
 
 pub fn build_ipv6_packet(

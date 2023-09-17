@@ -203,6 +203,10 @@ impl TcpPacket {
             payload: packet.payload().to_vec(),
         }
     }
+    pub fn from_bytes(packet: &[u8]) -> TcpPacket {
+        let tcp_packet = pnet::packet::tcp::TcpPacket::new(packet).unwrap();
+        TcpPacket::from_pnet_packet(&tcp_packet)
+    }
 }
 
 pub fn build_tcp_packet(

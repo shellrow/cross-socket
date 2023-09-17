@@ -399,6 +399,10 @@ impl Icmpv6Packet {
             payload: packet.payload().to_vec(),
         }
     }
+    pub fn from_bytes(packet: &[u8]) -> Icmpv6Packet {
+        let icmpv6_packet = pnet::packet::icmpv6::Icmpv6Packet::new(packet).unwrap();
+        Icmpv6Packet::from_pnet_packet(&icmpv6_packet)
+    }
 }
 
 pub fn build_icmpv6_echo_packet(icmp_packet: &mut pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket, src_ip: Ipv6Addr, dst_ip: Ipv6Addr) {

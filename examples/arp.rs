@@ -32,7 +32,8 @@ fn main() {
     }
     let src_mac = socket.interface.mac_addr.clone().unwrap();
     // Receive packets
-    for _x in 0..2 {
+    println!("Waiting for ARP reply... ");
+    loop {
         match socket.receive() {
             Ok(packet) => {
                 let ethernet_packet = ethernet::EthernetPacket::from_bytes(&packet);

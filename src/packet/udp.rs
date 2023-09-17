@@ -23,6 +23,10 @@ impl UdpPacket {
             payload: packet.payload().to_vec(),
         }
     }
+    pub fn from_bytes(packet: &[u8]) -> UdpPacket {
+        let udp_packet = pnet::packet::udp::UdpPacket::new(packet).unwrap();
+        UdpPacket::from_pnet_packet(&udp_packet)
+    }
 }
 
 pub fn build_udp_packet(

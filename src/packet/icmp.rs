@@ -240,6 +240,10 @@ impl IcmpPacket {
             payload: packet.payload().to_vec(),
         }
     }
+    pub fn from_bytes(packet: &[u8]) -> IcmpPacket {
+        let icmp_packet = pnet::packet::icmp::IcmpPacket::new(packet).unwrap();
+        IcmpPacket::from_pnet_packet(&icmp_packet)
+    }
 }
 
 pub fn build_icmp_echo_packet(icmp_packet: &mut pnet::packet::icmp::echo_request::MutableEchoRequestPacket) {
