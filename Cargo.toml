@@ -27,6 +27,10 @@ default = ["setup"]
 setup = ["cross-socket-deps"]
 
 [[example]]
+name = "tcp_ping"
+path = "examples/tcp_ping.rs"
+
+[[example]]
 name = "dump"
 path = "examples/dump.rs"
 

@@ -6,7 +6,7 @@ pub const ETHERNET_HEADER_LEN: usize = 14;
 // define the EtherType enum from avove as a const
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub enum EtherType {
-    IPv4,
+    Ipv4,
     Arp,
     WakeOnLan,
     Trill,
@@ -16,7 +16,7 @@ pub enum EtherType {
     Aarp,
     Ipx,
     Qnx,
-    IPv6,
+    Ipv6,
     FlowControl,
     CobraNet,
     Mpls,
@@ -35,7 +35,7 @@ pub enum EtherType {
 impl EtherType {
     pub fn from_u16(n: u16) -> Option<EtherType> {
         match n {
-            0x0800 => Some(EtherType::IPv4),
+            0x0800 => Some(EtherType::Ipv4),
             0x0806 => Some(EtherType::Arp),
             0x0842 => Some(EtherType::WakeOnLan),
             0x22F3 => Some(EtherType::Trill),
@@ -45,7 +45,7 @@ impl EtherType {
             0x80F3 => Some(EtherType::Aarp),
             0x8137 => Some(EtherType::Ipx),
             0x8204 => Some(EtherType::Qnx),
-            0x86DD => Some(EtherType::IPv6),
+            0x86DD => Some(EtherType::Ipv6),
             0x8808 => Some(EtherType::FlowControl),
             0x8819 => Some(EtherType::CobraNet),
             0x8847 => Some(EtherType::Mpls),
@@ -63,7 +63,7 @@ impl EtherType {
     }
     pub fn number(&self) -> u16 {
         match *self {
-            EtherType::IPv4 => 0x0800,
+            EtherType::Ipv4 => 0x0800,
             EtherType::Arp => 0x0806,
             EtherType::WakeOnLan => 0x0842,
             EtherType::Trill => 0x22F3,
@@ -73,7 +73,7 @@ impl EtherType {
             EtherType::Aarp => 0x80F3,
             EtherType::Ipx => 0x8137,
             EtherType::Qnx => 0x8204,
-            EtherType::IPv6 => 0x86DD,
+            EtherType::Ipv6 => 0x86DD,
             EtherType::FlowControl => 0x8808,
             EtherType::CobraNet => 0x8819,
             EtherType::Mpls => 0x8847,
@@ -91,7 +91,7 @@ impl EtherType {
     }
     pub fn name(&self) -> &str {
         match *self {
-            EtherType::IPv4 => "IPv4",
+            EtherType::Ipv4 => "IPv4",
             EtherType::Arp => "ARP",
             EtherType::WakeOnLan => "WakeOnLan",
             EtherType::Trill => "Trill",
@@ -101,7 +101,7 @@ impl EtherType {
             EtherType::Aarp => "AARP",
             EtherType::Ipx => "IPX",
             EtherType::Qnx => "QNX",
-            EtherType::IPv6 => "IPv6",
+            EtherType::Ipv6 => "IPv6",
             EtherType::FlowControl => "FlowControl",
             EtherType::CobraNet => "CobraNet",
             EtherType::Mpls => "MPLS",
@@ -150,10 +150,10 @@ pub fn build_ethernet_packet(
         EtherType::Arp => {
             eth_packet.set_ethertype(pnet::packet::ethernet::EtherTypes::Arp);
         }
-        EtherType::IPv4 => {
+        EtherType::Ipv4 => {
             eth_packet.set_ethertype(pnet::packet::ethernet::EtherTypes::Ipv4);
         }
-        EtherType::IPv6 => {
+        EtherType::Ipv6 => {
             eth_packet.set_ethertype(pnet::packet::ethernet::EtherTypes::Ipv6);
         }
         _ => {

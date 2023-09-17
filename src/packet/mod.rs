@@ -60,7 +60,7 @@ impl PacketInfo {
         PacketInfo {
             src_mac: datalink::MacAddr::zero(),
             dst_mac: datalink::MacAddr::zero(),
-            ether_type: ethernet::EtherType::IPv4,
+            ether_type: ethernet::EtherType::Ipv4,
             src_ip: IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
             dst_ip: IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
             src_port: None,

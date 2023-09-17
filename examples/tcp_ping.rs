@@ -1,6 +1,7 @@
 use std::net::IpAddr;
 
 use cross_socket::socket::DataLinkSocket;
+use cross_socket::packet::ethernet::EtherType;
 use cross_socket::packet::ip::IpNextLevelProtocol;
 use cross_socket::packet::PacketInfo;
 use cross_socket::interface::Interface;
@@ -13,6 +14,7 @@ fn main() {
     let mut packet_info = PacketInfo::new();
     packet_info.src_mac = socket.interface.mac_addr.clone().unwrap();
     packet_info.dst_mac = socket.interface.gateway.clone().unwrap().mac_addr;
+    packet_info.ether_type = EtherType::Ipv4;
     packet_info.src_ip = IpAddr::V4(socket.interface.ipv4[0].addr);
     packet_info.dst_ip = IpAddr::V4(std::net::Ipv4Addr::new(1, 1, 1, 1));
     packet_info.src_port = Some(53443);

@@ -81,12 +81,12 @@ fn receive_packets(
                     packet_frame.ethernet_packet = Some(EthernetPacket::from_pnet_packet(&frame));
                     match frame.get_ethertype() {
                         pnet::packet::ethernet::EtherTypes::Ipv4 => {
-                            if filter_ether_type(EtherType::IPv4, &capture_options) {
+                            if filter_ether_type(EtherType::Ipv4, &capture_options) {
                                 ipv4_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &packets);
                             }
                         }
                         pnet::packet::ethernet::EtherTypes::Ipv6 => {
-                            if filter_ether_type(EtherType::IPv6, &capture_options) {
+                            if filter_ether_type(EtherType::Ipv6, &capture_options) {
                                 ipv6_handler(&frame, &capture_options, &mut packet_frame, msg_tx, &packets);
                             }
                         }
