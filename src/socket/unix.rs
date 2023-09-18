@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, time::Duration, io, mem::MaybeUninit};
 
-use socket2::{Domain, SockAddr, Socket as SystemSocket, Type, Protocol};
+use socket2::{Domain, Socket as SystemSocket, Type, Protocol};
 use crate::packet::ip::IpNextLevelProtocol;
 
 use super::{SocketOption, IpVersion, SocketType};
@@ -88,17 +88,27 @@ impl ListenerSocket {
         if let Some(timeout) = timeout {
             socket.set_read_timeout(Some(timeout))?;
         }
+        //socket.bind(&socket_addr.into())?;
         Ok(ListenerSocket {
             inner: socket,
         })
     }
-    pub fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SockAddr)> {
+    pub fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SocketAddr)> {
         let recv_buf =
             unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
         loop {
             match self.inner.recv_from(recv_buf) {
-                Ok(result) => return Ok(result),
-                Err(_) => continue,
+                Ok((packet_len, addr)) => {
+                    match addr.as_socket() {
+                        Some(socket_addr) => {
+                            return Ok((packet_len, socket_addr));
+                        },
+                        None => continue,
+                    }
+                },
+                Err(_) => {
+                    continue;
+                },
             }
         }
     }
