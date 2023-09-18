@@ -11,17 +11,17 @@ fn build_packet(packet_info: PacketInfo, tmp_packet: &mut [u8]) {
         packet::ethernet::EtherType::Ipv4 => {
             match packet_info.ip_protocol {
                 Some(packet::ip::IpNextLevelProtocol::Icmp) => {
-                    let packet = builder::build_icmp_packet(packet_info);
+                    let packet = builder::build_full_icmp_packet(packet_info);
                     tmp_packet.copy_from_slice(&packet);
                     return;
                 }
                 Some(packet::ip::IpNextLevelProtocol::Tcp) => {
-                    let packet = builder::build_tcp_syn_packet(packet_info);
+                    let packet = builder::build_full_tcp_syn_packet(packet_info);
                     tmp_packet.copy_from_slice(&packet);
                     return;
                 }
                 Some(packet::ip::IpNextLevelProtocol::Udp) => {
-                    let packet = builder::build_udp_packet(packet_info);
+                    let packet = builder::build_full_udp_packet(packet_info);
                     tmp_packet.copy_from_slice(&packet);
                     return;
                 }
@@ -33,17 +33,17 @@ fn build_packet(packet_info: PacketInfo, tmp_packet: &mut [u8]) {
         packet::ethernet::EtherType::Ipv6 => {
             match packet_info.ip_protocol {
                 Some(packet::ip::IpNextLevelProtocol::Icmpv6) => {
-                    let packet = builder::build_icmpv6_packet(packet_info);
+                    let packet = builder::build_full_icmpv6_packet(packet_info);
                     tmp_packet.copy_from_slice(&packet);
                     return;
                 }
                 Some(packet::ip::IpNextLevelProtocol::Tcp) => {
-                    let packet = builder::build_tcp_syn_packet(packet_info);
+                    let packet = builder::build_full_tcp_syn_packet(packet_info);
                     tmp_packet.copy_from_slice(&packet);
                     return;
                 }
                 Some(packet::ip::IpNextLevelProtocol::Udp) => {
-                    let packet = builder::build_udp_packet(packet_info);
+                    let packet = builder::build_full_udp_packet(packet_info);
                     tmp_packet.copy_from_slice(&packet);
                     return;
                 }

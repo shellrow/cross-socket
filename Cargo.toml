@@ -22,39 +22,61 @@ chrono = "0.4"
 async-io = "1.13"
 cross-socket-deps = { path = "deps", version = "0.0.1", optional = true }
 
+[target.'cfg(windows)'.dependencies.windows-sys]
+version = "0.48.0"
+features = [
+  "Win32_Foundation",
+  "Win32_Networking_WinSock",
+  "Win32_System_IO",
+  "Win32_System_Threading",
+  "Win32_System_WindowsProgramming",
+]
+
 [features]
 default = ["setup"]
 setup = ["cross-socket-deps"]
 
 [[example]]
+name = "icmp"
+path = "examples/socket/icmp.rs"
+
+[[example]]
+name = "tcp"
+path = "examples/socket/tcp.rs"
+
+[[example]]
+name = "udp"
+path = "examples/socket/udp.rs"
+
+[[example]]
 name = "arp"
-path = "examples/arp.rs"
+path = "examples/datalink_socket/arp.rs"
 
 [[example]]
 name = "icmp_ping"
-path = "examples/icmp_ping.rs"
+path = "examples/datalink_socket/icmp_ping.rs"
 
 [[example]]
 name = "tcp_ping"
-path = "examples/tcp_ping.rs"
+path = "examples/datalink_socket/tcp_ping.rs"
 
 [[example]]
 name = "udp_ping"
-path = "examples/udp_ping.rs"
+path = "examples/datalink_socket/udp_ping.rs"
 
 [[example]]
 name = "dump"
-path = "examples/dump.rs"
+path = "examples/pcap/dump.rs"
 
 [[example]]
 name = "handle"
-path = "examples/handle.rs"
+path = "examples/pcap/handle.rs"
 
 [[example]]
 name = "store"
-path = "examples/store.rs"
+path = "examples/pcap/store.rs"
 
 [[example]]
 name = "resolve_deps"
-path = "examples/resolve_deps.rs"
+path = "examples/deps/resolve_deps.rs"
 required-features = ["setup"]

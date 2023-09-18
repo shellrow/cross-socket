@@ -4,18 +4,20 @@ pub(crate) use shared::*;
 #[cfg(not(target_os = "windows"))]
 mod unix;
 #[cfg(not(target_os = "windows"))]
-pub(crate) use unix::*;
+pub use unix::*;
 
 #[cfg(target_os = "windows")]
 mod windows;
 #[cfg(target_os = "windows")]
-pub(crate) use windows::*;
+pub use windows::*;
 
 use async_io::Async;
 use socket2::{Domain, SockAddr, Socket as SystemSocket, Type};
 use std::io;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
+use std::time::Duration;
+use std::net::SocketAddr;
 
 use crate::packet::PacketInfo;
 use crate::packet::ip::IpNextLevelProtocol;
@@ -74,15 +76,19 @@ impl SocketType {
 pub struct SocketOption {
     pub ip_version: IpVersion,
     pub socket_type: SocketType,
-    pub protocol: IpNextLevelProtocol,
+    pub protocol: Option<IpNextLevelProtocol>,
+    pub timeout: Option<u64>,
+    pub ttl: Option<u32>,
 }
 
 impl SocketOption {
-    pub fn new(ip_version: IpVersion, socket_type: SocketType, protocol: IpNextLevelProtocol) -> SocketOption {
+    pub fn new(ip_version: IpVersion, socket_type: SocketType, protocol: Option<IpNextLevelProtocol>) -> SocketOption {
         SocketOption {
             ip_version,
             socket_type,
             protocol,
+            timeout: None,
+            ttl: None,
         }
     }
 }
@@ -98,18 +104,23 @@ impl AsyncSocket {
             Ok(_) => (),
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         }
-        let socket: SystemSocket = SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), Some(socket_option.protocol.to_socket_protocol()))?;
+        let socket: SystemSocket = if let Some(protocol) = socket_option.protocol {
+            SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), Some(protocol.to_socket_protocol()))?
+        } else {
+            SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), None)?
+        };
         socket.set_nonblocking(true)?;
         Ok(AsyncSocket {
             inner: Arc::new(Async::new(socket)?),
         })
     }
-    pub async fn send_to(&self, buf: &mut [u8], target: &SockAddr) -> io::Result<usize> {
+    pub async fn send_to(&self, buf: &mut [u8], target: SocketAddr) -> io::Result<usize> {
+        let target: SockAddr = SockAddr::from(target);
         loop {
             self.inner.writable().await?;
             match self
                 .inner
-                .write_with(|inner| inner.send_to(buf, target))
+                .write_with(|inner| inner.send_to(buf, &target))
                 .await
             {
                 Ok(n) => return Ok(n),
@@ -117,25 +128,58 @@ impl AsyncSocket {
             }
         }
     }
-    pub async fn receive(&self, buf: &mut [MaybeUninit<u8>]) -> io::Result<usize> {
+    pub async fn receive(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        let recv_buf =
+            unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
         loop {
             self.inner.readable().await?;
-            match self.inner.read_with(|inner| inner.recv(buf)).await {
+            match self.inner.read_with(|inner| inner.recv(recv_buf)).await {
                 Ok(result) => return Ok(result),
                 Err(_) => continue,
             }
         }
     }
-    pub async fn receive_from(
-        &self,
-        buf: &mut [MaybeUninit<u8>],
-    ) -> io::Result<(usize, SockAddr)> {
+    pub async fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SocketAddr)> {
+        let recv_buf =
+            unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
         loop {
             self.inner.readable().await?;
-            match self.inner.read_with(|inner| inner.recv_from(buf)).await {
-                Ok(result) => return Ok(result),
+            match self.inner.read_with(|inner| inner.recv_from(recv_buf)).await {
+                Ok(result) => {
+                    let (n, addr) = result;
+                    match addr.as_socket() {
+                        Some(addr) => return Ok((n, addr)),
+                        None => continue,
+                    }
+                },
                 Err(_) => continue,
             }
+        }
+    }
+    pub async fn bind(&self, addr: SocketAddr) -> io::Result<()> {
+        let addr: SockAddr = SockAddr::from(addr);
+        self.inner.writable().await?;
+        self.inner.write_with(|inner| inner.bind(&addr)).await
+    }
+    pub async fn set_receive_timeout(&self, timeout: Option<Duration>) -> io::Result<()> {
+        self.inner.writable().await?;
+        self.inner
+            .write_with(|inner| inner.set_read_timeout(timeout))
+            .await
+    }
+    pub async fn set_ttl(&self, ttl: u32, ip_version: IpVersion) -> io::Result<()> {
+        self.inner.writable().await?;
+        match ip_version {
+            IpVersion::V4 => {
+                self.inner
+                    .write_with(|inner| inner.set_ttl(ttl))
+                    .await
+            },
+            IpVersion::V6 => {
+                self.inner
+                    .write_with(|inner| inner.set_unicast_hops_v6(ttl))
+                    .await
+            },
         }
     }
 }
@@ -151,34 +195,64 @@ impl Socket {
             Ok(_) => (),
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         }
-        let socket: SystemSocket = SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), Some(socket_option.protocol.to_socket_protocol()))?;
+        let socket: SystemSocket = if let Some(protocol) = socket_option.protocol {
+            SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), Some(protocol.to_socket_protocol()))?
+        } else {
+            SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), None)?
+        };
         socket.set_nonblocking(true)?;
         Ok(Socket {
             inner: Arc::new(socket),
         })
     }
-    pub fn send_to(&self, buf: &[u8], target: &SockAddr) -> io::Result<usize> {
-        loop {
-            match self.inner.send_to(buf, target) {
-                Ok(n) => return Ok(n),
-                Err(_) => continue,
-            }
+    pub fn send_to(&self, buf: &[u8], target: SocketAddr) -> io::Result<usize> {
+        let target: SockAddr = SockAddr::from(target);
+        match self.inner.send_to(buf, &target) {
+            Ok(n) => return Ok(n),
+            Err(_) => return Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
         }
     }
-    pub fn receive(&self, buf: &mut [MaybeUninit<u8>]) -> io::Result<usize> {
+    pub fn receive(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        let recv_buf =
+            unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
         loop {
-            match self.inner.recv(buf) {
+            match self.inner.recv(recv_buf) {
                 Ok(result) => return Ok(result),
                 Err(_) => continue,
             }
         }
     }
-    pub fn receive_from(&self, buf: &mut [MaybeUninit<u8>]) -> io::Result<(usize, SockAddr)> {
+    pub fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SocketAddr)> {
+        let recv_buf =
+            unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
         loop {
-            match self.inner.recv_from(buf) {
-                Ok(result) => return Ok(result),
+            match self.inner.recv_from(recv_buf) {
+                Ok(result) => {
+                    let (n, addr) = result;
+                    match addr.as_socket() {
+                        Some(addr) => return Ok((n, addr)),
+                        None => continue,
+                    }
+                },
                 Err(_) => continue,
             }
+        }
+    }
+    pub fn bind(&self, addr: SocketAddr) -> io::Result<()> {
+        let addr: SockAddr = SockAddr::from(addr);
+        self.inner.bind(&addr)
+    }
+    pub fn set_receive_timeout(&self, timeout: Option<Duration>) -> io::Result<()> {
+        self.inner.set_read_timeout(timeout)
+    }
+    pub fn set_ttl(&self, ttl: u32, ip_version: IpVersion) -> io::Result<()> {
+        match ip_version {
+            IpVersion::V4 => {
+                self.inner.set_ttl(ttl)
+            },
+            IpVersion::V6 => {
+                self.inner.set_unicast_hops_v6(ttl)
+            },
         }
     }
 }

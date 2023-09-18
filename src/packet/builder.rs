@@ -21,7 +21,7 @@ pub fn build_arp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     ethernet_packet.packet().to_vec()
 }
 
-pub fn build_icmp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
+pub fn build_full_icmp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     let src_ip: Ipv4Addr = match packet_info.src_ip {
         IpAddr::V4(ipv4_addr) => ipv4_addr,
         _ => return Vec::new(),
@@ -47,7 +47,17 @@ pub fn build_icmp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     ethernet_packet.packet().to_vec()
 }
 
-pub fn build_icmpv6_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
+pub fn build_icmp_packet() -> Vec<u8> {
+    let mut icmp_buffer = [0u8; packet::icmp::ICMPV4_HEADER_LEN];
+    let mut icmp_packet = pnet::packet::icmp::echo_request::MutableEchoRequestPacket::new(
+        &mut icmp_buffer,
+    )
+    .unwrap();
+    packet::icmp::build_icmp_echo_packet(&mut icmp_packet);
+    icmp_packet.packet().to_vec()
+}
+
+pub fn build_full_icmpv6_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     let src_ip: Ipv6Addr = match packet_info.src_ip {
         IpAddr::V6(ipv6_addr) => ipv6_addr,
         _ => return Vec::new(),
@@ -73,7 +83,25 @@ pub fn build_icmpv6_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     ethernet_packet.packet().to_vec()
 }
 
-pub fn build_tcp_syn_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
+pub fn build_icmpv6_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
+    let src_ip: Ipv6Addr = match packet_info.src_ip {
+        IpAddr::V6(ipv6_addr) => ipv6_addr,
+        _ => return Vec::new(),
+    };
+    let dst_ip: Ipv6Addr = match packet_info.dst_ip {
+        IpAddr::V6(ipv6_addr) => ipv6_addr,
+        _ => return Vec::new(),
+    };
+    let mut icmpv6_buffer = [0u8; packet::icmpv6::ICMPV6_HEADER_LEN];
+    let mut icmpv6_packet = pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket::new(
+        &mut icmpv6_buffer,
+    )
+    .unwrap();
+    packet::icmpv6::build_icmpv6_echo_packet(&mut icmpv6_packet, src_ip, dst_ip);
+    icmpv6_packet.packet().to_vec()
+}
+
+pub fn build_full_tcp_syn_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     match packet_info.src_ip {
         IpAddr::V4(src_ip) => match packet_info.dst_ip {
             IpAddr::V4(dst_ip) => {
@@ -116,7 +144,14 @@ pub fn build_tcp_syn_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     }
 }
 
-pub fn build_udp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
+pub fn build_tcp_syn_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
+    let mut tcp_buffer = [0u8; packet::tcp::TCP_HEADER_LEN + packet::tcp::TCP_DEFAULT_OPTION_LEN];
+    let mut tcp_packet = pnet::packet::tcp::MutableTcpPacket::new(&mut tcp_buffer).unwrap();
+    packet::tcp::build_tcp_packet(&mut tcp_packet, packet_info.src_ip, packet_info.src_port.unwrap(), packet_info.dst_ip, packet_info.dst_port.unwrap());
+    tcp_packet.packet().to_vec()
+}
+
+pub fn build_full_udp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     match packet_info.src_ip {
         IpAddr::V4(src_ip) => match packet_info.dst_ip {
             IpAddr::V4(dst_ip) => {
@@ -157,4 +192,11 @@ pub fn build_udp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
             }
         }
     }
+}
+
+pub fn build_udp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
+    let mut udp_buffer = [0u8; packet::udp::UDP_HEADER_LEN];
+    let mut udp_packet = pnet::packet::udp::MutableUdpPacket::new(&mut udp_buffer).unwrap();
+    packet::udp::build_udp_packet(&mut udp_packet, packet_info.src_ip, packet_info.src_port.unwrap(), packet_info.dst_ip, packet_info.dst_port.unwrap());
+    udp_packet.packet().to_vec()
 }
