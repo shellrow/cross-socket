@@ -96,20 +96,16 @@ impl ListenerSocket {
     pub fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SocketAddr)> {
         let recv_buf =
             unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
-        loop {
-            match self.inner.recv_from(recv_buf) {
-                Ok((packet_len, addr)) => {
-                    match addr.as_socket() {
-                        Some(socket_addr) => {
-                            return Ok((packet_len, socket_addr));
-                        },
-                        None => continue,
-                    }
-                },
-                Err(_) => {
-                    continue;
-                },
-            }
+        match self.inner.recv_from(recv_buf) {
+            Ok((packet_len, addr)) => {
+                match addr.as_socket() {
+                    Some(socket_addr) => {
+                        return Ok((packet_len, socket_addr));
+                    },
+                    None => Err(io::Error::new(io::ErrorKind::Other, "Invalid socket address"))
+                }
+            },
+            Err(e) => Err(e),
         }
     }
 }
