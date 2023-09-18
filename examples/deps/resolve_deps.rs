@@ -1,3 +1,4 @@
+#[cfg(target_os = "windows")]
 use cross_socket::deps::setup;
 
 #[cfg(target_os = "windows")]
