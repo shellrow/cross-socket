@@ -1,4 +1,6 @@
-use socket2::{Domain, SockAddr, Socket as SystemSocket, Type};
+use std::{net::SocketAddr, time::Duration, io, mem::MaybeUninit};
+
+use socket2::{Domain, SockAddr, Socket as SystemSocket, Type, Protocol};
 use crate::packet::ip::IpNextLevelProtocol;
 
 use super::{SocketOption, IpVersion, SocketType};
@@ -9,22 +11,22 @@ pub fn check_socket_option(socket_option: SocketOption) -> Result<(), String> {
             match socket_option.socket_type {
                 SocketType::Raw => {
                     match socket_option.protocol {
-                        IpNextLevelProtocol::Icmp => Ok(()),
-                        IpNextLevelProtocol::Tcp => Ok(()),
-                        IpNextLevelProtocol::Udp => Ok(()),
+                        Some(IpNextLevelProtocol::Icmp) => Ok(()),
+                        Some(IpNextLevelProtocol::Tcp) => Ok(()),
+                        Some(IpNextLevelProtocol::Udp) => Ok(()),
                         _ => Err(String::from("Invalid protocol")),
                     }
                 }
                 SocketType::Dgram => {
                     match socket_option.protocol {
-                        IpNextLevelProtocol::Icmp => Ok(()),
-                        IpNextLevelProtocol::Udp => Ok(()),
+                        Some(IpNextLevelProtocol::Icmp) => Ok(()),
+                        Some(IpNextLevelProtocol::Udp) => Ok(()),
                         _ => Err(String::from("Invalid protocol")),
                     }
                 }
                 SocketType::Stream => {
                     match socket_option.protocol {
-                        IpNextLevelProtocol::Tcp => Ok(()),
+                        Some(IpNextLevelProtocol::Tcp) => Ok(()),
                         _ => Err(String::from("Invalid protocol")),
                     }
                 }
@@ -34,22 +36,22 @@ pub fn check_socket_option(socket_option: SocketOption) -> Result<(), String> {
             match socket_option.socket_type {
                 SocketType::Raw => {
                     match socket_option.protocol {
-                        IpNextLevelProtocol::Icmpv6 => Ok(()),
-                        IpNextLevelProtocol::Tcp => Ok(()),
-                        IpNextLevelProtocol::Udp => Ok(()),
+                        Some(IpNextLevelProtocol::Icmpv6) => Ok(()),
+                        Some(IpNextLevelProtocol::Tcp) => Ok(()),
+                        Some(IpNextLevelProtocol::Udp) => Ok(()),
                         _ => Err(String::from("Invalid protocol")),
                     }
                 }
                 SocketType::Dgram => {
                     match socket_option.protocol {
-                        IpNextLevelProtocol::Icmpv6 => Ok(()),
-                        IpNextLevelProtocol::Udp => Ok(()),
+                        Some(IpNextLevelProtocol::Icmpv6) => Ok(()),
+                        Some(IpNextLevelProtocol::Udp) => Ok(()),
                         _ => Err(String::from("Invalid protocol")),
                     }
                 }
                 SocketType::Stream => {
                     match socket_option.protocol {
-                        IpNextLevelProtocol::Tcp => Ok(()),
+                        Some(IpNextLevelProtocol::Tcp) => Ok(()),
                         _ => Err(String::from("Invalid protocol")),
                     }
                 }
