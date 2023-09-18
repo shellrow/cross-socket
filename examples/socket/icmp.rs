@@ -14,6 +14,7 @@ fn main() {
         protocol: Some(IpNextLevelProtocol::Icmp),
         timeout: None,
         ttl: None,
+        non_blocking: false,
     };
     let socket: Socket = Socket::new(socket_option).unwrap();
     // Create packet info

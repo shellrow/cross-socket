@@ -82,6 +82,7 @@ pub struct SocketOption {
     pub protocol: Option<IpNextLevelProtocol>,
     pub timeout: Option<u64>,
     pub ttl: Option<u32>,
+    pub non_blocking: bool,
 }
 
 impl SocketOption {
@@ -92,6 +93,7 @@ impl SocketOption {
             protocol,
             timeout: None,
             ttl: None,
+            non_blocking: false,
         }
     }
 }
@@ -205,7 +207,9 @@ impl Socket {
         } else {
             SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), None)?
         };
-        socket.set_nonblocking(true)?;
+        if socket_option.non_blocking {
+            socket.set_nonblocking(true)?;
+        }
         Ok(Socket {
             inner: Arc::new(socket),
         })
@@ -213,34 +217,30 @@ impl Socket {
     pub fn send_to(&self, buf: &[u8], target: SocketAddr) -> io::Result<usize> {
         let target: SockAddr = SockAddr::from(target);
         match self.inner.send_to(buf, &target) {
-            Ok(n) => return Ok(n),
-            Err(_) => return Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
+            Ok(n) => Ok(n),
+            Err(e) => Err(e),
         }
     }
     pub fn receive(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let recv_buf =
             unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
-        loop {
-            match self.inner.recv(recv_buf) {
-                Ok(result) => return Ok(result),
-                Err(_) => continue,
-            }
+        match self.inner.recv(recv_buf) {
+            Ok(result) => Ok(result),
+            Err(e) => Err(e),
         }
     }
     pub fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SocketAddr)> {
         let recv_buf =
             unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
-        loop {
-            match self.inner.recv_from(recv_buf) {
-                Ok(result) => {
-                    let (n, addr) = result;
-                    match addr.as_socket() {
-                        Some(addr) => return Ok((n, addr)),
-                        None => continue,
-                    }
-                },
-                Err(_) => continue,
-            }
+        match self.inner.recv_from(recv_buf) {
+            Ok(result) => {
+                let (n, addr) = result;
+                match addr.as_socket() {
+                    Some(addr) => return Ok((n, addr)),
+                    None => return Err(io::Error::new(io::ErrorKind::Other, "Invalid socket address"))
+                }
+            },
+            Err(e) => Err(e),
         }
     }
     pub fn bind(&self, addr: SocketAddr) -> io::Result<()> {
@@ -312,7 +312,7 @@ impl DataLinkSocket {
             Some(res) => {
                 match res {
                     Ok(_) => return Ok(buf.len()),
-                    Err(_) => return Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
+                    Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
                 }
             },
             None => Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
@@ -323,7 +323,7 @@ impl DataLinkSocket {
             Some(res) => {
                 match res {
                     Ok(_) => return Ok(()),
-                    Err(_) => return Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
+                    Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
                 }
             },
             None => Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
@@ -334,7 +334,7 @@ impl DataLinkSocket {
             Ok(packet) => {
                 Ok(packet)
             },
-            Err(_) => Err(io::Error::new(io::ErrorKind::Other, "Failed to receive packet")),
+            Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
         }
     }
 }

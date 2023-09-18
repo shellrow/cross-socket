@@ -21,6 +21,7 @@ fn main() {
         protocol: Some(IpNextLevelProtocol::Tcp),
         timeout: None,
         ttl: None,
+        non_blocking: false,
     };
     // Sender socket
     let socket: Socket = Socket::new(socket_option).unwrap();
