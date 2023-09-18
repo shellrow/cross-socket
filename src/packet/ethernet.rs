@@ -3,7 +3,7 @@ use crate::datalink::MacAddr;
 
 pub const ETHERNET_HEADER_LEN: usize = 14;
 
-// define the EtherType enum from avove as a const
+/// Represents the Ethernet types.
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub enum EtherType {
     Ipv4,
@@ -119,6 +119,7 @@ impl EtherType {
     }
 }
 
+/// Represents an Ethernet packet.
 #[derive(Clone, Debug)]
 pub struct EthernetPacket {
     pub destination: MacAddr,
@@ -142,7 +143,7 @@ impl EthernetPacket {
     }
 }
 
-pub fn build_ethernet_packet(
+pub(crate) fn build_ethernet_packet(
     eth_packet: &mut pnet::packet::ethernet::MutableEthernetPacket,
     src_mac: MacAddr,
     dst_mac: MacAddr,
@@ -166,7 +167,7 @@ pub fn build_ethernet_packet(
     }
 }
 
-pub fn build_ethernet_arp_packet(
+pub(crate) fn build_ethernet_arp_packet(
     eth_packet: &mut pnet::packet::ethernet::MutableEthernetPacket,
     src_mac: MacAddr,
     ether_type: EtherType,

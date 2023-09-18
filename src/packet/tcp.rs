@@ -141,6 +141,7 @@ impl TcpFlag {
     }
 }
 
+/// Represents a TCP packet.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TcpPacket {
     pub source: u16,
@@ -209,7 +210,7 @@ impl TcpPacket {
     }
 }
 
-pub fn build_tcp_packet(
+pub(crate) fn build_tcp_packet(
     tcp_packet: &mut pnet::packet::tcp::MutableTcpPacket,
     src_ip: IpAddr,
     src_port: u16,

@@ -1,3 +1,4 @@
+/// GRE packet format
 pub struct GrePacket {
     pub checksum_present: u8,
     pub routing_present: u8,

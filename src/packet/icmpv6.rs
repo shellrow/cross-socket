@@ -247,7 +247,7 @@ impl Icmpv6Type {
     }
 }
 
-/// Represents the "ICMPv6 code" header field.
+/// Represents the ICMPv6 code header field.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Icmpv6Code {
     DestinationUnreachable,
@@ -382,6 +382,7 @@ impl Icmpv6Code {
     
 }
 
+/// Represents an ICMPv6 packet.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Icmpv6Packet {
     pub icmpv6_type: Icmpv6Type,
@@ -405,7 +406,7 @@ impl Icmpv6Packet {
     }
 }
 
-pub fn build_icmpv6_echo_packet(icmp_packet: &mut pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket, src_ip: Ipv6Addr, dst_ip: Ipv6Addr) {
+pub(crate) fn build_icmpv6_echo_packet(icmp_packet: &mut pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket, src_ip: Ipv6Addr, dst_ip: Ipv6Addr) {
     icmp_packet.set_icmpv6_type(pnet::packet::icmpv6::Icmpv6Types::EchoRequest);
     icmp_packet.set_identifier(rand::random::<u16>());
     icmp_packet.set_sequence_number(rand::random::<u16>());

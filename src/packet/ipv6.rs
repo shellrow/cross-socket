@@ -4,6 +4,7 @@ use super::ip::IpNextLevelProtocol;
 
 pub const IPV6_HEADER_LEN: usize = pnet::packet::ipv6::MutableIpv6Packet::minimum_packet_size();
 
+/// Represents the IPv6 options.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Ipv6Packet {
     pub version: u8,
@@ -37,7 +38,7 @@ impl Ipv6Packet {
     }
 }
 
-pub fn build_ipv6_packet(
+pub(crate) fn build_ipv6_packet(
     ipv6_packet: &mut pnet::packet::ipv6::MutableIpv6Packet,
     src_ip: Ipv6Addr,
     dst_ip: Ipv6Addr,

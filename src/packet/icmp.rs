@@ -3,7 +3,7 @@ use pnet::packet::Packet;
 pub const ICMPV4_HEADER_LEN: usize =
     pnet::packet::icmp::echo_request::MutableEchoRequestPacket::minimum_packet_size();
 
-/// ICMP types
+/// ICMP Types
 /// <https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml>
 #[derive(Clone, Debug, PartialEq)]
 pub enum IcmpType {
@@ -156,6 +156,7 @@ impl IcmpType {
     }
 }
 
+/// Represents an ICMP packet.
 #[derive(Clone, Debug, PartialEq)]
 pub struct IcmpPacket {
     pub icmp_type: IcmpType,
@@ -179,7 +180,7 @@ impl IcmpPacket {
     }
 }
 
-pub fn build_icmp_echo_packet(icmp_packet: &mut pnet::packet::icmp::echo_request::MutableEchoRequestPacket) {
+pub(crate) fn build_icmp_echo_packet(icmp_packet: &mut pnet::packet::icmp::echo_request::MutableEchoRequestPacket) {
     icmp_packet.set_icmp_type(pnet::packet::icmp::IcmpTypes::EchoRequest);
     icmp_packet.set_sequence_number(rand::random::<u16>());
     icmp_packet.set_identifier(rand::random::<u16>());

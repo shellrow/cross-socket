@@ -2,6 +2,7 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use pnet::packet::Packet;
 use crate::packet;
 
+/// Build ARP Packet from PacketInfo
 pub fn build_arp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     let src_ip: Ipv4Addr = match packet_info.src_ip {
         IpAddr::V4(ipv4_addr) => ipv4_addr,
@@ -21,6 +22,7 @@ pub fn build_arp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     ethernet_packet.packet().to_vec()
 }
 
+/// Build ICMP Packet from PacketInfo. Build full packet with ethernet and ipv4 header.
 pub fn build_full_icmp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     let src_ip: Ipv4Addr = match packet_info.src_ip {
         IpAddr::V4(ipv4_addr) => ipv4_addr,
@@ -47,6 +49,7 @@ pub fn build_full_icmp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     ethernet_packet.packet().to_vec()
 }
 
+/// Build ICMP Packet from PacketInfo. Build only icmp packet.
 pub fn build_icmp_packet() -> Vec<u8> {
     let mut icmp_buffer = [0u8; packet::icmp::ICMPV4_HEADER_LEN];
     let mut icmp_packet = pnet::packet::icmp::echo_request::MutableEchoRequestPacket::new(
@@ -57,6 +60,7 @@ pub fn build_icmp_packet() -> Vec<u8> {
     icmp_packet.packet().to_vec()
 }
 
+/// Build ICMPv6 Packet from PacketInfo. Build full packet with ethernet and ipv6 header.
 pub fn build_full_icmpv6_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     let src_ip: Ipv6Addr = match packet_info.src_ip {
         IpAddr::V6(ipv6_addr) => ipv6_addr,
@@ -83,6 +87,7 @@ pub fn build_full_icmpv6_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     ethernet_packet.packet().to_vec()
 }
 
+/// Build ICMPv6 Packet from PacketInfo. Build only icmpv6 packet.
 pub fn build_icmpv6_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     let src_ip: Ipv6Addr = match packet_info.src_ip {
         IpAddr::V6(ipv6_addr) => ipv6_addr,
@@ -101,6 +106,7 @@ pub fn build_icmpv6_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     icmpv6_packet.packet().to_vec()
 }
 
+/// Build TCP Packet from PacketInfo. Build full packet with ethernet and ipv4 header.
 pub fn build_full_tcp_syn_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     match packet_info.src_ip {
         IpAddr::V4(src_ip) => match packet_info.dst_ip {
@@ -144,6 +150,7 @@ pub fn build_full_tcp_syn_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     }
 }
 
+/// Build TCP Packet from PacketInfo. Build only tcp packet.
 pub fn build_tcp_syn_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     let mut tcp_buffer = [0u8; packet::tcp::TCP_HEADER_LEN + packet::tcp::TCP_DEFAULT_OPTION_LEN];
     let mut tcp_packet = pnet::packet::tcp::MutableTcpPacket::new(&mut tcp_buffer).unwrap();
@@ -151,6 +158,7 @@ pub fn build_tcp_syn_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     tcp_packet.packet().to_vec()
 }
 
+/// Build UDP Packet from PacketInfo. Build full packet with ethernet and ipv4 header.
 pub fn build_full_udp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     match packet_info.src_ip {
         IpAddr::V4(src_ip) => match packet_info.dst_ip {
@@ -194,6 +202,7 @@ pub fn build_full_udp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     }
 }
 
+/// Build UDP Packet from PacketInfo. Build only udp packet.
 pub fn build_udp_packet(packet_info: packet::PacketInfo) -> Vec<u8> {
     let mut udp_buffer = [0u8; packet::udp::UDP_HEADER_LEN];
     let mut udp_packet = pnet::packet::udp::MutableUdpPacket::new(&mut udp_buffer).unwrap();

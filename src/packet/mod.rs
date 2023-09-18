@@ -29,6 +29,7 @@ pub struct CaptureInfo {
     pub interface_name: String,
 }
 
+/// Packet Frame. Contains all the possible packet types
 #[derive(Clone, Debug)]
 pub struct PacketFrame {
     pub capture_info: CaptureInfo,
@@ -42,6 +43,7 @@ pub struct PacketFrame {
     pub udp_packet: Option<udp::UdpPacket>,
 }
 
+/// High-level abstraction of a packet information
 #[derive(Clone, Debug)]
 pub struct PacketInfo {
     pub src_mac: datalink::MacAddr,

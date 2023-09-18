@@ -1,3 +1,4 @@
+/// IP Next Level Protocol
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub enum IpNextLevelProtocol {
     Hopopt,

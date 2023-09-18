@@ -22,6 +22,7 @@ use std::net::SocketAddr;
 use crate::packet::PacketInfo;
 use crate::packet::ip::IpNextLevelProtocol;
 
+/// IP version. IPv4 or IPv6
 #[derive(Clone, Debug)]
 pub enum IpVersion {
     V4,
@@ -55,6 +56,7 @@ impl IpVersion {
     }
 }
 
+/// Socket type
 #[derive(Clone, Debug)]
 pub enum SocketType {
     Raw,
@@ -72,6 +74,7 @@ impl SocketType {
     }
 }
 
+/// Socket option
 #[derive(Clone, Debug)]
 pub struct SocketOption {
     pub ip_version: IpVersion,
@@ -93,6 +96,7 @@ impl SocketOption {
     }
 }
 
+/// Cross-platform async socket. Provides async adapter for system’s socket
 #[derive(Clone, Debug)]
 pub struct AsyncSocket {
     inner: Arc<Async<SystemSocket>>,
@@ -184,6 +188,7 @@ impl AsyncSocket {
     }
 }
 
+/// Cross-platform socket. Provides cross-platform API for system’s socket 
 #[derive(Clone, Debug)]
 pub struct Socket {
     inner: Arc<SystemSocket>,
@@ -257,6 +262,8 @@ impl Socket {
     }
 }
 
+/// Cross-platform raw socket.
+/// Enables to send and receive packets with custom headers. from datalink layer to application layer.
 pub struct DataLinkSocket {
     pub interface: crate::interface::Interface,
     sender: Box<dyn pnet::datalink::DataLinkSender>,

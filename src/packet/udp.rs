@@ -4,6 +4,7 @@ use pnet::packet::Packet;
 pub const UDP_HEADER_LEN: usize = 8;
 pub const UDP_BASE_DST_PORT: u16 = 33435;
 
+/// Represents the UDP packet.
 #[derive(Clone, Debug, PartialEq)]
 pub struct UdpPacket {
     pub source: u16,
@@ -29,7 +30,7 @@ impl UdpPacket {
     }
 }
 
-pub fn build_udp_packet(
+pub(crate) fn build_udp_packet(
     udp_packet: &mut pnet::packet::udp::MutableUdpPacket,
     src_ip: IpAddr,
     src_port: u16,

@@ -5,6 +5,7 @@ use crate::packet::ip::IpNextLevelProtocol;
 pub const IPV4_HEADER_LEN: usize = pnet::packet::ipv4::MutableIpv4Packet::minimum_packet_size();
 pub const IPV4_HEADER_BYTES: usize = 4;
 
+/// Represents the IPv4 flags.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Ipv4Flags {
     Reserved,
@@ -22,6 +23,7 @@ impl Ipv4Flags {
     }
 }
 
+/// Represents the IPv4 options.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Ipv4Option {
     EndOfOptionsList,
@@ -118,6 +120,7 @@ impl Ipv4Option {
     }
 }
 
+/// Represents an IPv4 packet.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Ipv4Packet {
     pub version: u8,
@@ -166,7 +169,7 @@ impl Ipv4Packet {
     }
 }
 
-pub fn build_ipv4_packet(
+pub(crate) fn build_ipv4_packet(
     ipv4_packet: &mut pnet::packet::ipv4::MutableIpv4Packet,
     src_ip: Ipv4Addr,
     dst_ip: Ipv4Addr,

@@ -5,6 +5,7 @@ use crate::packet::ethernet::EtherType;
 
 pub const ARP_HEADER_LEN: usize = 28;
 
+/// Represents the ARP operation types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ArpOperation{
     Request = 1,
@@ -158,6 +159,7 @@ impl ArpHardwareType {
     }
 }
 
+/// Represents an ARP packet.
 #[derive(Clone, Debug)]
 pub struct ArpPacket {
     pub hardware_type: ArpHardwareType,
@@ -189,7 +191,7 @@ impl ArpPacket {
     }
 }
 
-pub fn build_arp_packet(
+pub(crate) fn build_arp_packet(
     arp_packet: &mut pnet::packet::arp::MutableArpPacket,
     src_mac: MacAddr,
     dst_mac: MacAddr,
