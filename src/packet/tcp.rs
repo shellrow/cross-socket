@@ -1,4 +1,4 @@
-use std::net::IpAddr;
+use std::net::{IpAddr, SocketAddr};
 use pnet::packet::Packet;
 
 pub const TCP_HEADER_LEN: usize = pnet::packet::tcp::MutableTcpPacket::minimum_packet_size();
@@ -248,5 +248,95 @@ pub(crate) fn build_tcp_packet(
                 tcp_packet.set_checksum(checksum);
             }
         },
+    }
+}
+
+/// TCP Packet Builder
+#[derive(Clone, Debug)]
+pub struct TcpPacketBuilder {
+    pub src_ip: IpAddr,
+    pub src_port: u16,
+    pub dst_ip: IpAddr,
+    pub dst_port: u16,
+    pub window: u16,
+    pub data_offset: u8,
+    pub flags: Vec<TcpFlag>,
+    pub options: Vec<TcpOption>,
+    pub payload: Vec<u8>,
+}
+
+impl TcpPacketBuilder {
+    pub fn new(src_addr: SocketAddr, dst_addr: SocketAddr) -> TcpPacketBuilder {
+        TcpPacketBuilder {
+            src_ip: src_addr.ip(),
+            src_port: src_addr.port(),
+            dst_ip: dst_addr.ip(),
+            dst_port: dst_addr.port(),
+            window: 64240,
+            data_offset: 8,
+            flags: vec![TcpFlag::Syn],
+            options: vec![
+                TcpOption::Mss,
+                TcpOption::SackParmitted,
+                TcpOption::Nop,
+                TcpOption::Nop,
+                TcpOption::Wscale,
+            ],
+            payload: vec![],
+        }
+    }
+    pub fn build(&mut self) -> Vec<u8> {
+        let mut buffer: Vec<u8> = vec![0; TCP_HEADER_LEN];
+        let mut tcp_packet = pnet::packet::tcp::MutableTcpPacket::new(&mut buffer).unwrap();
+        tcp_packet.set_source(self.src_port);
+        tcp_packet.set_destination(self.dst_port);
+        tcp_packet.set_window(self.window);
+        tcp_packet.set_data_offset(self.data_offset);
+        tcp_packet.set_urgent_ptr(0);
+        tcp_packet.set_sequence(0);
+        let mut tcp_flags: u8 = 0;
+        for flag in &self.flags {
+            tcp_flags |= flag.number();
+        }
+        tcp_packet.set_flags(tcp_flags);
+        let mut tcp_options: Vec<pnet::packet::tcp::TcpOption> = vec![];
+        for opt in &self.options {
+            match *opt {
+                TcpOption::Mss => {
+                    tcp_options.push(pnet::packet::tcp::TcpOption::mss(1460));
+                }
+                TcpOption::Wscale => {
+                    tcp_options.push(pnet::packet::tcp::TcpOption::wscale(7));
+                }
+                TcpOption::SackParmitted => {
+                    tcp_options.push(pnet::packet::tcp::TcpOption::sack_perm());
+                }
+                TcpOption::Nop => {
+                    tcp_options.push(pnet::packet::tcp::TcpOption::nop());
+                }
+                _ => {}
+            }
+        }
+        tcp_packet.set_options(&tcp_options);
+        tcp_packet.set_payload(&self.payload);
+        match self.src_ip {
+            IpAddr::V4(src_ip) => match self.dst_ip {
+                IpAddr::V4(dst_ip) => {
+                    let checksum =
+                        pnet::packet::tcp::ipv4_checksum(&tcp_packet.to_immutable(), &src_ip, &dst_ip);
+                    tcp_packet.set_checksum(checksum);
+                }
+                IpAddr::V6(_) => {}
+            },
+            IpAddr::V6(src_ip) => match self.dst_ip {
+                IpAddr::V4(_) => {}
+                IpAddr::V6(dst_ip) => {
+                    let checksum =
+                        pnet::packet::tcp::ipv6_checksum(&tcp_packet.to_immutable(), &src_ip, &dst_ip);
+                    tcp_packet.set_checksum(checksum);
+                }
+            },
+        }
+        tcp_packet.packet().to_vec()
     }
 }

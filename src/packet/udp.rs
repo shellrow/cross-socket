@@ -59,3 +59,39 @@ pub(crate) fn build_udp_packet(
         },
     }
 }
+
+/// UDP Packet Builder
+#[derive(Clone, Debug)]
+pub struct UdpPacketBuilder {
+    pub src_ip: IpAddr,
+    pub src_port: u16,
+    pub dst_ip: IpAddr,
+    pub dst_port: u16,
+    pub payload: Vec<u8>,
+}
+
+impl UdpPacketBuilder {
+    pub fn new(src_ip: IpAddr, src_port: u16, dst_ip: IpAddr, dst_port: u16) -> Self {
+        UdpPacketBuilder {
+            src_ip,
+            src_port,
+            dst_ip,
+            dst_port,
+            payload: Vec::new(),
+        }
+    }
+    pub fn build(&mut self) -> Vec<u8> {
+        let mut buffer: Vec<u8> = vec![0; UDP_HEADER_LEN];
+        let mut udp_packet = pnet::packet::udp::MutableUdpPacket::new(&mut buffer).unwrap();
+        build_udp_packet(
+            &mut udp_packet,
+            self.src_ip,
+            self.src_port,
+            self.dst_ip,
+            self.dst_port,
+        );
+        udp_packet.set_payload(&self.payload);
+        udp_packet.set_length(UDP_HEADER_LEN as u16 + self.payload.len() as u16);
+        udp_packet.packet().to_vec()
+    }
+}

@@ -208,3 +208,35 @@ pub(crate) fn build_arp_packet(
     arp_packet.set_target_hw_addr(pnet::datalink::MacAddr::from(dst_mac.octets()));
     arp_packet.set_target_proto_addr(dst_ip);
 }
+
+/// ARP Packet Builder
+#[derive(Clone, Debug)]
+pub struct ArpPacketBuilder {
+    pub src_mac: MacAddr,
+    pub dst_mac: MacAddr,
+    pub src_ip: Ipv4Addr,
+    pub dst_ip: Ipv4Addr,
+}
+
+impl ArpPacketBuilder {
+    pub fn new() -> ArpPacketBuilder {
+        ArpPacketBuilder {
+            src_mac: MacAddr::new([0u8; 6]),
+            dst_mac: MacAddr::new([0u8; 6]),
+            src_ip: Ipv4Addr::new(0, 0, 0, 0),
+            dst_ip: Ipv4Addr::new(0, 0, 0, 0),
+        }
+    }
+    pub fn build(&self) -> Vec<u8> {
+        let mut buffer = [0u8; ARP_HEADER_LEN];
+        let mut arp_packet = pnet::packet::arp::MutableArpPacket::new(&mut buffer).unwrap();
+        build_arp_packet(
+            &mut arp_packet,
+            self.src_mac.clone(),
+            self.dst_mac.clone(),
+            self.src_ip,
+            self.dst_ip,
+        );
+        arp_packet.packet().to_vec()
+    }
+}

@@ -1,3 +1,5 @@
+use std::net::Ipv4Addr;
+
 use pnet::packet::Packet;
 
 pub const ICMPV4_HEADER_LEN: usize =
@@ -186,4 +188,37 @@ pub(crate) fn build_icmp_echo_packet(icmp_packet: &mut pnet::packet::icmp::echo_
     icmp_packet.set_identifier(rand::random::<u16>());
     let icmp_check_sum = pnet::packet::util::checksum(&icmp_packet.packet(), 1);
     icmp_packet.set_checksum(icmp_check_sum);
+}
+
+/// ICMP Packet Builder
+#[derive(Clone, Debug)]
+pub struct IcmpPacketBuilder {
+    pub src_ip: Ipv4Addr,
+    pub dst_ip: Ipv4Addr,
+    pub icmp_type: IcmpType,
+    pub sequence_number: Option<u16>,
+    pub identifier: Option<u16>,
+}
+
+impl IcmpPacketBuilder {
+    pub fn build(&self) -> Vec<u8> {
+        // pnet's MutableIcmpvPacket doesn't support setting the identifier and sequence number
+        // so we have to use the MutableEchoRequestPacket packet instead
+        let buffer: &mut [u8] = &mut [0u8; ICMPV4_HEADER_LEN];
+        let mut icmp_packet = pnet::packet::icmp::echo_request::MutableEchoRequestPacket::new(buffer).unwrap();
+        icmp_packet.set_icmp_type(pnet::packet::icmp::IcmpType(self.icmp_type.number()));
+        if let Some(sequence_number) = self.sequence_number {
+            icmp_packet.set_sequence_number(sequence_number);
+        }else {
+            icmp_packet.set_sequence_number(rand::random::<u16>());
+        }
+        if let Some(identifier) = self.identifier {
+            icmp_packet.set_identifier(identifier);
+        }else{
+            icmp_packet.set_identifier(rand::random::<u16>());
+        }
+        let icmp_check_sum = pnet::packet::util::checksum(&icmp_packet.packet(), 1);
+        icmp_packet.set_checksum(icmp_check_sum);
+        icmp_packet.packet().to_vec()
+    }
 }

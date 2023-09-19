@@ -5,6 +5,7 @@ use crate::packet::{ethernet, ip};
 use crate::datalink;
 
 /// Higher level packet builder.
+/// For protocol specific packet builder, use those builder under protocol specific module.
 #[derive(Clone, Debug)]
 pub struct PacketBuilder {
     pub src_mac: datalink::MacAddr,

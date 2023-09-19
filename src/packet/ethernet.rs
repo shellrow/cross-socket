@@ -189,3 +189,27 @@ pub(crate) fn build_ethernet_arp_packet(
         }
     }
 }
+
+/// Ethernet Packet Builder
+#[derive(Clone, Debug)]
+pub struct EthernetPacketBuilder {
+    pub src_mac: MacAddr,
+    pub dst_mac: MacAddr,
+    pub ether_type: EtherType,
+}
+
+impl EthernetPacketBuilder {
+    pub fn new() -> EthernetPacketBuilder {
+        EthernetPacketBuilder {
+            src_mac: MacAddr::new([0; 6]),
+            dst_mac: MacAddr::new([0; 6]),
+            ether_type: EtherType::Ipv4,
+        }
+    }
+    pub fn build(&self) -> Vec<u8> {
+        let mut buffer: Vec<u8> = vec![0; ETHERNET_HEADER_LEN];
+        let mut eth_packet = pnet::packet::ethernet::MutableEthernetPacket::new(&mut buffer).unwrap();
+        build_ethernet_packet(&mut eth_packet, self.src_mac.clone(), self.dst_mac.clone(), self.ether_type);
+        eth_packet.to_immutable().packet().to_vec()
+    }
+}

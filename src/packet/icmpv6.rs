@@ -415,3 +415,29 @@ pub(crate) fn build_icmpv6_echo_packet(icmp_packet: &mut pnet::packet::icmpv6::e
     //let icmp_check_sum = pnet::packet::util::checksum(&icmp_packet.packet(), 1);
     icmp_packet.set_checksum(icmpv6_checksum);
 }
+
+/// ICMPv6 Packet Builder
+#[derive(Clone, Debug)]
+pub struct Icmpv6PacketBuilder {
+    pub src_ip: Ipv6Addr,
+    pub dst_ip: Ipv6Addr,
+    pub icmpv6_type: Icmpv6Type,
+    pub sequence_number: Option<u16>,
+    pub identifier: Option<u16>,
+}
+
+impl Icmpv6PacketBuilder {
+    pub fn build(&self) -> Vec<u8> {
+        // pnet's MutableIcmpv6Packet doesn't support setting the identifier and sequence number
+        // so we have to use the MutableEchoRequestPacket packet instead
+        let buffer: &mut [u8] = &mut [0u8; ICMPV6_HEADER_LEN];
+        let mut icmp_packet = pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket::new(buffer).unwrap();
+        icmp_packet.set_icmpv6_type(pnet::packet::icmpv6::Icmpv6Type(self.icmpv6_type.number()));
+        icmp_packet.set_identifier(self.identifier.unwrap_or(rand::random::<u16>()));
+        icmp_packet.set_sequence_number(self.sequence_number.unwrap_or(rand::random::<u16>()));
+        let icmpv6_packet = pnet::packet::icmpv6::Icmpv6Packet::new(icmp_packet.packet()).unwrap();
+        let icmpv6_checksum = pnet::packet::icmpv6::checksum(&icmpv6_packet, &self.src_ip, &self.dst_ip);
+        icmp_packet.set_checksum(icmpv6_checksum);
+        icmp_packet.packet().to_vec()
+    }
+}

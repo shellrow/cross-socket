@@ -64,3 +64,37 @@ pub(crate) fn build_ipv6_packet(
         _ => {}
     }
 }
+
+/// IPv6 Packet Builder
+#[derive(Clone, Debug)]
+pub struct Ipv6PacketBuilder {
+    pub src_ip: Ipv6Addr,
+    pub dst_ip: Ipv6Addr,
+    pub next_protocol: IpNextLevelProtocol,
+    pub hop_limit: Option<u8>,
+}
+
+impl Ipv6PacketBuilder {
+    pub fn new(src_ip: Ipv6Addr, dst_ip: Ipv6Addr, next_protocol: IpNextLevelProtocol) -> Self {
+        Ipv6PacketBuilder {
+            src_ip,
+            dst_ip,
+            next_protocol,
+            hop_limit: None,
+        }
+    }
+    pub fn build(&self) -> Vec<u8> {
+        let mut buffer: Vec<u8> = vec![0; IPV6_HEADER_LEN];
+        let mut ipv6_packet = pnet::packet::ipv6::MutableIpv6Packet::new(&mut buffer).unwrap();
+        build_ipv6_packet(
+            &mut ipv6_packet,
+            self.src_ip,
+            self.dst_ip,
+            self.next_protocol,
+        );
+        if let Some(hop_limit) = self.hop_limit {
+            ipv6_packet.set_hop_limit(hop_limit);
+        }
+        ipv6_packet.packet().to_vec()
+    }
+}
