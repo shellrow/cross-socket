@@ -3,27 +3,27 @@ use std::net::IpAddr;
 use cross_socket::socket::DataLinkSocket;
 use cross_socket::packet::ethernet::EtherType;
 use cross_socket::packet::ip::IpNextLevelProtocol;
-use cross_socket::packet::PacketInfo;
+use cross_socket::packet::builder::PacketBuilder;
 use cross_socket::datalink::interface::Interface;
 // Send TCP SYN packets to 1.1.1.1:80 and check if the port is open
 fn main() {
     let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
     // Create new socket
     let mut socket: DataLinkSocket = DataLinkSocket::new(interface, false).unwrap();
-    // Create packet info
-    let mut packet_info = PacketInfo::new();
-    packet_info.src_mac = socket.interface.mac_addr.clone().unwrap();
-    packet_info.dst_mac = socket.interface.gateway.clone().unwrap().mac_addr;
-    packet_info.ether_type = EtherType::Ipv4;
-    packet_info.src_ip = IpAddr::V4(socket.interface.ipv4[0].addr);
-    packet_info.dst_ip = IpAddr::V4(std::net::Ipv4Addr::new(1, 1, 1, 1));
-    packet_info.src_port = Some(53443);
-    packet_info.dst_port = Some(80);
-    packet_info.ip_protocol = Some(IpNextLevelProtocol::Tcp);
-    packet_info.payload = vec![0; 0];
+    // Packet builder for TCP SYN
+    let mut packet_builder = PacketBuilder::new();
+    packet_builder.src_mac = socket.interface.mac_addr.clone().unwrap();
+    packet_builder.dst_mac = socket.interface.gateway.clone().unwrap().mac_addr;
+    packet_builder.ether_type = EtherType::Ipv4;
+    packet_builder.src_ip = IpAddr::V4(socket.interface.ipv4[0].addr);
+    packet_builder.dst_ip = IpAddr::V4(std::net::Ipv4Addr::new(1, 1, 1, 1));
+    packet_builder.src_port = Some(53443);
+    packet_builder.dst_port = Some(80);
+    packet_builder.ip_protocol = Some(IpNextLevelProtocol::Tcp);
+    packet_builder.payload = vec![0; 0];
 
     // Send TCP SYN packets to 1.1.1.1:80
-    match socket.send(packet_info) {
+    match socket.send(packet_builder) {
         Ok(packet_len) => {
             println!("Sent {} bytes", packet_len);
         }

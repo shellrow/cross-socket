@@ -2,7 +2,8 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use cross_socket::packet::ethernet::EtherType;
 use cross_socket::socket::{Socket, DataLinkSocket, SocketOption, IpVersion, SocketType};
-use cross_socket::packet::{PacketInfo, ip::IpNextLevelProtocol};
+use cross_socket::packet::ip::IpNextLevelProtocol;
+use cross_socket::packet::builder::PacketBuilder;
 use cross_socket::datalink::interface::Interface;
 
 // Send TCP SYN packets to 1.1.1.1:80 and check reply
@@ -30,17 +31,17 @@ fn main() {
     // RAW SOCKET recvfrom not working for TCP. So we use DataLinkSocket instead.
     let mut listener_socket: DataLinkSocket = DataLinkSocket::new(interface, false).unwrap();
 
-    // Create packet info
-    let mut packet_info = PacketInfo::new();
-    packet_info.src_ip = src_socket_addr.ip();
-    packet_info.dst_ip = dst_socket_addr.ip();
-    packet_info.src_port = Some(src_socket_addr.port());
-    packet_info.dst_port = Some(dst_socket_addr.port());
-    packet_info.ip_protocol = Some(IpNextLevelProtocol::Tcp);
-    packet_info.payload = vec![0; 0];
+    // Packet builder for TCP SYN
+    let mut packet_builder = PacketBuilder::new();
+    packet_builder.src_ip = src_socket_addr.ip();
+    packet_builder.dst_ip = dst_socket_addr.ip();
+    packet_builder.src_port = Some(src_socket_addr.port());
+    packet_builder.dst_port = Some(dst_socket_addr.port());
+    packet_builder.ip_protocol = Some(IpNextLevelProtocol::Tcp);
+    packet_builder.payload = vec![0; 0];
 
     // Build TCP SYN packet
-    let tcp_packet = cross_socket::packet::builder::build_tcp_syn_packet(packet_info);
+    let tcp_packet = cross_socket::packet::builder::build_tcp_syn_packet(packet_builder);
 
     // Send TCP SYN packet to 1.1.1.1
     match socket.send_to(&tcp_packet, dst_socket_addr) {

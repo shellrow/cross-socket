@@ -3,27 +3,27 @@ use std::net::IpAddr;
 use cross_socket::socket::DataLinkSocket;
 use cross_socket::packet::ethernet::EtherType;
 use cross_socket::packet::ip::IpNextLevelProtocol;
-use cross_socket::packet::PacketInfo;
+use cross_socket::packet::builder::PacketBuilder;
 use cross_socket::datalink::interface::Interface;
 // Send ICMP Echo Request packets to 1.1.1.1 and check reply
 fn main() {
     let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
     // Create new socket
     let mut socket: DataLinkSocket = DataLinkSocket::new(interface, false).unwrap();
-    // Create packet info
-    let mut packet_info = PacketInfo::new();
-    packet_info.src_mac = socket.interface.mac_addr.clone().unwrap();
-    packet_info.dst_mac = socket.interface.gateway.clone().unwrap().mac_addr;
-    packet_info.ether_type = EtherType::Ipv4;
-    packet_info.src_ip = IpAddr::V4(socket.interface.ipv4[0].addr);
-    packet_info.dst_ip = IpAddr::V4(std::net::Ipv4Addr::new(1, 1, 1, 1));
-    packet_info.src_port = None;
-    packet_info.dst_port = None;
-    packet_info.ip_protocol = Some(IpNextLevelProtocol::Icmp);
-    packet_info.payload = vec![0; 0];
+    // Packet builder for ICMP Echo Request
+    let mut packet_builder = PacketBuilder::new();
+    packet_builder.src_mac = socket.interface.mac_addr.clone().unwrap();
+    packet_builder.dst_mac = socket.interface.gateway.clone().unwrap().mac_addr;
+    packet_builder.ether_type = EtherType::Ipv4;
+    packet_builder.src_ip = IpAddr::V4(socket.interface.ipv4[0].addr);
+    packet_builder.dst_ip = IpAddr::V4(std::net::Ipv4Addr::new(1, 1, 1, 1));
+    packet_builder.src_port = None;
+    packet_builder.dst_port = None;
+    packet_builder.ip_protocol = Some(IpNextLevelProtocol::Icmp);
+    packet_builder.payload = vec![0; 0];
 
     // Send ICMP Echo Request packets to 1.1.1.1
-    match socket.send(packet_info) {
+    match socket.send(packet_builder) {
         Ok(packet_len) => {
             println!("Sent {} bytes", packet_len);
         }

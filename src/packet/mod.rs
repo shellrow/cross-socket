@@ -11,9 +11,6 @@ pub mod icmp;
 pub mod icmpv6;
 pub mod builder;
 
-use std::net::IpAddr;
-use crate::datalink;
-
 /// Packet Capture information
 #[derive(Clone, Debug, PartialEq)]
 pub struct CaptureInfo {
@@ -41,34 +38,4 @@ pub struct PacketFrame {
     pub icmpv6_packet: Option<icmpv6::Icmpv6Packet>,
     pub tcp_packet: Option<tcp::TcpPacket>,
     pub udp_packet: Option<udp::UdpPacket>,
-}
-
-/// High-level abstraction of a packet information
-#[derive(Clone, Debug)]
-pub struct PacketInfo {
-    pub src_mac: datalink::MacAddr,
-    pub dst_mac: datalink::MacAddr,
-    pub ether_type: ethernet::EtherType,
-    pub src_ip: IpAddr,
-    pub dst_ip: IpAddr,
-    pub src_port: Option<u16>,
-    pub dst_port: Option<u16>,
-    pub ip_protocol: Option<ip::IpNextLevelProtocol>,
-    pub payload: Vec<u8>,
-}
-
-impl PacketInfo {
-    pub fn new() -> Self {
-        PacketInfo {
-            src_mac: datalink::MacAddr::zero(),
-            dst_mac: datalink::MacAddr::zero(),
-            ether_type: ethernet::EtherType::Ipv4,
-            src_ip: IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
-            dst_ip: IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
-            src_port: None,
-            dst_port: None,
-            ip_protocol: None,
-            payload: Vec::new(),
-        }
-    }
 }
