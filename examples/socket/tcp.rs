@@ -3,14 +3,14 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use cross_socket::packet::ethernet::EtherType;
 use cross_socket::socket::{Socket, DataLinkSocket, SocketOption, IpVersion, SocketType};
 use cross_socket::packet::{PacketInfo, ip::IpNextLevelProtocol};
-use cross_socket::interface::Interface;
+use cross_socket::datalink::interface::Interface;
 
 // Send TCP SYN packets to 1.1.1.1:80 and check reply
 // This example is for Unix(Linux, macOS ...) only.
 // For Windows, use examples/datalink_socket/tcp_ping.rs instead.
 // (Due to Winsock2 limitation.)
 fn main() {
-    let interface: Interface = cross_socket::interface::get_default_interface().unwrap();
+    let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
     let src_ip: IpAddr = IpAddr::V4(interface.ipv4[0].addr);
     let src_socket_addr: SocketAddr = SocketAddr::new(src_ip, 53443);
     let dst_ip: IpAddr = IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1));

@@ -2,12 +2,12 @@ use std::net::IpAddr;
 
 use cross_socket::socket::DataLinkSocket;
 use cross_socket::packet::{PacketInfo, ethernet, builder};
-use cross_socket::interface::Interface;
+use cross_socket::datalink::interface::Interface;
 use cross_socket::datalink::MacAddr;
 
 // Send ARP request to default gateway and check mac address
 fn main() {
-    let interface: Interface = cross_socket::interface::get_default_interface().unwrap();
+    let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
     // Create new socket
     let mut socket: DataLinkSocket = DataLinkSocket::new(interface, false).unwrap();
     // Create packet info for ARP request

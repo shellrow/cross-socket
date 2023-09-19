@@ -2,12 +2,12 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use cross_socket::socket::{Socket, SocketOption, IpVersion, SocketType};
 use cross_socket::packet::{PacketInfo, ip::IpNextLevelProtocol};
-use cross_socket::interface::Interface;
+use cross_socket::datalink::interface::Interface;
 
 // Send ICMP Echo Request packets to 1.1.1.1 and check reply
 fn main() {
     let dst_ip: IpAddr = IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1));
-    let interface: Interface = cross_socket::interface::get_default_interface().unwrap();
+    let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
     let socket_option = SocketOption {
         ip_version: IpVersion::V4,
         socket_type: SocketType::Raw,

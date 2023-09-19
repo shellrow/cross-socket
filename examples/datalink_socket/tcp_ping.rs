@@ -4,10 +4,10 @@ use cross_socket::socket::DataLinkSocket;
 use cross_socket::packet::ethernet::EtherType;
 use cross_socket::packet::ip::IpNextLevelProtocol;
 use cross_socket::packet::PacketInfo;
-use cross_socket::interface::Interface;
+use cross_socket::datalink::interface::Interface;
 // Send TCP SYN packets to 1.1.1.1:80 and check if the port is open
 fn main() {
-    let interface: Interface = cross_socket::interface::get_default_interface().unwrap();
+    let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
     // Create new socket
     let mut socket: DataLinkSocket = DataLinkSocket::new(interface, false).unwrap();
     // Create packet info

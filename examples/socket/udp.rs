@@ -3,11 +3,11 @@ use std::time::Duration;
 
 use cross_socket::socket::{Socket, SocketOption, IpVersion, SocketType, ListenerSocket};
 use cross_socket::packet::{PacketInfo, ip::IpNextLevelProtocol};
-use cross_socket::interface::Interface;
+use cross_socket::datalink::interface::Interface;
 
 // Send UDP packets to 1.1.1.1:33435 and check ICMP Port Unreachable reply
 fn main() {
-    let interface: Interface = cross_socket::interface::get_default_interface().unwrap();
+    let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
     let src_ip: IpAddr = IpAddr::V4(interface.ipv4[0].addr);
     let src_socket_addr: SocketAddr = SocketAddr::new(src_ip, 0);
     let dst_ip: IpAddr = IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1));

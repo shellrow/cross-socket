@@ -265,13 +265,13 @@ impl Socket {
 /// Cross-platform raw socket.
 /// Enables to send and receive packets with custom headers. from datalink layer to application layer.
 pub struct DataLinkSocket {
-    pub interface: crate::interface::Interface,
+    pub interface: crate::datalink::interface::Interface,
     sender: Box<dyn pnet::datalink::DataLinkSender>,
     receiver: Box<dyn pnet::datalink::DataLinkReceiver>,
 }
 
 impl DataLinkSocket {
-    pub fn new(interface: crate::interface::Interface, promiscuous: bool) -> io::Result<DataLinkSocket> {
+    pub fn new(interface: crate::datalink::interface::Interface, promiscuous: bool) -> io::Result<DataLinkSocket> {
         let interfaces = pnet::datalink::interfaces();
         let network_interface = match interfaces
         .into_iter()

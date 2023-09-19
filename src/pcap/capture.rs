@@ -1,4 +1,4 @@
-use crate::option::PacketCaptureOptions;
+use crate::pcap::PacketCaptureOptions;
 use crate::packet::ethernet::EthernetPacket;
 use crate::packet::{
     CaptureInfo, 
