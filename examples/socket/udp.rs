@@ -1,9 +1,9 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::time::Duration;
 
+use cross_socket::packet::udp::UdpPacketBuilder;
 use cross_socket::socket::{Socket, SocketOption, IpVersion, SocketType, ListenerSocket};
 use cross_socket::packet::ip::IpNextLevelProtocol;
-use cross_socket::packet::builder::PacketBuildOption;
 use cross_socket::datalink::interface::Interface;
 
 // Send UDP packets to 1.1.1.1:33435 and check ICMP Port Unreachable reply
@@ -28,19 +28,10 @@ fn main() {
     let listener_socket: ListenerSocket = ListenerSocket::new(src_socket_addr, IpVersion::V4, None, Some(Duration::from_millis(1000))).unwrap();
 
     // Packet builder for UDP packet. Expect ICMP Destination (Port) Unreachable.
-    let mut packet_builder = PacketBuildOption::new();
-    packet_builder.src_ip = src_ip;
-    packet_builder.dst_ip = dst_socket_addr.ip();
-    packet_builder.src_port = Some(53443);
-    packet_builder.dst_port = Some(dst_socket_addr.port());
-    packet_builder.ip_protocol = Some(IpNextLevelProtocol::Udp);
-    packet_builder.payload = vec![0; 0];
-
-    // Build UDP packet
-    let udp_packet = cross_socket::packet::builder::build_udp_packet(packet_builder);
+    let udp_packet_builder = UdpPacketBuilder::new(src_socket_addr, dst_socket_addr);
 
     // Send UDP packets to 1.1.1.1:33435
-    match socket.send_to(&udp_packet, dst_socket_addr) {
+    match socket.send_to(&udp_packet_builder.build(), dst_socket_addr) {
         Ok(packet_len) => {
             println!("Sent {} bytes", packet_len);
         }
