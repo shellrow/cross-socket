@@ -1,4 +1,4 @@
-use std::net::IpAddr;
+use std::net::{IpAddr, SocketAddr};
 use pnet::packet::Packet;
 
 pub const UDP_HEADER_LEN: usize = 8;
@@ -71,21 +71,23 @@ pub struct UdpPacketBuilder {
 }
 
 impl UdpPacketBuilder {
-    pub fn new(src_ip: IpAddr, src_port: u16, dst_ip: IpAddr, dst_port: u16) -> Self {
+    pub fn new(src_addr: SocketAddr, dst_addr: SocketAddr) -> Self {
         UdpPacketBuilder {
-            src_ip,
-            src_port,
-            dst_ip,
-            dst_port,
+            src_ip: src_addr.ip(),
+            src_port: src_addr.port(),
+            dst_ip: dst_addr.ip(),
+            dst_port: dst_addr.port(),
             payload: Vec::new(),
         }
     }
     pub fn build(&self) -> Vec<u8> {
-        let mut buffer: Vec<u8> = vec![0; UDP_HEADER_LEN];
+        let mut buffer: Vec<u8> = vec![0; UDP_HEADER_LEN + self.payload.len()];
         let mut udp_packet = pnet::packet::udp::MutableUdpPacket::new(&mut buffer).unwrap();
         udp_packet.set_source(self.src_port);
         udp_packet.set_destination(self.dst_port);
-        udp_packet.set_payload(&self.payload);
+        if self.payload.len() > 0 {
+            udp_packet.set_payload(&self.payload);
+        }
         udp_packet.set_length(UDP_HEADER_LEN as u16 + self.payload.len() as u16);
         match self.src_ip {
             IpAddr::V4(src_ip) => match self.dst_ip {
