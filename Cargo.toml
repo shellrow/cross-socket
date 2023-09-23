@@ -32,6 +32,11 @@ features = [
   "Win32_System_WindowsProgramming",
 ]
 
+[dev-dependencies]
+ipnet = "2.7"
+futures = {version = "0.3", features = ["executor", "thread-pool"]}
+futures-lite = "1.13"
+
 [features]
 setup = ["cross-socket-deps"]
 
@@ -48,12 +53,20 @@ name = "udp"
 path = "examples/socket/udp.rs"
 
 [[example]]
+name = "async_icmp"
+path = "examples/async_socket/async_icmp.rs"
+
+[[example]]
 name = "arp"
 path = "examples/datalink_socket/arp.rs"
 
 [[example]]
 name = "icmp_ping"
 path = "examples/datalink_socket/icmp_ping.rs"
+
+[[example]]
+name = "icmp_build"
+path = "examples/datalink_socket/icmp_build.rs"
 
 [[example]]
 name = "tcp_ping"

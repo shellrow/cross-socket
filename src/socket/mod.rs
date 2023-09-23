@@ -120,7 +120,7 @@ impl AsyncSocket {
             inner: Arc::new(Async::new(socket)?),
         })
     }
-    pub async fn send_to(&self, buf: &mut [u8], target: SocketAddr) -> io::Result<usize> {
+    pub async fn send_to(&self, buf: &[u8], target: SocketAddr) -> io::Result<usize> {
         let target: SockAddr = SockAddr::from(target);
         loop {
             self.inner.writable().await?;
