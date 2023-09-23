@@ -1,7 +1,7 @@
 use std::net::IpAddr;
 
 use cross_socket::socket::DataLinkSocket;
-use cross_socket::packet::{ethernet, builder};
+use cross_socket::packet::ethernet;
 use cross_socket::packet::builder::PacketBuilder;
 use cross_socket::datalink::interface::Interface;
 use cross_socket::datalink::MacAddr;
@@ -19,11 +19,8 @@ fn main() {
     packet_buider.src_ip = IpAddr::V4(socket.interface.ipv4[0].addr);
     packet_buider.dst_ip = socket.interface.gateway.clone().unwrap().ip_addr;
 
-    // Build ARP packet
-    let arp_packet = builder::build_arp_packet(packet_buider);
-
     // Send ARP request to default gateway
-    match socket.send_to(&arp_packet) {
+    match socket.send(packet_buider) {
         Ok(packet_len) => {
             println!("Sent {} bytes", packet_len);
         }

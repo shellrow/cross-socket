@@ -5,7 +5,7 @@ use crate::packet::builder::PacketBuilder;
 fn build_packet(packet_builder: PacketBuilder, tmp_packet: &mut [u8]) {
     match packet_builder.ether_type {
         packet::ethernet::EtherType::Arp => {
-            let packet = builder::build_arp_packet(packet_builder);
+            let packet = builder::build_full_arp_packet(packet_builder);
             tmp_packet.copy_from_slice(&packet);
             return;
         }

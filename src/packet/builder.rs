@@ -36,7 +36,7 @@ impl PacketBuilder {
 }
 
 /// Build ARP Packet from PacketInfo
-pub fn build_arp_packet(packet_builder: PacketBuilder) -> Vec<u8> {
+pub fn build_full_arp_packet(packet_builder: PacketBuilder) -> Vec<u8> {
     let src_ip: Ipv4Addr = match packet_builder.src_ip {
         IpAddr::V4(ipv4_addr) => ipv4_addr,
         _ => return Vec::new(),
@@ -47,7 +47,7 @@ pub fn build_arp_packet(packet_builder: PacketBuilder) -> Vec<u8> {
     };
     let mut ethernet_buffer = [0u8; packet::ethernet::ETHERNET_HEADER_LEN + packet::arp::ARP_HEADER_LEN];
     let mut ethernet_packet:pnet::packet::ethernet::MutableEthernetPacket = pnet::packet::ethernet::MutableEthernetPacket::new(&mut ethernet_buffer).unwrap();
-    packet::ethernet::build_ethernet_arp_packet(&mut ethernet_packet, packet_builder.src_mac.clone(), packet_builder.ether_type);
+    packet::ethernet::build_ethernet_arp_packet(&mut ethernet_packet, packet_builder.src_mac.clone());
     let mut arp_buffer = [0u8; packet::arp::ARP_HEADER_LEN];
     let mut arp_packet = pnet::packet::arp::MutableArpPacket::new(&mut arp_buffer).unwrap();
     packet::arp::build_arp_packet(&mut arp_packet, packet_builder.src_mac, packet_builder.dst_mac, src_ip, dst_ip);
