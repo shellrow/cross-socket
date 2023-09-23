@@ -1,7 +1,13 @@
 use std::net::{IpAddr, SocketAddr};
 use pnet::packet::Packet;
 
+/// Minimum TCP Header Length
 pub const TCP_HEADER_LEN: usize = pnet::packet::tcp::MutableTcpPacket::minimum_packet_size();
+pub const TCP_MIN_DATA_OFFSET: u8 = 5;
+/// Maximum TCP Option Length
+pub const TCP_OPTION_MAX_LEN: usize = 40;
+/// Maximum TCP Header Length (with options)
+pub const TCP_HEADER_MAX_LEN: usize = TCP_HEADER_LEN + TCP_OPTION_MAX_LEN;
 pub const TCP_DEFAULT_OPTION_LEN: usize = 12;
 pub const DEFAULT_SRC_PORT: u16 = 53443;
 
@@ -65,6 +71,18 @@ impl TcpOption {
             TcpOption::SackParmitted => String::from("SACK_PERMITTED"),
             TcpOption::Sack => String::from("SACK"),
             TcpOption::Timestamp => String::from("TIMESTAMPS"),
+        }
+    }
+    /// Get size (bytes) of the TCP option
+    pub fn size(&self) -> usize {
+        match *self {
+            TcpOption::Eol => 1,
+            TcpOption::Nop => 1,
+            TcpOption::Mss => 4,
+            TcpOption::Wscale => 3,
+            TcpOption::SackParmitted => 2,
+            TcpOption::Sack => 10,
+            TcpOption::Timestamp => 10,
         }
     }
 }
@@ -138,6 +156,26 @@ impl TcpFlag {
             TcpFlag::Cwr => String::from("CWR"),
             TcpFlag::Unknown(n) => format!("Unknown({})", n),
         }
+    }
+}
+
+pub fn get_tcp_options_length(data_offset: u8) -> usize {
+    if data_offset > 5 {
+        data_offset as usize * 4 - TCP_HEADER_LEN
+    } else {
+        0
+    }
+}
+
+pub fn get_tcp_data_offset(opstions: Vec<TcpOption>) -> u8 {
+    let mut total_size: u8 = 0;
+    for opt in opstions {
+        total_size += opt.size() as u8;
+    }
+    if total_size % 4 == 0 {
+        total_size / 4 + TCP_MIN_DATA_OFFSET
+    } else {
+        total_size / 4 + TCP_MIN_DATA_OFFSET + 1
     }
 }
 
@@ -259,7 +297,6 @@ pub struct TcpPacketBuilder {
     pub dst_ip: IpAddr,
     pub dst_port: u16,
     pub window: u16,
-    pub data_offset: u8,
     pub flags: Vec<TcpFlag>,
     pub options: Vec<TcpOption>,
     pub payload: Vec<u8>,
@@ -273,7 +310,6 @@ impl TcpPacketBuilder {
             dst_ip: dst_addr.ip(),
             dst_port: dst_addr.port(),
             window: 64240,
-            data_offset: 8,
             flags: vec![TcpFlag::Syn],
             options: vec![
                 TcpOption::Mss,
@@ -286,17 +322,23 @@ impl TcpPacketBuilder {
         }
     }
     pub fn build(&self) -> Vec<u8> {
-        let mut buffer: Vec<u8> = vec![0; TCP_HEADER_LEN];
+        let data_offset = get_tcp_data_offset(self.options.clone());
+        let tcp_options_len = get_tcp_options_length(data_offset);
+        let mut buffer: Vec<u8> = vec![0; TCP_HEADER_LEN + tcp_options_len];
         let mut tcp_packet = pnet::packet::tcp::MutableTcpPacket::new(&mut buffer).unwrap();
         tcp_packet.set_source(self.src_port);
         tcp_packet.set_destination(self.dst_port);
         tcp_packet.set_window(self.window);
-        tcp_packet.set_data_offset(self.data_offset);
+        tcp_packet.set_data_offset(data_offset);
         tcp_packet.set_urgent_ptr(0);
         tcp_packet.set_sequence(0);
         let mut tcp_flags: u8 = 0;
         for flag in &self.flags {
-            tcp_flags |= flag.number();
+            if tcp_flags == 0 {
+                tcp_flags = flag.number();
+            }else{
+                tcp_flags |= flag.number();
+            }
         }
         tcp_packet.set_flags(tcp_flags);
         let mut tcp_options: Vec<pnet::packet::tcp::TcpOption> = vec![];
@@ -318,7 +360,9 @@ impl TcpPacketBuilder {
             }
         }
         tcp_packet.set_options(&tcp_options);
-        tcp_packet.set_payload(&self.payload);
+        if self.payload.len() > 0 {
+            tcp_packet.set_payload(&self.payload);
+        }
         match self.src_ip {
             IpAddr::V4(src_ip) => match self.dst_ip {
                 IpAddr::V4(dst_ip) => {

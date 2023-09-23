@@ -60,6 +60,10 @@ name = "tcp_ping"
 path = "examples/datalink_socket/tcp_ping.rs"
 
 [[example]]
+name = "tcp_build"
+path = "examples/datalink_socket/tcp_build.rs"
+
+[[example]]
 name = "udp_ping"
 path = "examples/datalink_socket/udp_ping.rs"
 
