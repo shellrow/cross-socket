@@ -2,12 +2,12 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use cross_socket::socket::{Socket, SocketOption, IpVersion, SocketType};
 use cross_socket::packet::ip::IpNextLevelProtocol;
-use cross_socket::packet::builder::PacketBuilder;
+use cross_socket::packet::icmp::IcmpPacketBuilder;
 use cross_socket::datalink::interface::Interface;
 
 // Send ICMP Echo Request packets to 1.1.1.1 and check reply
 fn main() {
-    let dst_ip: IpAddr = IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1));
+    let dst_ip: Ipv4Addr = Ipv4Addr::new(1, 1, 1, 1);
     let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
     let socket_option = SocketOption {
         ip_version: IpVersion::V4,
@@ -19,17 +19,16 @@ fn main() {
     };
     let socket: Socket = Socket::new(socket_option).unwrap();
     // Packet builder for ICMP Echo Request
-    let mut packet_builder = PacketBuilder::new();
-    packet_builder.src_ip = IpAddr::V4(interface.ipv4[0].addr);
+    let mut packet_builder = IcmpPacketBuilder::new();
+    packet_builder.src_ip = interface.ipv4[0].addr;
     packet_builder.dst_ip = dst_ip;
-    packet_builder.ip_protocol = Some(IpNextLevelProtocol::Icmp);
-    packet_builder.payload = vec![0; 0];
+    packet_builder.icmp_type = cross_socket::packet::icmp::IcmpType::EchoRequest;
 
     // Build ICMP Echo Request packet
-    let icmp_packet = cross_socket::packet::builder::build_icmp_packet();
+    let icmp_packet = packet_builder.build();
 
     // Send ICMP Echo Request packets to 1.1.1.1
-    let socket_addr = SocketAddr::new(dst_ip, 0);
+    let socket_addr = SocketAddr::new(IpAddr::V4(dst_ip), 0);
     match socket.send_to(&icmp_packet, socket_addr) {
         Ok(packet_len) => {
             println!("Sent {} bytes", packet_len);

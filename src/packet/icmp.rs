@@ -201,6 +201,15 @@ pub struct IcmpPacketBuilder {
 }
 
 impl IcmpPacketBuilder {
+    pub fn new() -> IcmpPacketBuilder {
+        IcmpPacketBuilder {
+            src_ip: Ipv4Addr::LOCALHOST,
+            dst_ip: Ipv4Addr::LOCALHOST,
+            icmp_type: IcmpType::EchoRequest,
+            sequence_number: None,
+            identifier: None,
+        }
+    }
     pub fn build(&self) -> Vec<u8> {
         // pnet's MutableIcmpvPacket doesn't support setting the identifier and sequence number
         // so we have to use the MutableEchoRequestPacket packet instead
