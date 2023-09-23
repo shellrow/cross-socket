@@ -3,7 +3,7 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use cross_socket::packet::ethernet::EtherType;
 use cross_socket::socket::{Socket, DataLinkSocket, SocketOption, IpVersion, SocketType};
 use cross_socket::packet::ip::IpNextLevelProtocol;
-use cross_socket::packet::builder::PacketBuilder;
+use cross_socket::packet::builder::PacketBuildOption;
 use cross_socket::datalink::interface::Interface;
 
 // Send TCP SYN packets to 1.1.1.1:80 and check reply
@@ -32,7 +32,7 @@ fn main() {
     let mut listener_socket: DataLinkSocket = DataLinkSocket::new(interface, false).unwrap();
 
     // Packet builder for TCP SYN
-    let mut packet_builder = PacketBuilder::new();
+    let mut packet_builder = PacketBuildOption::new();
     packet_builder.src_ip = src_socket_addr.ip();
     packet_builder.dst_ip = dst_socket_addr.ip();
     packet_builder.src_port = Some(src_socket_addr.port());

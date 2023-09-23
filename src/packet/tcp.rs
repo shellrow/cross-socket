@@ -285,7 +285,7 @@ impl TcpPacketBuilder {
             payload: vec![],
         }
     }
-    pub fn build(&mut self) -> Vec<u8> {
+    pub fn build(&self) -> Vec<u8> {
         let mut buffer: Vec<u8> = vec![0; TCP_HEADER_LEN];
         let mut tcp_packet = pnet::packet::tcp::MutableTcpPacket::new(&mut buffer).unwrap();
         tcp_packet.set_source(self.src_port);

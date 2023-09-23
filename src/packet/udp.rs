@@ -80,7 +80,7 @@ impl UdpPacketBuilder {
             payload: Vec::new(),
         }
     }
-    pub fn build(&mut self) -> Vec<u8> {
+    pub fn build(&self) -> Vec<u8> {
         let mut buffer: Vec<u8> = vec![0; UDP_HEADER_LEN];
         let mut udp_packet = pnet::packet::udp::MutableUdpPacket::new(&mut buffer).unwrap();
         udp_packet.set_source(self.src_port);

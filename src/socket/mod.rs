@@ -19,7 +19,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use std::net::SocketAddr;
 
-use crate::packet::builder::PacketBuilder;
+use crate::packet::builder::PacketBuildOption;
 use crate::packet::ip::IpNextLevelProtocol;
 
 /// IP version. IPv4 or IPv6
@@ -304,7 +304,7 @@ impl DataLinkSocket {
             receiver: rx,
         })
     }
-    pub fn send(&mut self, packet_builder: PacketBuilder) -> io::Result<usize> {
+    pub fn send(&mut self, packet_builder: PacketBuildOption) -> io::Result<usize> {
         build_and_send_packet(&mut self.sender, packet_builder)
     }
     pub fn send_to(&mut self, buf: &[u8]) -> io::Result<usize> {

@@ -1,8 +1,8 @@
 use std::io;
 use crate::packet::{self, builder};
-use crate::packet::builder::PacketBuilder;
+use crate::packet::builder::PacketBuildOption;
 
-fn build_packet(packet_builder: PacketBuilder, tmp_packet: &mut [u8]) {
+fn build_packet(packet_builder: PacketBuildOption, tmp_packet: &mut [u8]) {
     match packet_builder.ether_type {
         packet::ethernet::EtherType::Arp => {
             let packet = builder::build_full_arp_packet(packet_builder);
@@ -59,7 +59,7 @@ fn build_packet(packet_builder: PacketBuilder, tmp_packet: &mut [u8]) {
     }
 }
 
-pub(crate) fn build_and_send_packet(tx: &mut Box<dyn pnet::datalink::DataLinkSender>, packet_builder: PacketBuilder) -> io::Result<usize> {
+pub(crate) fn build_and_send_packet(tx: &mut Box<dyn pnet::datalink::DataLinkSender>, packet_builder: PacketBuildOption) -> io::Result<usize> {
     match packet_builder.ether_type {
         packet::ethernet::EtherType::Arp => {
             let packet_size: usize = packet::ethernet::ETHERNET_HEADER_LEN + packet::arp::ARP_HEADER_LEN;

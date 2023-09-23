@@ -2,7 +2,7 @@ use std::net::IpAddr;
 
 use cross_socket::socket::DataLinkSocket;
 use cross_socket::packet::ethernet;
-use cross_socket::packet::builder::PacketBuilder;
+use cross_socket::packet::builder::PacketBuildOption;
 use cross_socket::datalink::interface::Interface;
 use cross_socket::datalink::MacAddr;
 
@@ -11,16 +11,16 @@ fn main() {
     let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
     // Create new socket
     let mut socket: DataLinkSocket = DataLinkSocket::new(interface, false).unwrap();
-    // Packet builder for ARP request
-    let mut packet_buider = PacketBuilder::new();
-    packet_buider.src_mac = socket.interface.mac_addr.clone().unwrap();
-    packet_buider.dst_mac = MacAddr::zero();
-    packet_buider.ether_type = cross_socket::packet::ethernet::EtherType::Arp;
-    packet_buider.src_ip = IpAddr::V4(socket.interface.ipv4[0].addr);
-    packet_buider.dst_ip = socket.interface.gateway.clone().unwrap().ip_addr;
+    // Packet option for ARP request
+    let mut packet_option = PacketBuildOption::new();
+    packet_option.src_mac = socket.interface.mac_addr.clone().unwrap();
+    packet_option.dst_mac = MacAddr::zero();
+    packet_option.ether_type = cross_socket::packet::ethernet::EtherType::Arp;
+    packet_option.src_ip = IpAddr::V4(socket.interface.ipv4[0].addr);
+    packet_option.dst_ip = socket.interface.gateway.clone().unwrap().ip_addr;
 
     // Send ARP request to default gateway
-    match socket.send(packet_buider) {
+    match socket.send(packet_option) {
         Ok(packet_len) => {
             println!("Sent {} bytes", packet_len);
         }
