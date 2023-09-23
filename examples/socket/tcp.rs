@@ -1,9 +1,9 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use cross_socket::packet::ethernet::EtherType;
+use cross_socket::packet::tcp::{TcpPacketBuilder, TcpFlag, TcpOption};
 use cross_socket::socket::{Socket, DataLinkSocket, SocketOption, IpVersion, SocketType};
 use cross_socket::packet::ip::IpNextLevelProtocol;
-use cross_socket::packet::builder::PacketBuildOption;
 use cross_socket::datalink::interface::Interface;
 
 // Send TCP SYN packets to 1.1.1.1:80 and check reply
@@ -13,7 +13,6 @@ use cross_socket::datalink::interface::Interface;
 fn main() {
     let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
     let src_ip: IpAddr = IpAddr::V4(interface.ipv4[0].addr);
-    let src_socket_addr: SocketAddr = SocketAddr::new(src_ip, 53443);
     let dst_ip: IpAddr = IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1));
     let dst_socket_addr: SocketAddr = SocketAddr::new(dst_ip, 80);
     let socket_option = SocketOption {
@@ -32,19 +31,12 @@ fn main() {
     let mut listener_socket: DataLinkSocket = DataLinkSocket::new(interface, false).unwrap();
 
     // Packet builder for TCP SYN
-    let mut packet_builder = PacketBuildOption::new();
-    packet_builder.src_ip = src_socket_addr.ip();
-    packet_builder.dst_ip = dst_socket_addr.ip();
-    packet_builder.src_port = Some(src_socket_addr.port());
-    packet_builder.dst_port = Some(dst_socket_addr.port());
-    packet_builder.ip_protocol = Some(IpNextLevelProtocol::Tcp);
-    packet_builder.payload = vec![0; 0];
-
-    // Build TCP SYN packet
-    let tcp_packet = cross_socket::packet::builder::build_tcp_syn_packet(packet_builder);
+    let mut tcp_packet_builder = TcpPacketBuilder::new(SocketAddr::new(src_ip, 53443), SocketAddr::new(IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1)), 80));
+    tcp_packet_builder.flags = vec![TcpFlag::Syn];
+    tcp_packet_builder.options = vec![TcpOption::Mss, TcpOption::SackParmitted, TcpOption::Nop, TcpOption::Nop, TcpOption::Wscale];
 
     // Send TCP SYN packet to 1.1.1.1
-    match socket.send_to(&tcp_packet, dst_socket_addr) {
+    match socket.send_to(&tcp_packet_builder.build(), dst_socket_addr) {
         Ok(packet_len) => {
             println!("Sent {} bytes", packet_len);
         }
