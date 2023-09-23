@@ -83,15 +83,28 @@ impl UdpPacketBuilder {
     pub fn build(&mut self) -> Vec<u8> {
         let mut buffer: Vec<u8> = vec![0; UDP_HEADER_LEN];
         let mut udp_packet = pnet::packet::udp::MutableUdpPacket::new(&mut buffer).unwrap();
-        build_udp_packet(
-            &mut udp_packet,
-            self.src_ip,
-            self.src_port,
-            self.dst_ip,
-            self.dst_port,
-        );
+        udp_packet.set_source(self.src_port);
+        udp_packet.set_destination(self.dst_port);
         udp_packet.set_payload(&self.payload);
         udp_packet.set_length(UDP_HEADER_LEN as u16 + self.payload.len() as u16);
+        match self.src_ip {
+            IpAddr::V4(src_ip) => match self.dst_ip {
+                IpAddr::V4(dst_ip) => {
+                    let checksum =
+                        pnet::packet::udp::ipv4_checksum(&udp_packet.to_immutable(), &src_ip, &dst_ip);
+                    udp_packet.set_checksum(checksum);
+                }
+                IpAddr::V6(_) => {}
+            },
+            IpAddr::V6(src_ip) => match self.dst_ip {
+                IpAddr::V4(_) => {}
+                IpAddr::V6(dst_ip) => {
+                    let checksum =
+                        pnet::packet::udp::ipv6_checksum(&udp_packet.to_immutable(), &src_ip, &dst_ip);
+                    udp_packet.set_checksum(checksum);
+                }
+            },
+        }
         udp_packet.packet().to_vec()
     }
 }
