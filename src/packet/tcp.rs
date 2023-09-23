@@ -324,7 +324,7 @@ impl TcpPacketBuilder {
     pub fn build(&self) -> Vec<u8> {
         let data_offset = get_tcp_data_offset(self.options.clone());
         let tcp_options_len = get_tcp_options_length(data_offset);
-        let mut buffer: Vec<u8> = vec![0; TCP_HEADER_LEN + tcp_options_len];
+        let mut buffer: Vec<u8> = vec![0; TCP_HEADER_LEN + tcp_options_len + self.payload.len()];
         let mut tcp_packet = pnet::packet::tcp::MutableTcpPacket::new(&mut buffer).unwrap();
         tcp_packet.set_source(self.src_port);
         tcp_packet.set_destination(self.dst_port);
