@@ -201,10 +201,10 @@ pub struct IcmpPacketBuilder {
 }
 
 impl IcmpPacketBuilder {
-    pub fn new() -> IcmpPacketBuilder {
+    pub fn new(src_ip: Ipv4Addr, dst_ip: Ipv4Addr) -> IcmpPacketBuilder {
         IcmpPacketBuilder {
-            src_ip: Ipv4Addr::LOCALHOST,
-            dst_ip: Ipv4Addr::LOCALHOST,
+            src_ip: src_ip,
+            dst_ip: dst_ip,
             icmp_type: IcmpType::EchoRequest,
             sequence_number: None,
             identifier: None,

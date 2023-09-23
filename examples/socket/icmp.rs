@@ -7,8 +7,9 @@ use cross_socket::datalink::interface::Interface;
 
 // Send ICMP Echo Request packets to 1.1.1.1 and check reply
 fn main() {
-    let dst_ip: Ipv4Addr = Ipv4Addr::new(1, 1, 1, 1);
     let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
+    let src_ip: Ipv4Addr = interface.ipv4[0].addr;
+    let dst_ip: Ipv4Addr = Ipv4Addr::new(1, 1, 1, 1);
     let socket_option = SocketOption {
         ip_version: IpVersion::V4,
         socket_type: SocketType::Raw,
@@ -19,9 +20,7 @@ fn main() {
     };
     let socket: Socket = Socket::new(socket_option).unwrap();
     // Packet builder for ICMP Echo Request
-    let mut packet_builder = IcmpPacketBuilder::new();
-    packet_builder.src_ip = interface.ipv4[0].addr;
-    packet_builder.dst_ip = dst_ip;
+    let mut packet_builder = IcmpPacketBuilder::new(src_ip, dst_ip);
     packet_builder.icmp_type = cross_socket::packet::icmp::IcmpType::EchoRequest;
 
     // Build ICMP Echo Request packet
