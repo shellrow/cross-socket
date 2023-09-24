@@ -1,5 +1,5 @@
-use std::net::Ipv6Addr;
 use pnet::packet::Packet;
+use std::net::Ipv6Addr;
 
 pub const ICMPV6_HEADER_LEN: usize =
     pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket::minimum_packet_size();
@@ -146,14 +146,10 @@ impl Icmpv6Type {
             Icmpv6Type::MulticastRouterSolicitation => {
                 String::from("multicast_router_solicitation")
             }
-            Icmpv6Type::MulticastRouterTermination => {
-                String::from("multicast_router_termination")
-            }
+            Icmpv6Type::MulticastRouterTermination => String::from("multicast_router_termination"),
             Icmpv6Type::FMIPv6Messages => String::from("fmipv6_messages"),
             Icmpv6Type::RPLControlMessage => String::from("rpl_control_message"),
-            Icmpv6Type::ILNPv6LocatorUpdateMessage => {
-                String::from("ilnpv6_locator_update_message")
-            }
+            Icmpv6Type::ILNPv6LocatorUpdateMessage => String::from("ilnpv6_locator_update_message"),
             Icmpv6Type::DuplicateAddressRequest => String::from("duplicate_address_request"),
             Icmpv6Type::DuplicateAddressConfirmation => {
                 String::from("duplicate_address_confirmation")
@@ -216,9 +212,7 @@ impl Icmpv6Type {
             Icmpv6Type::MulticastRouterSolicitation => {
                 String::from("Multicast Router Solicitation")
             }
-            Icmpv6Type::MulticastRouterTermination => {
-                String::from("Multicast Router Termination")
-            }
+            Icmpv6Type::MulticastRouterTermination => String::from("Multicast Router Termination"),
             Icmpv6Type::FMIPv6Messages => String::from("FMIPv6 Messages"),
             Icmpv6Type::RPLControlMessage => String::from("RPL Control Message"),
             Icmpv6Type::ILNPv6LocatorUpdateMessage => String::from("ILNPv6 Locator Update Message"),
@@ -380,7 +374,6 @@ impl Icmpv6Code {
             Icmpv6Code::Unknown(n) => n,
         }
     }
-    
 }
 
 /// Represents an ICMPv6 packet.
@@ -413,7 +406,11 @@ impl Icmpv6Packet {
 }
 
 /// Build ICMPv6 packet
-pub(crate) fn build_icmpv6_echo_packet(icmp_packet: &mut pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket, src_ip: Ipv6Addr, dst_ip: Ipv6Addr) {
+pub(crate) fn build_icmpv6_echo_packet(
+    icmp_packet: &mut pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket,
+    src_ip: Ipv6Addr,
+    dst_ip: Ipv6Addr,
+) {
     icmp_packet.set_icmpv6_type(pnet::packet::icmpv6::Icmpv6Types::EchoRequest);
     icmp_packet.set_identifier(rand::random::<u16>());
     icmp_packet.set_sequence_number(rand::random::<u16>());
@@ -442,12 +439,14 @@ impl Icmpv6PacketBuilder {
     /// Build ICMPv6 packet and return bytes
     pub fn build(&self) -> Vec<u8> {
         let buffer: &mut [u8] = &mut [0u8; ICMPV6_HEADER_LEN];
-        let mut icmp_packet = pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket::new(buffer).unwrap();
+        let mut icmp_packet =
+            pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket::new(buffer).unwrap();
         icmp_packet.set_icmpv6_type(pnet::packet::icmpv6::Icmpv6Type(self.icmpv6_type.number()));
         icmp_packet.set_identifier(self.identifier.unwrap_or(rand::random::<u16>()));
         icmp_packet.set_sequence_number(self.sequence_number.unwrap_or(rand::random::<u16>()));
         let icmpv6_packet = pnet::packet::icmpv6::Icmpv6Packet::new(icmp_packet.packet()).unwrap();
-        let icmpv6_checksum = pnet::packet::icmpv6::checksum(&icmpv6_packet, &self.src_ip, &self.dst_ip);
+        let icmpv6_checksum =
+            pnet::packet::icmpv6::checksum(&icmpv6_packet, &self.src_ip, &self.dst_ip);
         icmp_packet.set_checksum(icmpv6_checksum);
         icmp_packet.packet().to_vec()
     }

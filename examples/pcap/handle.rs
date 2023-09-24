@@ -1,11 +1,11 @@
+use cross_socket::packet::ethernet::EtherType;
+use cross_socket::packet::ip::IpNextLevelProtocol;
+use cross_socket::pcap::listener::Listner;
+use cross_socket::pcap::PacketCaptureOptions;
+use default_net::Interface;
 use std::collections::HashSet;
 use std::thread;
 use std::time::Duration;
-use default_net::Interface;
-use cross_socket::pcap::PacketCaptureOptions;
-use cross_socket::pcap::listener::Listner;
-use cross_socket::packet::ethernet::EtherType;
-use cross_socket::packet::ip::IpNextLevelProtocol;
 
 // Start capturing TCP packets on the default interface
 // Filter: Protocol: TCP only, Ports: 22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443
@@ -20,8 +20,14 @@ fn main() {
         interface_name: default_interface.name,
         src_ips: HashSet::new(),
         dst_ips: HashSet::new(),
-        src_ports: [22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443].iter().cloned().collect(),
-        dst_ports: [22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443].iter().cloned().collect(),
+        src_ports: [22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443]
+            .iter()
+            .cloned()
+            .collect(),
+        dst_ports: [22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443]
+            .iter()
+            .cloned()
+            .collect(),
         ether_types: [EtherType::Ipv4].iter().cloned().collect(),
         ip_protocols: [IpNextLevelProtocol::Tcp].iter().cloned().collect(),
         duration: Duration::from_secs(30),

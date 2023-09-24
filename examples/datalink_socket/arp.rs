@@ -1,10 +1,10 @@
 use std::net::IpAddr;
 
-use cross_socket::socket::DataLinkSocket;
-use cross_socket::packet::ethernet;
-use cross_socket::packet::builder::PacketBuildOption;
 use cross_socket::datalink::interface::Interface;
 use cross_socket::datalink::MacAddr;
+use cross_socket::packet::builder::PacketBuildOption;
+use cross_socket::packet::ethernet;
+use cross_socket::socket::DataLinkSocket;
 
 // Send ARP request to default gateway and check mac address
 fn main() {
@@ -38,9 +38,14 @@ fn main() {
                 if ethernet_packet.ethertype != cross_socket::packet::ethernet::EtherType::Arp {
                     continue;
                 }
-                let arp_packet = cross_socket::packet::arp::ArpPacket::from_bytes(&ethernet_packet.payload);
+                let arp_packet =
+                    cross_socket::packet::arp::ArpPacket::from_bytes(&ethernet_packet.payload);
                 if arp_packet.sender_hw_addr.address() != src_mac.address() {
-                    println!("Received {} bytes from {}", packet.len(), arp_packet.sender_hw_addr.address());
+                    println!(
+                        "Received {} bytes from {}",
+                        packet.len(),
+                        arp_packet.sender_hw_addr.address()
+                    );
                     println!("Packet: {:?}", arp_packet);
                     break;
                 }

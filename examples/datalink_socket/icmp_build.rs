@@ -1,11 +1,11 @@
-use std::net::Ipv4Addr;
-use cross_socket::socket::DataLinkSocket;
+use cross_socket::datalink::interface::Interface;
+use cross_socket::packet::builder::PacketBuilder;
 use cross_socket::packet::ethernet::{EtherType, EthernetPacketBuilder};
-use cross_socket::packet::ipv4::Ipv4PacketBuilder;
 use cross_socket::packet::icmp::IcmpPacketBuilder;
 use cross_socket::packet::ip::IpNextLevelProtocol;
-use cross_socket::packet::builder::PacketBuilder;
-use cross_socket::datalink::interface::Interface;
+use cross_socket::packet::ipv4::Ipv4PacketBuilder;
+use cross_socket::socket::DataLinkSocket;
+use std::net::Ipv4Addr;
 // Send ICMP Echo Request packets to 1.1.1.1 and check reply
 fn main() {
     let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
@@ -42,16 +42,21 @@ fn main() {
     loop {
         match socket.receive() {
             Ok(packet) => {
-                let ethernet_packet = cross_socket::packet::ethernet::EthernetPacket::from_bytes(&packet);
+                let ethernet_packet =
+                    cross_socket::packet::ethernet::EthernetPacket::from_bytes(&packet);
                 if ethernet_packet.ethertype != EtherType::Ipv4 {
                     continue;
                 }
-                let ip_packet = cross_socket::packet::ipv4::Ipv4Packet::from_bytes(&ethernet_packet.payload);
-                if ip_packet.next_level_protocol != IpNextLevelProtocol::Icmp || ip_packet.source != std::net::Ipv4Addr::new(1, 1, 1, 1) {
+                let ip_packet =
+                    cross_socket::packet::ipv4::Ipv4Packet::from_bytes(&ethernet_packet.payload);
+                if ip_packet.next_level_protocol != IpNextLevelProtocol::Icmp
+                    || ip_packet.source != std::net::Ipv4Addr::new(1, 1, 1, 1)
+                {
                     continue;
                 }
                 println!("Received {} bytes from {}", packet.len(), ip_packet.source);
-                let icmp_packet = cross_socket::packet::icmp::IcmpPacket::from_bytes(&ip_packet.payload);
+                let icmp_packet =
+                    cross_socket::packet::icmp::IcmpPacket::from_bytes(&ip_packet.payload);
                 println!("Packet: {:?}", icmp_packet);
                 break;
             }
@@ -60,5 +65,4 @@ fn main() {
             }
         }
     }
-    
 }

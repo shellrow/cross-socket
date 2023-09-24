@@ -1,6 +1,6 @@
-use std::net::Ipv6Addr;
-use pnet::packet::Packet;
 use super::ip::IpNextLevelProtocol;
+use pnet::packet::Packet;
+use std::net::Ipv6Addr;
 
 /// IPv6 Header Length
 pub const IPV6_HEADER_LEN: usize = pnet::packet::ipv6::MutableIpv6Packet::minimum_packet_size();

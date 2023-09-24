@@ -1,8 +1,8 @@
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::{Arc, Mutex};
-use crate::pcap::PacketCaptureOptions;
 use crate::packet::PacketFrame;
 use crate::pcap::capture::start_capture;
+use crate::pcap::PacketCaptureOptions;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::{Arc, Mutex};
 
 /// Listner
 #[derive(Debug)]
@@ -37,7 +37,7 @@ impl Listner {
     pub fn get_receiver(&self) -> Arc<Mutex<Receiver<PacketFrame>>> {
         self.rx.clone()
     }
-    
+
     /// Get stop handle
     pub fn get_stop_handle(&self) -> Arc<Mutex<bool>> {
         self.stop.clone()
@@ -47,7 +47,7 @@ impl Listner {
     pub fn get_packets(&self) -> Vec<PacketFrame> {
         self.packets.lock().unwrap().clone()
     }
-    
+
     /// Start capture
     pub fn start(&self) {
         let options = self.options.clone();

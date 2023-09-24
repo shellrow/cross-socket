@@ -1,5 +1,5 @@
-use std::net::{IpAddr, SocketAddr};
 use pnet::packet::Packet;
+use std::net::{IpAddr, SocketAddr};
 
 /// UDP Header Length
 pub const UDP_HEADER_LEN: usize = 8;
@@ -107,8 +107,11 @@ impl UdpPacketBuilder {
         match self.src_ip {
             IpAddr::V4(src_ip) => match self.dst_ip {
                 IpAddr::V4(dst_ip) => {
-                    let checksum =
-                        pnet::packet::udp::ipv4_checksum(&udp_packet.to_immutable(), &src_ip, &dst_ip);
+                    let checksum = pnet::packet::udp::ipv4_checksum(
+                        &udp_packet.to_immutable(),
+                        &src_ip,
+                        &dst_ip,
+                    );
                     udp_packet.set_checksum(checksum);
                 }
                 IpAddr::V6(_) => {}
@@ -116,8 +119,11 @@ impl UdpPacketBuilder {
             IpAddr::V6(src_ip) => match self.dst_ip {
                 IpAddr::V4(_) => {}
                 IpAddr::V6(dst_ip) => {
-                    let checksum =
-                        pnet::packet::udp::ipv6_checksum(&udp_packet.to_immutable(), &src_ip, &dst_ip);
+                    let checksum = pnet::packet::udp::ipv6_checksum(
+                        &udp_packet.to_immutable(),
+                        &src_ip,
+                        &dst_ip,
+                    );
                     udp_packet.set_checksum(checksum);
                 }
             },

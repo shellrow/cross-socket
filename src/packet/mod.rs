@@ -1,15 +1,15 @@
 pub mod arp;
+pub mod builder;
 pub mod dhcp;
 pub mod ethernet;
 pub mod gre;
+pub mod icmp;
+pub mod icmpv6;
 pub mod ip;
 pub mod ipv4;
 pub mod ipv6;
 pub mod tcp;
 pub mod udp;
-pub mod icmp;
-pub mod icmpv6;
-pub mod builder;
 
 /// Packet Capture information
 #[derive(Clone, Debug, PartialEq)]

@@ -15,9 +15,9 @@ use async_io::Async;
 use socket2::{Domain, SockAddr, Socket as SystemSocket, Type};
 use std::io;
 use std::mem::MaybeUninit;
+use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
-use std::net::SocketAddr;
 
 use crate::packet::builder::PacketBuildOption;
 use crate::packet::ip::IpNextLevelProtocol;
@@ -99,7 +99,11 @@ pub struct SocketOption {
 
 impl SocketOption {
     /// Constructs a new SocketOption
-    pub fn new(ip_version: IpVersion, socket_type: SocketType, protocol: Option<IpNextLevelProtocol>) -> SocketOption {
+    pub fn new(
+        ip_version: IpVersion,
+        socket_type: SocketType,
+        protocol: Option<IpNextLevelProtocol>,
+    ) -> SocketOption {
         SocketOption {
             ip_version,
             socket_type,
@@ -125,9 +129,17 @@ impl AsyncSocket {
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         }
         let socket: SystemSocket = if let Some(protocol) = socket_option.protocol {
-            SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), Some(protocol.to_socket_protocol()))?
+            SystemSocket::new(
+                socket_option.ip_version.to_domain(),
+                socket_option.socket_type.to_type(),
+                Some(protocol.to_socket_protocol()),
+            )?
         } else {
-            SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), None)?
+            SystemSocket::new(
+                socket_option.ip_version.to_domain(),
+                socket_option.socket_type.to_type(),
+                None,
+            )?
         };
         socket.set_nonblocking(true)?;
         Ok(AsyncSocket {
@@ -151,8 +163,7 @@ impl AsyncSocket {
     }
     /// Receive packet
     pub async fn receive(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
-        let recv_buf =
-            unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
+        let recv_buf = unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
         loop {
             self.inner.readable().await?;
             match self.inner.read_with(|inner| inner.recv(recv_buf)).await {
@@ -163,18 +174,21 @@ impl AsyncSocket {
     }
     /// Receive packet with sender address
     pub async fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SocketAddr)> {
-        let recv_buf =
-            unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
+        let recv_buf = unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
         loop {
             self.inner.readable().await?;
-            match self.inner.read_with(|inner| inner.recv_from(recv_buf)).await {
+            match self
+                .inner
+                .read_with(|inner| inner.recv_from(recv_buf))
+                .await
+            {
                 Ok(result) => {
                     let (n, addr) = result;
                     match addr.as_socket() {
                         Some(addr) => return Ok((n, addr)),
                         None => continue,
                     }
-                },
+                }
                 Err(_) => continue,
             }
         }
@@ -196,16 +210,12 @@ impl AsyncSocket {
     pub async fn set_ttl(&self, ttl: u32, ip_version: IpVersion) -> io::Result<()> {
         self.inner.writable().await?;
         match ip_version {
-            IpVersion::V4 => {
-                self.inner
-                    .write_with(|inner| inner.set_ttl(ttl))
-                    .await
-            },
+            IpVersion::V4 => self.inner.write_with(|inner| inner.set_ttl(ttl)).await,
             IpVersion::V6 => {
                 self.inner
                     .write_with(|inner| inner.set_unicast_hops_v6(ttl))
                     .await
-            },
+            }
         }
     }
 }
@@ -224,9 +234,17 @@ impl Socket {
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         }
         let socket: SystemSocket = if let Some(protocol) = socket_option.protocol {
-            SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), Some(protocol.to_socket_protocol()))?
+            SystemSocket::new(
+                socket_option.ip_version.to_domain(),
+                socket_option.socket_type.to_type(),
+                Some(protocol.to_socket_protocol()),
+            )?
         } else {
-            SystemSocket::new(socket_option.ip_version.to_domain(), socket_option.socket_type.to_type(), None)?
+            SystemSocket::new(
+                socket_option.ip_version.to_domain(),
+                socket_option.socket_type.to_type(),
+                None,
+            )?
         };
         if socket_option.non_blocking {
             socket.set_nonblocking(true)?;
@@ -245,8 +263,7 @@ impl Socket {
     }
     /// Receive packet
     pub fn receive(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
-        let recv_buf =
-            unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
+        let recv_buf = unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
         match self.inner.recv(recv_buf) {
             Ok(result) => Ok(result),
             Err(e) => Err(e),
@@ -254,16 +271,20 @@ impl Socket {
     }
     /// Receive packet with sender address
     pub fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SocketAddr)> {
-        let recv_buf =
-            unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
+        let recv_buf = unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
         match self.inner.recv_from(recv_buf) {
             Ok(result) => {
                 let (n, addr) = result;
                 match addr.as_socket() {
                     Some(addr) => return Ok((n, addr)),
-                    None => return Err(io::Error::new(io::ErrorKind::Other, "Invalid socket address"))
+                    None => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            "Invalid socket address",
+                        ))
+                    }
                 }
-            },
+            }
             Err(e) => Err(e),
         }
     }
@@ -279,12 +300,8 @@ impl Socket {
     /// Set TTL or Hop Limit
     pub fn set_ttl(&self, ttl: u32, ip_version: IpVersion) -> io::Result<()> {
         match ip_version {
-            IpVersion::V4 => {
-                self.inner.set_ttl(ttl)
-            },
-            IpVersion::V6 => {
-                self.inner.set_unicast_hops_v6(ttl)
-            },
+            IpVersion::V4 => self.inner.set_ttl(ttl),
+            IpVersion::V6 => self.inner.set_unicast_hops_v6(ttl),
         }
     }
 }
@@ -299,17 +316,25 @@ pub struct DataLinkSocket {
 
 impl DataLinkSocket {
     /// Constructs a new DataLinkSocket
-    pub fn new(interface: crate::datalink::interface::Interface, promiscuous: bool) -> io::Result<DataLinkSocket> {
+    pub fn new(
+        interface: crate::datalink::interface::Interface,
+        promiscuous: bool,
+    ) -> io::Result<DataLinkSocket> {
         let interfaces = pnet::datalink::interfaces();
         let network_interface = match interfaces
-        .into_iter()
-        .filter(|network_interface: &pnet::datalink::NetworkInterface| {
-            network_interface.index == interface.index
-        })
-        .next()
+            .into_iter()
+            .filter(|network_interface: &pnet::datalink::NetworkInterface| {
+                network_interface.index == interface.index
+            })
+            .next()
         {
             Some(network_interface) => network_interface,
-            None => return Err(io::Error::new(io::ErrorKind::Other, "Network Interface not found")),
+            None => {
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "Network Interface not found",
+                ))
+            }
         };
         let config = pnet::datalink::Config {
             write_buffer_size: 4096,
@@ -323,7 +348,12 @@ impl DataLinkSocket {
         };
         let (tx, rx) = match pnet::datalink::channel(&network_interface, config) {
             Ok(pnet::datalink::Channel::Ethernet(sender, receiver)) => (sender, receiver),
-            Ok(_) => return Err(io::Error::new(io::ErrorKind::Other, "Not an Ethernet interface")),
+            Ok(_) => {
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "Not an Ethernet interface",
+                ))
+            }
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         };
         Ok(DataLinkSocket {
@@ -339,33 +369,38 @@ impl DataLinkSocket {
     /// Send packet
     pub fn send_to(&mut self, buf: &[u8]) -> io::Result<usize> {
         match self.sender.send_to(buf, None) {
-            Some(res) => {
-                match res {
-                    Ok(_) => return Ok(buf.len()),
-                    Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
-                }
+            Some(res) => match res {
+                Ok(_) => return Ok(buf.len()),
+                Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
             },
-            None => Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
+            None => Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Failed to send packet",
+            )),
         }
     }
     /// Build and send packet. This is useful when you want to send packet with custom build function.
-    pub fn build_and_send(&mut self, num_packets: usize, packet_size: usize, func: &mut dyn FnMut(&mut [u8])) -> io::Result<()> {
+    pub fn build_and_send(
+        &mut self,
+        num_packets: usize,
+        packet_size: usize,
+        func: &mut dyn FnMut(&mut [u8]),
+    ) -> io::Result<()> {
         match self.sender.build_and_send(num_packets, packet_size, func) {
-            Some(res) => {
-                match res {
-                    Ok(_) => return Ok(()),
-                    Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
-                }
+            Some(res) => match res {
+                Ok(_) => return Ok(()),
+                Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
             },
-            None => Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
+            None => Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Failed to send packet",
+            )),
         }
     }
     /// Receive packet
     pub fn receive(&mut self) -> io::Result<&[u8]> {
         match self.receiver.next() {
-            Ok(packet) => {
-                Ok(packet)
-            },
+            Ok(packet) => Ok(packet),
             Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
         }
     }

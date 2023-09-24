@@ -292,7 +292,9 @@ impl IpNextLevelProtocol {
         }
     }
     #[allow(dead_code)]
-    pub(crate) fn from_pnet_packet_protocol(n: pnet::packet::ip::IpNextHeaderProtocol) -> IpNextLevelProtocol {
+    pub(crate) fn from_pnet_packet_protocol(
+        n: pnet::packet::ip::IpNextHeaderProtocol,
+    ) -> IpNextLevelProtocol {
         match n {
             pnet::packet::ip::IpNextHeaderProtocols::Hopopt => IpNextLevelProtocol::Hopopt,
             pnet::packet::ip::IpNextHeaderProtocols::Icmp => IpNextLevelProtocol::Icmp,
@@ -355,9 +357,13 @@ impl IpNextLevelProtocol {
             pnet::packet::ip::IpNextHeaderProtocols::Icmpv6 => IpNextLevelProtocol::Icmpv6,
             pnet::packet::ip::IpNextHeaderProtocols::Ipv6NoNxt => IpNextLevelProtocol::Ipv6NoNxt,
             pnet::packet::ip::IpNextHeaderProtocols::Ipv6Opts => IpNextLevelProtocol::Ipv6Opts,
-            pnet::packet::ip::IpNextHeaderProtocols::HostInternal => IpNextLevelProtocol::HostInternal,
+            pnet::packet::ip::IpNextHeaderProtocols::HostInternal => {
+                IpNextLevelProtocol::HostInternal
+            }
             pnet::packet::ip::IpNextHeaderProtocols::Cftp => IpNextLevelProtocol::Cftp,
-            pnet::packet::ip::IpNextHeaderProtocols::LocalNetwork => IpNextLevelProtocol::LocalNetwork,
+            pnet::packet::ip::IpNextHeaderProtocols::LocalNetwork => {
+                IpNextLevelProtocol::LocalNetwork
+            }
             pnet::packet::ip::IpNextHeaderProtocols::SatExpak => IpNextLevelProtocol::SatExpak,
             pnet::packet::ip::IpNextHeaderProtocols::Kryptolan => IpNextLevelProtocol::Kryptolan,
             pnet::packet::ip::IpNextHeaderProtocols::Rvd => IpNextLevelProtocol::Rvd,
@@ -389,7 +395,9 @@ impl IpNextLevelProtocol {
             pnet::packet::ip::IpNextHeaderProtocols::SccSp => IpNextLevelProtocol::SccSp,
             pnet::packet::ip::IpNextHeaderProtocols::Etherip => IpNextLevelProtocol::Etherip,
             pnet::packet::ip::IpNextHeaderProtocols::Encap => IpNextLevelProtocol::Encap,
-            pnet::packet::ip::IpNextHeaderProtocols::PrivEncryption => IpNextLevelProtocol::PrivEncryption,
+            pnet::packet::ip::IpNextHeaderProtocols::PrivEncryption => {
+                IpNextLevelProtocol::PrivEncryption
+            }
             pnet::packet::ip::IpNextHeaderProtocols::Gmtp => IpNextLevelProtocol::Gmtp,
             pnet::packet::ip::IpNextHeaderProtocols::Ifmp => IpNextLevelProtocol::Ifmp,
             pnet::packet::ip::IpNextHeaderProtocols::Pnni => IpNextLevelProtocol::Pnni,
@@ -413,7 +421,9 @@ impl IpNextLevelProtocol {
             pnet::packet::ip::IpNextHeaderProtocols::Uti => IpNextLevelProtocol::Uti,
             pnet::packet::ip::IpNextHeaderProtocols::Smp => IpNextLevelProtocol::Smp,
             pnet::packet::ip::IpNextHeaderProtocols::Ptp => IpNextLevelProtocol::Ptp,
-            pnet::packet::ip::IpNextHeaderProtocols::IsisOverIpv4 => IpNextLevelProtocol::IsisOverIpv4,
+            pnet::packet::ip::IpNextHeaderProtocols::IsisOverIpv4 => {
+                IpNextLevelProtocol::IsisOverIpv4
+            }
             pnet::packet::ip::IpNextHeaderProtocols::Fire => IpNextLevelProtocol::Fire,
             pnet::packet::ip::IpNextHeaderProtocols::Crtp => IpNextLevelProtocol::Crtp,
             pnet::packet::ip::IpNextHeaderProtocols::Crudp => IpNextLevelProtocol::Crudp,
@@ -423,8 +433,12 @@ impl IpNextLevelProtocol {
             pnet::packet::ip::IpNextHeaderProtocols::Pipe => IpNextLevelProtocol::Pipe,
             pnet::packet::ip::IpNextHeaderProtocols::Sctp => IpNextLevelProtocol::Sctp,
             pnet::packet::ip::IpNextHeaderProtocols::Fc => IpNextLevelProtocol::Fc,
-            pnet::packet::ip::IpNextHeaderProtocols::RsvpE2eIgnore => IpNextLevelProtocol::RsvpE2eIgnore,
-            pnet::packet::ip::IpNextHeaderProtocols::MobilityHeader => IpNextLevelProtocol::MobilityHeader,
+            pnet::packet::ip::IpNextHeaderProtocols::RsvpE2eIgnore => {
+                IpNextLevelProtocol::RsvpE2eIgnore
+            }
+            pnet::packet::ip::IpNextHeaderProtocols::MobilityHeader => {
+                IpNextLevelProtocol::MobilityHeader
+            }
             pnet::packet::ip::IpNextHeaderProtocols::UdpLite => IpNextLevelProtocol::UdpLite,
             pnet::packet::ip::IpNextHeaderProtocols::MplsInIp => IpNextLevelProtocol::MplsInIp,
             pnet::packet::ip::IpNextHeaderProtocols::Manet => IpNextLevelProtocol::Manet,

@@ -1,6 +1,6 @@
-use std::net::Ipv4Addr;
-use pnet::packet::Packet;
 use crate::packet::ip::IpNextLevelProtocol;
+use pnet::packet::Packet;
+use std::net::Ipv4Addr;
 
 /// IPv4 Header Length
 pub const IPV4_HEADER_LEN: usize = pnet::packet::ipv4::MutableIpv4Packet::minimum_packet_size();
@@ -261,10 +261,10 @@ impl Ipv4PacketBuilder {
             match flags {
                 Ipv4Flags::DontFragment => {
                     ipv4_packet.set_flags(pnet::packet::ipv4::Ipv4Flags::DontFragment);
-                },
+                }
                 Ipv4Flags::MoreFragments => {
                     ipv4_packet.set_flags(pnet::packet::ipv4::Ipv4Flags::MoreFragments);
-                },
+                }
                 _ => {}
             }
         } else {

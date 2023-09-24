@@ -1,14 +1,14 @@
-use std::net::Ipv4Addr;
-use pnet::packet::Packet;
 use crate::datalink::MacAddr;
 use crate::packet::ethernet::EtherType;
+use pnet::packet::Packet;
+use std::net::Ipv4Addr;
 
 /// ARP Header Length
 pub const ARP_HEADER_LEN: usize = 28;
 
 /// Represents the ARP operation types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum ArpOperation{
+pub enum ArpOperation {
     Request = 1,
     Reply = 2,
     RarpRequest = 3,

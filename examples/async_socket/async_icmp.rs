@@ -1,22 +1,22 @@
-use std::collections::HashSet;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::sync::{Mutex, Arc};
-use std::time::Duration;
 use async_io;
-use cross_socket::packet::PacketFrame;
 use cross_socket::packet::ethernet::EtherType;
+use cross_socket::packet::PacketFrame;
 use futures::executor::ThreadPool;
 use futures::stream::{self, StreamExt};
 use futures::task::SpawnExt;
 use ipnet::Ipv4Net;
+use std::collections::HashSet;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 
-use cross_socket::socket::{SocketOption, IpVersion, SocketType, AsyncSocket};
-use cross_socket::packet::ip::IpNextLevelProtocol;
-use cross_socket::packet::icmp::IcmpPacketBuilder;
 use cross_socket::datalink::interface::Interface;
-use cross_socket::pcap::PacketCaptureOptions;
+use cross_socket::packet::icmp::IcmpPacketBuilder;
+use cross_socket::packet::ip::IpNextLevelProtocol;
 use cross_socket::pcap::listener::Listner;
+use cross_socket::pcap::PacketCaptureOptions;
+use cross_socket::socket::{AsyncSocket, IpVersion, SocketOption, SocketType};
 
 // Send ICMP Echo Request packets asynchronously
 async fn send_icmp_echo_packets(
@@ -24,23 +24,20 @@ async fn send_icmp_echo_packets(
     src_ip: Ipv4Addr,
     target_hosts: Vec<Ipv4Addr>,
 ) {
-    let fut_host = stream::iter(target_hosts).for_each_concurrent(
-        50,
-        |dst_ip| {
-            let socket_addr = SocketAddr::new(IpAddr::V4(dst_ip), 0);
-            async move {
-                // Packet builder for ICMP Echo Request
-                let mut packet_builder = IcmpPacketBuilder::new(src_ip, dst_ip);
-                packet_builder.icmp_type = cross_socket::packet::icmp::IcmpType::EchoRequest;
-                // Build ICMP Echo Request packet
-                let mut icmp_packet = packet_builder.build();
-                match socket.send_to(&mut icmp_packet, socket_addr).await {
-                    Ok(_) => {}
-                    Err(_) => {}
-                }
+    let fut_host = stream::iter(target_hosts).for_each_concurrent(50, |dst_ip| {
+        let socket_addr = SocketAddr::new(IpAddr::V4(dst_ip), 0);
+        async move {
+            // Packet builder for ICMP Echo Request
+            let mut packet_builder = IcmpPacketBuilder::new(src_ip, dst_ip);
+            packet_builder.icmp_type = cross_socket::packet::icmp::IcmpType::EchoRequest;
+            // Build ICMP Echo Request packet
+            let mut icmp_packet = packet_builder.build();
+            match socket.send_to(&mut icmp_packet, socket_addr).await {
+                Ok(_) => {}
+                Err(_) => {}
             }
-        },
-    );
+        }
+    });
     fut_host.await;
 }
 
@@ -95,7 +92,8 @@ async fn async_main() {
             receive_packets.lock().unwrap().push(p);
         }
     };
-    let lisner_handle: futures::future::RemoteHandle<()> = executor.spawn_with_handle(future).unwrap();
+    let lisner_handle: futures::future::RemoteHandle<()> =
+        executor.spawn_with_handle(future).unwrap();
     // Wait for listener to start
     thread::sleep(Duration::from_millis(1));
 

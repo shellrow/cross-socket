@@ -1,10 +1,10 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::time::Duration;
 
-use cross_socket::packet::udp::UdpPacketBuilder;
-use cross_socket::socket::{Socket, SocketOption, IpVersion, SocketType, ListenerSocket};
-use cross_socket::packet::ip::IpNextLevelProtocol;
 use cross_socket::datalink::interface::Interface;
+use cross_socket::packet::ip::IpNextLevelProtocol;
+use cross_socket::packet::udp::UdpPacketBuilder;
+use cross_socket::socket::{IpVersion, ListenerSocket, Socket, SocketOption, SocketType};
 
 // Send UDP packets to 1.1.1.1:33435 and check ICMP Port Unreachable reply
 fn main() {
@@ -25,7 +25,13 @@ fn main() {
     let socket: Socket = Socket::new(socket_option).unwrap();
 
     // Receiver socket
-    let listener_socket: ListenerSocket = ListenerSocket::new(src_socket_addr, IpVersion::V4, None, Some(Duration::from_millis(1000))).unwrap();
+    let listener_socket: ListenerSocket = ListenerSocket::new(
+        src_socket_addr,
+        IpVersion::V4,
+        None,
+        Some(Duration::from_millis(1000)),
+    )
+    .unwrap();
 
     // Packet builder for UDP packet. Expect ICMP Destination (Port) Unreachable.
     let udp_packet_builder = UdpPacketBuilder::new(src_socket_addr, dst_socket_addr);
@@ -44,14 +50,18 @@ fn main() {
     println!("Waiting for ICMP Destination (Port) Unreachable...");
     let mut buf = vec![0; 512];
     loop {
-        match listener_socket.receive_from(&mut buf){
+        match listener_socket.receive_from(&mut buf) {
             Ok((packet_len, _)) => {
-                let ip_packet = cross_socket::packet::ipv4::Ipv4Packet::from_bytes(&buf[..packet_len]);
-                if ip_packet.next_level_protocol != IpNextLevelProtocol::Icmp || ip_packet.source != std::net::Ipv4Addr::new(1, 1, 1, 1) {
+                let ip_packet =
+                    cross_socket::packet::ipv4::Ipv4Packet::from_bytes(&buf[..packet_len]);
+                if ip_packet.next_level_protocol != IpNextLevelProtocol::Icmp
+                    || ip_packet.source != std::net::Ipv4Addr::new(1, 1, 1, 1)
+                {
                     continue;
                 }
                 println!("Received {} bytes from {}", packet_len, ip_packet.source);
-                let icmp_packet = cross_socket::packet::icmp::IcmpPacket::from_bytes(&ip_packet.payload);
+                let icmp_packet =
+                    cross_socket::packet::icmp::IcmpPacket::from_bytes(&ip_packet.payload);
                 println!("Packet: {:?}", icmp_packet);
                 break;
             }

@@ -1,12 +1,12 @@
+use cross_socket::pcap::listener::Listner;
+use cross_socket::pcap::PacketCaptureOptions;
+use default_net::Interface;
 use std::collections::HashSet;
 use std::thread;
 use std::time::Duration;
-use default_net::Interface;
-use cross_socket::pcap::PacketCaptureOptions;
-use cross_socket::pcap::listener::Listner;
 
 // Start capturing all packets (TCP, UDP, ICMP only) on the default interface
-fn main(){
+fn main() {
     // Get default interface information
     let default_interface: Interface =
         default_net::get_default_interface().expect("Failed to get default interface information");
@@ -33,7 +33,7 @@ fn main(){
     let handle = thread::spawn(move || listener.start());
     // Print captured packets
     while let Ok(msg) = rx.lock().unwrap().recv() {
-        println!("{:?}", msg);        
+        println!("{:?}", msg);
     }
     let _result = handle.join().unwrap();
 }

@@ -1,9 +1,9 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
-use cross_socket::socket::{Socket, SocketOption, IpVersion, SocketType};
-use cross_socket::packet::ip::IpNextLevelProtocol;
-use cross_socket::packet::icmp::IcmpPacketBuilder;
 use cross_socket::datalink::interface::Interface;
+use cross_socket::packet::icmp::IcmpPacketBuilder;
+use cross_socket::packet::ip::IpNextLevelProtocol;
+use cross_socket::socket::{IpVersion, Socket, SocketOption, SocketType};
 
 // Send ICMP Echo Request packets to 1.1.1.1 and check reply
 fn main() {

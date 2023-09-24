@@ -2,7 +2,7 @@ use socket2::SockAddr;
 use std::cmp::min;
 use std::io;
 use std::mem::{self, MaybeUninit};
-use std::net::{UdpSocket, SocketAddr};
+use std::net::{SocketAddr, UdpSocket};
 use std::ptr;
 use std::sync::Once;
 use std::time::Duration;
@@ -21,13 +21,16 @@ use windows_sys::Win32::System::Threading::INFINITE;
 type u_long = u32;
 
 use windows_sys::Win32::Networking::WinSock::{self as sock, SOCKET, WSA_FLAG_NO_HANDLE_INHERIT};
-use windows_sys::Win32::Networking::WinSock::{AF_INET, AF_INET6, IPPROTO_IP, IPPROTO_IPV6, IPPROTO_ICMP, IPPROTO_ICMPV6,IPPROTO_TCP, IPPROTO_UDP};
+use windows_sys::Win32::Networking::WinSock::{
+    AF_INET, AF_INET6, IPPROTO_ICMP, IPPROTO_ICMPV6, IPPROTO_IP, IPPROTO_IPV6, IPPROTO_TCP,
+    IPPROTO_UDP,
+};
 
 pub(crate) const NO_INHERIT: c_int = 1 << (c_int::BITS - 1);
 pub(crate) const MAX_BUF_LEN: usize = <c_int>::max_value() as usize;
 
+use super::{IpVersion, SocketOption, SocketType};
 use crate::packet::ip::IpNextLevelProtocol;
-use super::{SocketOption, IpVersion, SocketType};
 
 pub fn check_socket_option(socket_option: SocketOption) -> Result<(), String> {
     match socket_option.ip_version {
@@ -219,48 +222,59 @@ pub struct ListenerSocket {
 }
 
 impl ListenerSocket {
-    pub fn new(socket_addr: SocketAddr, ip_version: IpVersion, protocol: Option<IpNextLevelProtocol>, timeout: Option<Duration>) -> io::Result<ListenerSocket> {
+    pub fn new(
+        socket_addr: SocketAddr,
+        ip_version: IpVersion,
+        protocol: Option<IpNextLevelProtocol>,
+        timeout: Option<Duration>,
+    ) -> io::Result<ListenerSocket> {
         let socket = match ip_version {
-            IpVersion::V4 => {
-                match protocol {
-                    Some(IpNextLevelProtocol::Icmp) => create_socket(AF_INET as i32, sock::SOCK_RAW, IPPROTO_ICMP)?,
-                    Some(IpNextLevelProtocol::Tcp) => create_socket(AF_INET as i32, sock::SOCK_RAW, IPPROTO_TCP)?,
-                    Some(IpNextLevelProtocol::Udp) => create_socket(AF_INET as i32, sock::SOCK_RAW, IPPROTO_UDP)?,
-                    _ => create_socket(AF_INET as i32, sock::SOCK_RAW, IPPROTO_IP)?,
+            IpVersion::V4 => match protocol {
+                Some(IpNextLevelProtocol::Icmp) => {
+                    create_socket(AF_INET as i32, sock::SOCK_RAW, IPPROTO_ICMP)?
                 }
+                Some(IpNextLevelProtocol::Tcp) => {
+                    create_socket(AF_INET as i32, sock::SOCK_RAW, IPPROTO_TCP)?
+                }
+                Some(IpNextLevelProtocol::Udp) => {
+                    create_socket(AF_INET as i32, sock::SOCK_RAW, IPPROTO_UDP)?
+                }
+                _ => create_socket(AF_INET as i32, sock::SOCK_RAW, IPPROTO_IP)?,
             },
-            IpVersion::V6 => {
-                match protocol {
-                    Some(IpNextLevelProtocol::Icmpv6) => create_socket(AF_INET6 as i32, sock::SOCK_RAW, IPPROTO_ICMPV6)?,
-                    Some(IpNextLevelProtocol::Tcp) => create_socket(AF_INET6 as i32, sock::SOCK_RAW, IPPROTO_TCP)?,
-                    Some(IpNextLevelProtocol::Udp) => create_socket(AF_INET6 as i32, sock::SOCK_RAW, IPPROTO_UDP)?,
-                    _ => create_socket(AF_INET6 as i32, sock::SOCK_RAW, IPPROTO_IPV6)?,
+            IpVersion::V6 => match protocol {
+                Some(IpNextLevelProtocol::Icmpv6) => {
+                    create_socket(AF_INET6 as i32, sock::SOCK_RAW, IPPROTO_ICMPV6)?
                 }
+                Some(IpNextLevelProtocol::Tcp) => {
+                    create_socket(AF_INET6 as i32, sock::SOCK_RAW, IPPROTO_TCP)?
+                }
+                Some(IpNextLevelProtocol::Udp) => {
+                    create_socket(AF_INET6 as i32, sock::SOCK_RAW, IPPROTO_UDP)?
+                }
+                _ => create_socket(AF_INET6 as i32, sock::SOCK_RAW, IPPROTO_IPV6)?,
             },
         };
         let sock_addr = SockAddr::from(socket_addr);
         bind(socket, &sock_addr)?;
         set_promiscuous(socket, true)?;
         set_timeout_opt(socket, sock::SOL_SOCKET, sock::SO_RCVTIMEO, timeout)?;
-        Ok(ListenerSocket {
-            inner: socket,
-        })
+        Ok(ListenerSocket { inner: socket })
     }
     pub fn bind(&self, addr: &SockAddr) -> io::Result<()> {
         bind(self.inner, addr)
     }
     pub fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SocketAddr)> {
-        let recv_buf =
-            unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
+        let recv_buf = unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
         match recv_from(self.inner, recv_buf, 0) {
-            Ok((n, addr)) => {
-                match addr.as_socket() {
-                    Some(socket_addr) => {
-                        return Ok((n, socket_addr));
-                    },
-                    None => Err(io::Error::new(io::ErrorKind::Other, "Invalid socket address"))
+            Ok((n, addr)) => match addr.as_socket() {
+                Some(socket_addr) => {
+                    return Ok((n, socket_addr));
                 }
-            }
+                None => Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "Invalid socket address",
+                )),
+            },
             Err(e) => Err(e),
         }
     }

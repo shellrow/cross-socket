@@ -1,9 +1,9 @@
-use std::net::Ipv4Addr;
 use crate::datalink::MacAddr;
+use std::net::Ipv4Addr;
 
 /// Represents an DHCP operation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum DhcpOperation{
+pub enum DhcpOperation {
     Request = 1,
     Reply = 2,
 }
@@ -22,7 +22,7 @@ impl DhcpOperation {
 /// Represents the Dhcp hardware types.
 #[allow(non_snake_case)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum DhcpHardwareType{
+pub enum DhcpHardwareType {
     Ethernet = 1,
     ExperimentalEthernet = 2,
     AmateurRadioAX25 = 3,

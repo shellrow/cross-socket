@@ -1,11 +1,11 @@
-pub mod listener;
 mod capture;
+pub mod listener;
 
+use crate::packet::ethernet::EtherType;
+use crate::packet::ip::IpNextLevelProtocol;
 use std::collections::HashSet;
 use std::net::IpAddr;
 use std::time::Duration;
-use crate::packet::ethernet::EtherType;
-use crate::packet::ip::IpNextLevelProtocol;
 
 /// Packet capture options
 #[derive(Clone, Debug)]
@@ -99,4 +99,3 @@ impl PacketCaptureOptions {
         }
     }
 }
-

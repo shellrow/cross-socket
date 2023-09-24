@@ -139,7 +139,9 @@ impl IcmpType {
     pub(crate) fn from_pnet_type(t: pnet::packet::icmp::IcmpType) -> IcmpType {
         match t {
             pnet::packet::icmp::IcmpTypes::EchoReply => IcmpType::EchoReply,
-            pnet::packet::icmp::IcmpTypes::DestinationUnreachable => IcmpType::DestinationUnreachable,
+            pnet::packet::icmp::IcmpTypes::DestinationUnreachable => {
+                IcmpType::DestinationUnreachable
+            }
             pnet::packet::icmp::IcmpTypes::SourceQuench => IcmpType::SourceQuench,
             pnet::packet::icmp::IcmpTypes::RedirectMessage => IcmpType::RedirectMessage,
             pnet::packet::icmp::IcmpTypes::EchoRequest => IcmpType::EchoRequest,
@@ -190,7 +192,9 @@ impl IcmpPacket {
 }
 
 /// Build ICMP packet
-pub(crate) fn build_icmp_echo_packet(icmp_packet: &mut pnet::packet::icmp::echo_request::MutableEchoRequestPacket) {
+pub(crate) fn build_icmp_echo_packet(
+    icmp_packet: &mut pnet::packet::icmp::echo_request::MutableEchoRequestPacket,
+) {
     icmp_packet.set_icmp_type(pnet::packet::icmp::IcmpTypes::EchoRequest);
     icmp_packet.set_sequence_number(rand::random::<u16>());
     icmp_packet.set_identifier(rand::random::<u16>());
@@ -227,16 +231,17 @@ impl IcmpPacketBuilder {
     /// Build ICMP packet and return bytes
     pub fn build(&self) -> Vec<u8> {
         let buffer: &mut [u8] = &mut [0u8; ICMPV4_HEADER_LEN];
-        let mut icmp_packet = pnet::packet::icmp::echo_request::MutableEchoRequestPacket::new(buffer).unwrap();
+        let mut icmp_packet =
+            pnet::packet::icmp::echo_request::MutableEchoRequestPacket::new(buffer).unwrap();
         icmp_packet.set_icmp_type(pnet::packet::icmp::IcmpType(self.icmp_type.number()));
         if let Some(sequence_number) = self.sequence_number {
             icmp_packet.set_sequence_number(sequence_number);
-        }else {
+        } else {
             icmp_packet.set_sequence_number(rand::random::<u16>());
         }
         if let Some(identifier) = self.identifier {
             icmp_packet.set_identifier(identifier);
-        }else{
+        } else {
             icmp_packet.set_identifier(rand::random::<u16>());
         }
         let icmp_check_sum = pnet::packet::util::checksum(&icmp_packet.packet(), 1);

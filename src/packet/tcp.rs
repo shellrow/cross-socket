@@ -1,5 +1,5 @@
-use std::net::{IpAddr, SocketAddr};
 use pnet::packet::Packet;
+use std::net::{IpAddr, SocketAddr};
 
 /// Minimum TCP Header Length
 pub const TCP_HEADER_LEN: usize = pnet::packet::tcp::MutableTcpPacket::minimum_packet_size();
@@ -172,14 +172,14 @@ impl TcpOption {
         }
     }
 
-    pub (crate) fn from_pnet_type(opt: pnet::packet::tcp::TcpOptionPacket) -> TcpOption {
+    pub(crate) fn from_pnet_type(opt: pnet::packet::tcp::TcpOptionPacket) -> TcpOption {
         TcpOption {
             kind: TcpOptionKind::from_u8(opt.get_number().0),
             data: opt.payload().to_vec(),
         }
     }
 
-    pub (crate) fn to_pnet_type(&self) -> pnet::packet::tcp::TcpOption {
+    pub(crate) fn to_pnet_type(&self) -> pnet::packet::tcp::TcpOption {
         match self.kind {
             TcpOptionKind::Nop => pnet::packet::tcp::TcpOption::nop(),
             TcpOptionKind::Mss => pnet::packet::tcp::TcpOption::mss(self.get_mss()),
@@ -477,7 +477,7 @@ impl TcpPacketBuilder {
         for flag in &self.flags {
             if tcp_flags == 0 {
                 tcp_flags = flag.number();
-            }else{
+            } else {
                 tcp_flags |= flag.number();
             }
         }
@@ -493,8 +493,11 @@ impl TcpPacketBuilder {
         match self.src_ip {
             IpAddr::V4(src_ip) => match self.dst_ip {
                 IpAddr::V4(dst_ip) => {
-                    let checksum =
-                        pnet::packet::tcp::ipv4_checksum(&tcp_packet.to_immutable(), &src_ip, &dst_ip);
+                    let checksum = pnet::packet::tcp::ipv4_checksum(
+                        &tcp_packet.to_immutable(),
+                        &src_ip,
+                        &dst_ip,
+                    );
                     tcp_packet.set_checksum(checksum);
                 }
                 IpAddr::V6(_) => {}
@@ -502,8 +505,11 @@ impl TcpPacketBuilder {
             IpAddr::V6(src_ip) => match self.dst_ip {
                 IpAddr::V4(_) => {}
                 IpAddr::V6(dst_ip) => {
-                    let checksum =
-                        pnet::packet::tcp::ipv6_checksum(&tcp_packet.to_immutable(), &src_ip, &dst_ip);
+                    let checksum = pnet::packet::tcp::ipv6_checksum(
+                        &tcp_packet.to_immutable(),
+                        &src_ip,
+                        &dst_ip,
+                    );
                     tcp_packet.set_checksum(checksum);
                 }
             },

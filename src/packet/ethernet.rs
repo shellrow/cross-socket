@@ -1,5 +1,5 @@
-use pnet::packet::Packet;
 use crate::datalink::MacAddr;
+use pnet::packet::Packet;
 
 /// Represents the Ethernet header length.
 pub const ETHERNET_HEADER_LEN: usize = 14;
@@ -138,7 +138,9 @@ pub struct EthernetPacket {
 
 impl EthernetPacket {
     /// Constructs a new EthernetPacket from pnet::packet::ethernet::EthernetPacket.
-    pub(crate) fn from_pnet_packet(packet: &pnet::packet::ethernet::EthernetPacket) -> EthernetPacket {
+    pub(crate) fn from_pnet_packet(
+        packet: &pnet::packet::ethernet::EthernetPacket,
+    ) -> EthernetPacket {
         EthernetPacket {
             destination: MacAddr::new(packet.get_destination().octets()),
             source: MacAddr::new(packet.get_source().octets()),
@@ -211,8 +213,14 @@ impl EthernetPacketBuilder {
     /// Build Ethernet packet and return bytes
     pub fn build(&self) -> Vec<u8> {
         let mut buffer: Vec<u8> = vec![0; ETHERNET_HEADER_LEN];
-        let mut eth_packet = pnet::packet::ethernet::MutableEthernetPacket::new(&mut buffer).unwrap();
-        build_ethernet_packet(&mut eth_packet, self.src_mac.clone(), self.dst_mac.clone(), self.ether_type);
+        let mut eth_packet =
+            pnet::packet::ethernet::MutableEthernetPacket::new(&mut buffer).unwrap();
+        build_ethernet_packet(
+            &mut eth_packet,
+            self.src_mac.clone(),
+            self.dst_mac.clone(),
+            self.ether_type,
+        );
         eth_packet.to_immutable().packet().to_vec()
     }
 }
