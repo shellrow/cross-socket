@@ -165,6 +165,13 @@ impl TcpOption {
         }
     }
 
+    pub (crate) fn from_pnet_type(opt: pnet::packet::tcp::TcpOptionPacket) -> TcpOption {
+        TcpOption {
+            kind: TcpOptionKind::from_u8(opt.get_number().0),
+            data: opt.payload().to_vec(),
+        }
+    }
+
     pub (crate) fn to_pnet_type(&self) -> pnet::packet::tcp::TcpOption {
         match self.kind {
             TcpOptionKind::Nop => pnet::packet::tcp::TcpOption::nop(),
@@ -294,15 +301,15 @@ pub struct TcpPacket {
     pub window: u16,
     pub checksum: u16,
     pub urgent_ptr: u16,
-    pub options: Vec<TcpOptionKind>,
+    pub options: Vec<TcpOption>,
     pub payload: Vec<u8>,
 }
 
 impl TcpPacket {
     pub(crate) fn from_pnet_packet(packet: &pnet::packet::tcp::TcpPacket) -> TcpPacket {
-        let mut tcp_options: Vec<TcpOptionKind> = vec![];
+        let mut tcp_options: Vec<TcpOption> = vec![];
         for opt in packet.get_options_iter() {
-            tcp_options.push(TcpOptionKind::from_u8(opt.get_number().0));
+            tcp_options.push(TcpOption::from_pnet_type(opt));
         }
         let mut tcp_flags: Vec<TcpFlag> = vec![];
         if packet.get_flags() & TcpFlag::Syn.number() == TcpFlag::Syn.number() {
