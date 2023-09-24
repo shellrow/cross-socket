@@ -25,7 +25,7 @@ fn main() {
     packet_builder.set_ipv4(ipv4_packet_builder);
     let mut tcp_packet_builder = TcpPacketBuilder::new(SocketAddr::new(IpAddr::V4(socket.interface.ipv4[0].addr), 53443), SocketAddr::new(IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1)), 80));
     tcp_packet_builder.flags = vec![TcpFlag::Syn];
-    tcp_packet_builder.options = vec![TcpOption::Mss, TcpOption::SackParmitted, TcpOption::Nop, TcpOption::Nop, TcpOption::Wscale];
+    tcp_packet_builder.options = vec![TcpOption::mss(1460), TcpOption::sack_perm(), TcpOption::nop(), TcpOption::nop(), TcpOption::wscale(7)];
     packet_builder.set_tcp(tcp_packet_builder);
 
     // Send TCP SYN packets to 1.1.1.1:80

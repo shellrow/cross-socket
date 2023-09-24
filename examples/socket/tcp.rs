@@ -33,7 +33,7 @@ fn main() {
     // Packet builder for TCP SYN
     let mut tcp_packet_builder = TcpPacketBuilder::new(SocketAddr::new(src_ip, 53443), SocketAddr::new(IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1)), 80));
     tcp_packet_builder.flags = vec![TcpFlag::Syn];
-    tcp_packet_builder.options = vec![TcpOption::Mss, TcpOption::SackParmitted, TcpOption::Nop, TcpOption::Nop, TcpOption::Wscale];
+    tcp_packet_builder.options = vec![TcpOption::mss(1460), TcpOption::sack_perm(), TcpOption::nop(), TcpOption::nop(), TcpOption::wscale(7)];
 
     // Send TCP SYN packet to 1.1.1.1
     match socket.send_to(&tcp_packet_builder.build(), dst_socket_addr) {

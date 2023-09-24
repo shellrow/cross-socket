@@ -14,7 +14,7 @@ pub const DEFAULT_SRC_PORT: u16 = 53443;
 /// TCP Option Kind
 /// <https://www.iana.org/assignments/tcp-parameters/tcp-parameters.xhtml#tcp-parameters-1>
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum TcpOption {
+pub enum TcpOptionKind {
     Eol,
     Nop,
     Mss,
@@ -24,65 +24,167 @@ pub enum TcpOption {
     Timestamp,
 }
 
-impl TcpOption {
-    pub fn from_u8(n: u8) -> TcpOption {
+impl TcpOptionKind {
+    pub fn from_u8(n: u8) -> TcpOptionKind {
         match n {
-            0 => TcpOption::Eol,
-            1 => TcpOption::Nop,
-            2 => TcpOption::Mss,
-            3 => TcpOption::Wscale,
-            4 => TcpOption::SackParmitted,
-            5 => TcpOption::Sack,
-            8 => TcpOption::Timestamp,
+            0 => TcpOptionKind::Eol,
+            1 => TcpOptionKind::Nop,
+            2 => TcpOptionKind::Mss,
+            3 => TcpOptionKind::Wscale,
+            4 => TcpOptionKind::SackParmitted,
+            5 => TcpOptionKind::Sack,
+            8 => TcpOptionKind::Timestamp,
             _ => panic!("Unknown TCP option kind: {}", n),
         }
     }
     /// Get the number of the TCP option kind
     pub fn number(&self) -> u8 {
         match *self {
-            TcpOption::Eol => 0,
-            TcpOption::Nop => 1,
-            TcpOption::Mss => 2,
-            TcpOption::Wscale => 3,
-            TcpOption::SackParmitted => 4,
-            TcpOption::Sack => 5,
-            TcpOption::Timestamp => 8,
+            TcpOptionKind::Eol => 0,
+            TcpOptionKind::Nop => 1,
+            TcpOptionKind::Mss => 2,
+            TcpOptionKind::Wscale => 3,
+            TcpOptionKind::SackParmitted => 4,
+            TcpOptionKind::Sack => 5,
+            TcpOptionKind::Timestamp => 8,
         }
     }
     /// Get the ID of the TCP option kind
     pub fn id(&self) -> String {
         match *self {
-            TcpOption::Eol => String::from("EOL"),
-            TcpOption::Nop => String::from("NOP"),
-            TcpOption::Mss => String::from("MSS"),
-            TcpOption::Wscale => String::from("WSCALE"),
-            TcpOption::SackParmitted => String::from("SACK_PERMITTED"),
-            TcpOption::Sack => String::from("SACK"),
-            TcpOption::Timestamp => String::from("TIMESTAMPS"),
+            TcpOptionKind::Eol => String::from("EOL"),
+            TcpOptionKind::Nop => String::from("NOP"),
+            TcpOptionKind::Mss => String::from("MSS"),
+            TcpOptionKind::Wscale => String::from("WSCALE"),
+            TcpOptionKind::SackParmitted => String::from("SACK_PERMITTED"),
+            TcpOptionKind::Sack => String::from("SACK"),
+            TcpOptionKind::Timestamp => String::from("TIMESTAMPS"),
         }
     }
     /// Get the name of the TCP option kind
     pub fn name(&self) -> String {
         match *self {
-            TcpOption::Eol => String::from("EOL"),
-            TcpOption::Nop => String::from("NOP"),
-            TcpOption::Mss => String::from("MSS"),
-            TcpOption::Wscale => String::from("WSCALE"),
-            TcpOption::SackParmitted => String::from("SACK_PERMITTED"),
-            TcpOption::Sack => String::from("SACK"),
-            TcpOption::Timestamp => String::from("TIMESTAMPS"),
+            TcpOptionKind::Eol => String::from("EOL"),
+            TcpOptionKind::Nop => String::from("NOP"),
+            TcpOptionKind::Mss => String::from("MSS"),
+            TcpOptionKind::Wscale => String::from("WSCALE"),
+            TcpOptionKind::SackParmitted => String::from("SACK_PERMITTED"),
+            TcpOptionKind::Sack => String::from("SACK"),
+            TcpOptionKind::Timestamp => String::from("TIMESTAMPS"),
         }
     }
     /// Get size (bytes) of the TCP option
     pub fn size(&self) -> usize {
         match *self {
-            TcpOption::Eol => 1,
-            TcpOption::Nop => 1,
-            TcpOption::Mss => 4,
-            TcpOption::Wscale => 3,
-            TcpOption::SackParmitted => 2,
-            TcpOption::Sack => 10,
-            TcpOption::Timestamp => 10,
+            TcpOptionKind::Eol => 1,
+            TcpOptionKind::Nop => 1,
+            TcpOptionKind::Mss => 4,
+            TcpOptionKind::Wscale => 3,
+            TcpOptionKind::SackParmitted => 2,
+            TcpOptionKind::Sack => 10,
+            TcpOptionKind::Timestamp => 10,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct TcpOption {
+    pub kind: TcpOptionKind,
+    pub data: Vec<u8>,
+}
+
+impl TcpOption {
+    pub fn nop() -> Self {
+        TcpOption {
+            kind: TcpOptionKind::Nop,
+            data: vec![],
+        }
+    }
+
+    pub fn timestamp(my: u32, their: u32) -> Self {
+        let mut data = vec![];
+        data.extend_from_slice(&my.to_be_bytes());
+        data.extend_from_slice(&their.to_be_bytes());
+
+        TcpOption {
+            kind: TcpOptionKind::Timestamp,
+            data: data,
+        }
+    }
+
+    pub fn get_timestamp(&self) -> (u32, u32) {
+        let mut my: [u8; 4] = [0; 4];
+        my.copy_from_slice(&self.data[0..4]);
+        let mut their: [u8; 4] = [0; 4];
+        their.copy_from_slice(&self.data[4..8]);
+        (u32::from_be_bytes(my), u32::from_be_bytes(their))
+    }
+
+    pub fn mss(val: u16) -> Self {
+        let mut data = vec![];
+        data.extend_from_slice(&val.to_be_bytes());
+
+        TcpOption {
+            kind: TcpOptionKind::Mss,
+            data: data,
+        }
+    }
+
+    pub fn get_mss(&self) -> u16 {
+        let mut mss: [u8; 2] = [0; 2];
+        mss.copy_from_slice(&self.data[0..2]);
+        u16::from_be_bytes(mss)
+    }
+
+    pub fn wscale(val: u8) -> Self {
+        TcpOption {
+            kind: TcpOptionKind::Wscale,
+            data: vec![val],
+        }
+    }
+
+    pub fn get_wscale(&self) -> u8 {
+        self.data[0]
+    }
+
+    pub fn sack_perm() -> Self {
+        TcpOption {
+            kind: TcpOptionKind::SackParmitted,
+            data: vec![],
+        }
+    }
+
+    pub fn selective_ack(acks: &[u32]) -> Self {
+        let mut data = vec![];
+        for ack in acks {
+            data.extend_from_slice(&ack.to_be_bytes());
+        }
+        TcpOption {
+            kind: TcpOptionKind::Sack,
+            data: data,
+        }
+    }
+
+    pub (crate) fn to_pnet_type(&self) -> pnet::packet::tcp::TcpOption {
+        match self.kind {
+            TcpOptionKind::Nop => pnet::packet::tcp::TcpOption::nop(),
+            TcpOptionKind::Mss => pnet::packet::tcp::TcpOption::mss(self.get_mss()),
+            TcpOptionKind::Wscale => pnet::packet::tcp::TcpOption::wscale(self.get_wscale()),
+            TcpOptionKind::SackParmitted => pnet::packet::tcp::TcpOption::sack_perm(),
+            TcpOptionKind::Sack => {
+                let mut acks: Vec<u32> = vec![];
+                for i in 0..self.data.len() / 4 {
+                    let mut ack: [u8; 4] = [0; 4];
+                    ack.copy_from_slice(&self.data[i * 4..i * 4 + 4]);
+                    acks.push(u32::from_be_bytes(ack));
+                }
+                pnet::packet::tcp::TcpOption::selective_ack(&acks)
+            }
+            TcpOptionKind::Timestamp => {
+                let (my, their) = self.get_timestamp();
+                pnet::packet::tcp::TcpOption::timestamp(my, their)
+            }
+            _ => pnet::packet::tcp::TcpOption::nop(),
         }
     }
 }
@@ -170,7 +272,7 @@ pub fn get_tcp_options_length(data_offset: u8) -> usize {
 pub fn get_tcp_data_offset(opstions: Vec<TcpOption>) -> u8 {
     let mut total_size: u8 = 0;
     for opt in opstions {
-        total_size += opt.size() as u8;
+        total_size += opt.kind.size() as u8;
     }
     if total_size % 4 == 0 {
         total_size / 4 + TCP_MIN_DATA_OFFSET
@@ -192,15 +294,15 @@ pub struct TcpPacket {
     pub window: u16,
     pub checksum: u16,
     pub urgent_ptr: u16,
-    pub options: Vec<TcpOption>,
+    pub options: Vec<TcpOptionKind>,
     pub payload: Vec<u8>,
 }
 
 impl TcpPacket {
     pub(crate) fn from_pnet_packet(packet: &pnet::packet::tcp::TcpPacket) -> TcpPacket {
-        let mut tcp_options: Vec<TcpOption> = vec![];
+        let mut tcp_options: Vec<TcpOptionKind> = vec![];
         for opt in packet.get_options_iter() {
-            tcp_options.push(TcpOption::from_u8(opt.get_number().0));
+            tcp_options.push(TcpOptionKind::from_u8(opt.get_number().0));
         }
         let mut tcp_flags: Vec<TcpFlag> = vec![];
         if packet.get_flags() & TcpFlag::Syn.number() == TcpFlag::Syn.number() {
@@ -312,11 +414,11 @@ impl TcpPacketBuilder {
             window: 64240,
             flags: vec![TcpFlag::Syn],
             options: vec![
-                TcpOption::Mss,
-                TcpOption::SackParmitted,
-                TcpOption::Nop,
-                TcpOption::Nop,
-                TcpOption::Wscale,
+                TcpOption::mss(1460),
+                TcpOption::sack_perm(),
+                TcpOption::nop(),
+                TcpOption::nop(),
+                TcpOption::wscale(7),
             ],
             payload: vec![],
         }
@@ -343,21 +445,7 @@ impl TcpPacketBuilder {
         tcp_packet.set_flags(tcp_flags);
         let mut tcp_options: Vec<pnet::packet::tcp::TcpOption> = vec![];
         for opt in &self.options {
-            match *opt {
-                TcpOption::Mss => {
-                    tcp_options.push(pnet::packet::tcp::TcpOption::mss(1460));
-                }
-                TcpOption::Wscale => {
-                    tcp_options.push(pnet::packet::tcp::TcpOption::wscale(7));
-                }
-                TcpOption::SackParmitted => {
-                    tcp_options.push(pnet::packet::tcp::TcpOption::sack_perm());
-                }
-                TcpOption::Nop => {
-                    tcp_options.push(pnet::packet::tcp::TcpOption::nop());
-                }
-                _ => {}
-            }
+            tcp_options.push(opt.to_pnet_type());
         }
         tcp_packet.set_options(&tcp_options);
         if self.payload.len() > 0 {
