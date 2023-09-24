@@ -292,6 +292,7 @@ pub enum Icmpv6Code {
 }
 
 impl Icmpv6Code {
+    /// Constructs a new Icmpv6Code from u8
     pub fn from_u8(t: u8) -> Icmpv6Code {
         match t {
             1 => Icmpv6Code::DestinationUnreachable,
@@ -385,9 +386,13 @@ impl Icmpv6Code {
 /// Represents an ICMPv6 packet.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Icmpv6Packet {
+    /// ICMPv6 type
     pub icmpv6_type: Icmpv6Type,
+    /// ICMPv6 code
     pub icmpv6_code: Icmpv6Code,
+    /// ICMPv6 checksum
     pub checksum: u16,
+    /// Payload
     pub payload: Vec<u8>,
 }
 
@@ -400,12 +405,14 @@ impl Icmpv6Packet {
             payload: packet.payload().to_vec(),
         }
     }
+    /// Constructs a new Icmpv6Packet from bytes
     pub fn from_bytes(packet: &[u8]) -> Icmpv6Packet {
         let icmpv6_packet = pnet::packet::icmpv6::Icmpv6Packet::new(packet).unwrap();
         Icmpv6Packet::from_pnet_packet(&icmpv6_packet)
     }
 }
 
+/// Build ICMPv6 packet
 pub(crate) fn build_icmpv6_echo_packet(icmp_packet: &mut pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket, src_ip: Ipv6Addr, dst_ip: Ipv6Addr) {
     icmp_packet.set_icmpv6_type(pnet::packet::icmpv6::Icmpv6Types::EchoRequest);
     icmp_packet.set_identifier(rand::random::<u16>());
@@ -419,17 +426,21 @@ pub(crate) fn build_icmpv6_echo_packet(icmp_packet: &mut pnet::packet::icmpv6::e
 /// ICMPv6 Packet Builder
 #[derive(Clone, Debug)]
 pub struct Icmpv6PacketBuilder {
+    /// Source IPv6 address
     pub src_ip: Ipv6Addr,
+    /// Destination IPv6 address
     pub dst_ip: Ipv6Addr,
+    /// ICMPv6 type
     pub icmpv6_type: Icmpv6Type,
+    /// ICMPv6 sequence number
     pub sequence_number: Option<u16>,
+    /// ICMPv6 identifier
     pub identifier: Option<u16>,
 }
 
 impl Icmpv6PacketBuilder {
+    /// Build ICMPv6 packet and return bytes
     pub fn build(&self) -> Vec<u8> {
-        // pnet's MutableIcmpv6Packet doesn't support setting the identifier and sequence number
-        // so we have to use the MutableEchoRequestPacket packet instead
         let buffer: &mut [u8] = &mut [0u8; ICMPV6_HEADER_LEN];
         let mut icmp_packet = pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket::new(buffer).unwrap();
         icmp_packet.set_icmpv6_type(pnet::packet::icmpv6::Icmpv6Type(self.icmpv6_type.number()));

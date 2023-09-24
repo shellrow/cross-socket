@@ -2,6 +2,7 @@ use std::net::Ipv4Addr;
 
 use pnet::packet::Packet;
 
+/// ICMPv4 Header Length
 pub const ICMPV4_HEADER_LEN: usize =
     pnet::packet::icmp::echo_request::MutableEchoRequestPacket::minimum_packet_size();
 
@@ -161,13 +162,18 @@ impl IcmpType {
 /// Represents an ICMP packet.
 #[derive(Clone, Debug, PartialEq)]
 pub struct IcmpPacket {
+    /// ICMP type
     pub icmp_type: IcmpType,
+    /// ICMP code
     pub icmp_code: u8,
+    /// ICMP checksum
     pub checksum: u16,
+    /// Payload.
     pub payload: Vec<u8>,
 }
 
 impl IcmpPacket {
+    /// Constructs a new IcmpPacket from pnet::packet::icmp::IcmpPacket.
     pub(crate) fn from_pnet_packet(packet: &pnet::packet::icmp::IcmpPacket) -> IcmpPacket {
         IcmpPacket {
             icmp_type: IcmpType::from_pnet_type(packet.get_icmp_type()),
@@ -176,12 +182,14 @@ impl IcmpPacket {
             payload: packet.payload().to_vec(),
         }
     }
+    /// Constructs a new IcmpPacket from bytes
     pub fn from_bytes(packet: &[u8]) -> IcmpPacket {
         let icmp_packet = pnet::packet::icmp::IcmpPacket::new(packet).unwrap();
         IcmpPacket::from_pnet_packet(&icmp_packet)
     }
 }
 
+/// Build ICMP packet
 pub(crate) fn build_icmp_echo_packet(icmp_packet: &mut pnet::packet::icmp::echo_request::MutableEchoRequestPacket) {
     icmp_packet.set_icmp_type(pnet::packet::icmp::IcmpTypes::EchoRequest);
     icmp_packet.set_sequence_number(rand::random::<u16>());
@@ -193,14 +201,20 @@ pub(crate) fn build_icmp_echo_packet(icmp_packet: &mut pnet::packet::icmp::echo_
 /// ICMP Packet Builder
 #[derive(Clone, Debug)]
 pub struct IcmpPacketBuilder {
+    /// Source IPv4 address
     pub src_ip: Ipv4Addr,
+    /// Destination IPv4 address
     pub dst_ip: Ipv4Addr,
+    /// ICMP type
     pub icmp_type: IcmpType,
+    /// ICMP sequence number
     pub sequence_number: Option<u16>,
+    /// ICMP identifier
     pub identifier: Option<u16>,
 }
 
 impl IcmpPacketBuilder {
+    /// Constructs a new IcmpPacketBuilder
     pub fn new(src_ip: Ipv4Addr, dst_ip: Ipv4Addr) -> IcmpPacketBuilder {
         IcmpPacketBuilder {
             src_ip: src_ip,
@@ -210,9 +224,8 @@ impl IcmpPacketBuilder {
             identifier: None,
         }
     }
+    /// Build ICMP packet and return bytes
     pub fn build(&self) -> Vec<u8> {
-        // pnet's MutableIcmpvPacket doesn't support setting the identifier and sequence number
-        // so we have to use the MutableEchoRequestPacket packet instead
         let buffer: &mut [u8] = &mut [0u8; ICMPV4_HEADER_LEN];
         let mut icmp_packet = pnet::packet::icmp::echo_request::MutableEchoRequestPacket::new(buffer).unwrap();
         icmp_packet.set_icmp_type(pnet::packet::icmp::IcmpType(self.icmp_type.number()));

@@ -3,6 +3,7 @@ use pnet::packet::Packet;
 use crate::datalink::MacAddr;
 use crate::packet::ethernet::EtherType;
 
+/// ARP Header Length
 pub const ARP_HEADER_LEN: usize = 28;
 
 /// Represents the ARP operation types.
@@ -18,6 +19,7 @@ pub enum ArpOperation{
 }
 
 impl ArpOperation {
+    /// Constructs a new ArpOperation from u16
     pub fn from_u16(n: u16) -> Option<ArpOperation> {
         match n {
             1 => Some(ArpOperation::Request),
@@ -114,6 +116,7 @@ pub enum ArpHardwareType {
 }
 
 impl ArpHardwareType {
+    /// Constructs a new ArpHardwareType from u16
     pub fn from_u16(n: u16) -> Option<ArpHardwareType> {
         match n {
             1 => Some(ArpHardwareType::Ethernet),
@@ -159,20 +162,29 @@ impl ArpHardwareType {
     }
 }
 
-/// Represents an ARP packet.
+/// Represents an ARP packet
 #[derive(Clone, Debug)]
 pub struct ArpPacket {
+    /// Hardware type
     pub hardware_type: ArpHardwareType,
+    /// Protocol type
     pub protocol_type: EtherType,
+    /// Operation
     pub operation: ArpOperation,
+    /// Sender hardware address
     pub sender_hw_addr: MacAddr,
+    /// Sender IPv4 address
     pub sender_proto_addr: Ipv4Addr,
+    /// Target hardware address
     pub target_hw_addr: MacAddr,
+    /// Target IPv4 address
     pub target_proto_addr: Ipv4Addr,
+    /// Payload
     pub payload: Vec<u8>,
 }
 
 impl ArpPacket {
+    /// Constructs a new ArpPacket from pnet::packet::arp::ArpPacket.
     pub(crate) fn from_pnet_packet(packet: pnet::packet::arp::ArpPacket) -> ArpPacket {
         ArpPacket {
             hardware_type: ArpHardwareType::from_u16(packet.get_hardware_type().0).unwrap(),
@@ -185,12 +197,14 @@ impl ArpPacket {
             payload: packet.payload().to_vec(),
         }
     }
+    /// Constructs a new ArpPacket from bytes
     pub fn from_bytes(packet: &[u8]) -> ArpPacket {
         let arp_packet = pnet::packet::arp::ArpPacket::new(packet).unwrap();
         ArpPacket::from_pnet_packet(arp_packet)
     }
 }
 
+/// Build ARP packet
 pub(crate) fn build_arp_packet(
     arp_packet: &mut pnet::packet::arp::MutableArpPacket,
     src_mac: MacAddr,
@@ -212,13 +226,18 @@ pub(crate) fn build_arp_packet(
 /// ARP Packet Builder
 #[derive(Clone, Debug)]
 pub struct ArpPacketBuilder {
+    /// Source MAC address
     pub src_mac: MacAddr,
+    /// Destination MAC address
     pub dst_mac: MacAddr,
+    /// Source IPv4 address
     pub src_ip: Ipv4Addr,
+    /// Destination IPv4 address
     pub dst_ip: Ipv4Addr,
 }
 
 impl ArpPacketBuilder {
+    /// Constructs a new ArpPacketBuilder
     pub fn new() -> ArpPacketBuilder {
         ArpPacketBuilder {
             src_mac: MacAddr::new([0u8; 6]),
@@ -227,6 +246,7 @@ impl ArpPacketBuilder {
             dst_ip: Ipv4Addr::new(0, 0, 0, 0),
         }
     }
+    /// Builds ARP packet and return bytes
     pub fn build(&self) -> Vec<u8> {
         let mut buffer = [0u8; ARP_HEADER_LEN];
         let mut arp_packet = pnet::packet::arp::MutableArpPacket::new(&mut buffer).unwrap();

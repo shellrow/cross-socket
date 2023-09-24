@@ -30,18 +30,21 @@ pub enum IpVersion {
 }
 
 impl IpVersion {
+    /// IP Version number as u8
     pub fn version_u8(&self) -> u8 {
         match self {
             IpVersion::V4 => 4,
             IpVersion::V6 => 6,
         }
     }
+    /// Return true if IP version is IPv4
     pub fn is_ipv4(&self) -> bool {
         match self {
             IpVersion::V4 => true,
             IpVersion::V6 => false,
         }
     }
+    /// Return true if IP version is IPv6
     pub fn is_ipv6(&self) -> bool {
         match self {
             IpVersion::V4 => false,
@@ -59,8 +62,11 @@ impl IpVersion {
 /// Socket type
 #[derive(Clone, Debug)]
 pub enum SocketType {
+    /// Raw socket
     Raw,
+    /// Datagram socket. Usualy used for UDP.
     Dgram,
+    /// Stream socket. Used for TCP.
     Stream,
 }
 
@@ -77,15 +83,22 @@ impl SocketType {
 /// Socket option
 #[derive(Clone, Debug)]
 pub struct SocketOption {
+    /// IP version
     pub ip_version: IpVersion,
+    /// Socket type
     pub socket_type: SocketType,
+    /// Protocol. TCP, UDP, ICMP, etc.
     pub protocol: Option<IpNextLevelProtocol>,
+    /// Timeout
     pub timeout: Option<u64>,
+    /// TTL or Hop Limit
     pub ttl: Option<u32>,
+    /// Non-blocking mode
     pub non_blocking: bool,
 }
 
 impl SocketOption {
+    /// Constructs a new SocketOption
     pub fn new(ip_version: IpVersion, socket_type: SocketType, protocol: Option<IpNextLevelProtocol>) -> SocketOption {
         SocketOption {
             ip_version,
@@ -98,13 +111,14 @@ impl SocketOption {
     }
 }
 
-/// Cross-platform async socket. Provides async adapter for system’s socket
+/// Async socket. Provides cross-platform async adapter for system’s socket.
 #[derive(Clone, Debug)]
 pub struct AsyncSocket {
     inner: Arc<Async<SystemSocket>>,
 }
 
 impl AsyncSocket {
+    /// Constructs a new AsyncSocket
     pub fn new(socket_option: SocketOption) -> io::Result<AsyncSocket> {
         match check_socket_option(socket_option.clone()) {
             Ok(_) => (),
@@ -120,6 +134,7 @@ impl AsyncSocket {
             inner: Arc::new(Async::new(socket)?),
         })
     }
+    /// Send packet to target
     pub async fn send_to(&self, buf: &[u8], target: SocketAddr) -> io::Result<usize> {
         let target: SockAddr = SockAddr::from(target);
         loop {
@@ -134,6 +149,7 @@ impl AsyncSocket {
             }
         }
     }
+    /// Receive packet
     pub async fn receive(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let recv_buf =
             unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
@@ -145,6 +161,7 @@ impl AsyncSocket {
             }
         }
     }
+    /// Receive packet with sender address
     pub async fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SocketAddr)> {
         let recv_buf =
             unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
@@ -162,17 +179,20 @@ impl AsyncSocket {
             }
         }
     }
+    /// Bind socket to address
     pub async fn bind(&self, addr: SocketAddr) -> io::Result<()> {
         let addr: SockAddr = SockAddr::from(addr);
         self.inner.writable().await?;
         self.inner.write_with(|inner| inner.bind(&addr)).await
     }
+    /// Set receive timeout
     pub async fn set_receive_timeout(&self, timeout: Option<Duration>) -> io::Result<()> {
         self.inner.writable().await?;
         self.inner
             .write_with(|inner| inner.set_read_timeout(timeout))
             .await
     }
+    /// Set TTL or Hop Limit
     pub async fn set_ttl(&self, ttl: u32, ip_version: IpVersion) -> io::Result<()> {
         self.inner.writable().await?;
         match ip_version {
@@ -190,13 +210,14 @@ impl AsyncSocket {
     }
 }
 
-/// Cross-platform socket. Provides cross-platform API for system’s socket 
+/// Socket. Provides cross-platform adapter for system’s socket.
 #[derive(Clone, Debug)]
 pub struct Socket {
     inner: Arc<SystemSocket>,
 }
 
 impl Socket {
+    /// Constructs a new Socket
     pub fn new(socket_option: SocketOption) -> io::Result<Socket> {
         match check_socket_option(socket_option.clone()) {
             Ok(_) => (),
@@ -214,6 +235,7 @@ impl Socket {
             inner: Arc::new(socket),
         })
     }
+    /// Send packet to target
     pub fn send_to(&self, buf: &[u8], target: SocketAddr) -> io::Result<usize> {
         let target: SockAddr = SockAddr::from(target);
         match self.inner.send_to(buf, &target) {
@@ -221,6 +243,7 @@ impl Socket {
             Err(e) => Err(e),
         }
     }
+    /// Receive packet
     pub fn receive(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let recv_buf =
             unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
@@ -229,6 +252,7 @@ impl Socket {
             Err(e) => Err(e),
         }
     }
+    /// Receive packet with sender address
     pub fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SocketAddr)> {
         let recv_buf =
             unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };
@@ -243,13 +267,16 @@ impl Socket {
             Err(e) => Err(e),
         }
     }
+    /// Bind socket to address
     pub fn bind(&self, addr: SocketAddr) -> io::Result<()> {
         let addr: SockAddr = SockAddr::from(addr);
         self.inner.bind(&addr)
     }
+    /// Set receive timeout
     pub fn set_receive_timeout(&self, timeout: Option<Duration>) -> io::Result<()> {
         self.inner.set_read_timeout(timeout)
     }
+    /// Set TTL or Hop Limit
     pub fn set_ttl(&self, ttl: u32, ip_version: IpVersion) -> io::Result<()> {
         match ip_version {
             IpVersion::V4 => {
@@ -263,7 +290,7 @@ impl Socket {
 }
 
 /// Cross-platform raw socket.
-/// Enables to send and receive packets with custom headers. from datalink layer to application layer.
+/// Enables to send and receive packets with custom headers.
 pub struct DataLinkSocket {
     pub interface: crate::datalink::interface::Interface,
     sender: Box<dyn pnet::datalink::DataLinkSender>,
@@ -271,6 +298,7 @@ pub struct DataLinkSocket {
 }
 
 impl DataLinkSocket {
+    /// Constructs a new DataLinkSocket
     pub fn new(interface: crate::datalink::interface::Interface, promiscuous: bool) -> io::Result<DataLinkSocket> {
         let interfaces = pnet::datalink::interfaces();
         let network_interface = match interfaces
@@ -304,9 +332,11 @@ impl DataLinkSocket {
             receiver: rx,
         })
     }
+    /// Build packet from PacketBuildOption and send it
     pub fn send(&mut self, packet_builder: PacketBuildOption) -> io::Result<usize> {
         build_and_send_packet(&mut self.sender, packet_builder)
     }
+    /// Send packet
     pub fn send_to(&mut self, buf: &[u8]) -> io::Result<usize> {
         match self.sender.send_to(buf, None) {
             Some(res) => {
@@ -318,6 +348,7 @@ impl DataLinkSocket {
             None => Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
         }
     }
+    /// Build and send packet. This is useful when you want to send packet with custom build function.
     pub fn build_and_send(&mut self, num_packets: usize, packet_size: usize, func: &mut dyn FnMut(&mut [u8])) -> io::Result<()> {
         match self.sender.build_and_send(num_packets, packet_size, func) {
             Some(res) => {
@@ -329,6 +360,7 @@ impl DataLinkSocket {
             None => Err(io::Error::new(io::ErrorKind::Other, "Failed to send packet")),
         }
     }
+    /// Receive packet
     pub fn receive(&mut self) -> io::Result<&[u8]> {
         match self.receiver.next() {
             Ok(packet) => {

@@ -1,6 +1,10 @@
+/// Module for network packets
 pub mod packet;
+/// Module for datalink layer and network interface.
 pub mod datalink;
+/// Module for sockets
 pub mod socket;
+/// Module for packet capture
 pub mod pcap;
 
 #[cfg(feature = "setup")]

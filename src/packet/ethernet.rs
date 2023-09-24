@@ -1,6 +1,7 @@
 use pnet::packet::Packet;
 use crate::datalink::MacAddr;
 
+/// Represents the Ethernet header length.
 pub const ETHERNET_HEADER_LEN: usize = 14;
 
 /// Represents the Ethernet types.
@@ -33,6 +34,7 @@ pub enum EtherType {
 }
 
 impl EtherType {
+    /// Constructs a new EtherType from u16
     pub fn from_u16(n: u16) -> Option<EtherType> {
         match n {
             0x0800 => Some(EtherType::Ipv4),
@@ -61,6 +63,7 @@ impl EtherType {
             _ => Some(EtherType::Unknown(n)),
         }
     }
+    /// Return the number of the EtherType
     pub fn number(&self) -> u16 {
         match *self {
             EtherType::Ipv4 => 0x0800,
@@ -89,6 +92,7 @@ impl EtherType {
             EtherType::Unknown(n) => n,
         }
     }
+    /// Return the name of the EtherType
     pub fn name(&self) -> &str {
         match *self {
             EtherType::Ipv4 => "IPv4",
@@ -122,13 +126,18 @@ impl EtherType {
 /// Represents an Ethernet packet.
 #[derive(Clone, Debug)]
 pub struct EthernetPacket {
+    /// Destination MAC address
     pub destination: MacAddr,
+    /// Source MAC address
     pub source: MacAddr,
+    /// EtherType
     pub ethertype: EtherType,
+    /// Payload. Next level protocol packet.
     pub payload: Vec<u8>,
 }
 
 impl EthernetPacket {
+    /// Constructs a new EthernetPacket from pnet::packet::ethernet::EthernetPacket.
     pub(crate) fn from_pnet_packet(packet: &pnet::packet::ethernet::EthernetPacket) -> EthernetPacket {
         EthernetPacket {
             destination: MacAddr::new(packet.get_destination().octets()),
@@ -137,12 +146,14 @@ impl EthernetPacket {
             payload: packet.payload().to_vec(),
         }
     }
+    /// Constructs a new EthernetPacket from bytes
     pub fn from_bytes(packet: &[u8]) -> EthernetPacket {
         let ethernet_packet = pnet::packet::ethernet::EthernetPacket::new(packet).unwrap();
         EthernetPacket::from_pnet_packet(&ethernet_packet)
     }
 }
 
+/// Build Ethernet packet
 pub(crate) fn build_ethernet_packet(
     eth_packet: &mut pnet::packet::ethernet::MutableEthernetPacket,
     src_mac: MacAddr,
@@ -167,6 +178,7 @@ pub(crate) fn build_ethernet_packet(
     }
 }
 
+/// Build Ethernet ARP packet
 pub(crate) fn build_ethernet_arp_packet(
     eth_packet: &mut pnet::packet::ethernet::MutableEthernetPacket,
     src_mac: MacAddr,
@@ -179,12 +191,16 @@ pub(crate) fn build_ethernet_arp_packet(
 /// Ethernet Packet Builder
 #[derive(Clone, Debug)]
 pub struct EthernetPacketBuilder {
+    /// Source MAC address
     pub src_mac: MacAddr,
+    /// Destination MAC address
     pub dst_mac: MacAddr,
+    /// EtherType
     pub ether_type: EtherType,
 }
 
 impl EthernetPacketBuilder {
+    /// Constructs a new EthernetPacketBuilder
     pub fn new() -> EthernetPacketBuilder {
         EthernetPacketBuilder {
             src_mac: MacAddr::new([0; 6]),
@@ -192,6 +208,7 @@ impl EthernetPacketBuilder {
             ether_type: EtherType::Ipv4,
         }
     }
+    /// Build Ethernet packet and return bytes
     pub fn build(&self) -> Vec<u8> {
         let mut buffer: Vec<u8> = vec![0; ETHERNET_HEADER_LEN];
         let mut eth_packet = pnet::packet::ethernet::MutableEthernetPacket::new(&mut buffer).unwrap();

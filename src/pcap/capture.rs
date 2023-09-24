@@ -19,7 +19,8 @@ use std::time::Instant;
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 
-pub fn start_capture(capture_options: PacketCaptureOptions, msg_tx: &Arc<Mutex<Sender<PacketFrame>>>, stop: &Arc<Mutex<bool>>) -> Vec<PacketFrame> {
+/// Start packet capture
+pub(crate) fn start_capture(capture_options: PacketCaptureOptions, msg_tx: &Arc<Mutex<Sender<PacketFrame>>>, stop: &Arc<Mutex<bool>>) -> Vec<PacketFrame> {
     let interfaces = pnet::datalink::interfaces();
     let interface = interfaces
         .into_iter()

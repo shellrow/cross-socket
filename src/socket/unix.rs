@@ -5,7 +5,7 @@ use crate::packet::ip::IpNextLevelProtocol;
 
 use super::{SocketOption, IpVersion, SocketType};
 
-pub fn check_socket_option(socket_option: SocketOption) -> Result<(), String> {
+pub(crate) fn check_socket_option(socket_option: SocketOption) -> Result<(), String> {
     match socket_option.ip_version {
         IpVersion::V4 => {
             match socket_option.socket_type {
@@ -66,6 +66,7 @@ pub struct ListenerSocket {
 }
 
 impl ListenerSocket {
+    /// Constructs a new ListenerSocket
     pub fn new(_socket_addr: SocketAddr, ip_version: IpVersion, protocol: Option<IpNextLevelProtocol>, timeout: Option<Duration>) -> io::Result<ListenerSocket> {
         let socket = match ip_version {
             IpVersion::V4 => {
@@ -93,6 +94,7 @@ impl ListenerSocket {
             inner: socket,
         })
     }
+    /// Receive packet without source address
     pub fn receive_from(&self, buf: &mut Vec<u8>) -> io::Result<(usize, SocketAddr)> {
         let recv_buf =
             unsafe { &mut *(buf.as_mut_slice() as *mut [u8] as *mut [MaybeUninit<u8>]) };

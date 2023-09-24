@@ -1,7 +1,7 @@
 use std::net::Ipv4Addr;
 use crate::datalink::MacAddr;
 
-/// Represents an Dhcp operation.
+/// Represents an DHCP operation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum DhcpOperation{
     Request = 1,
@@ -9,6 +9,7 @@ pub enum DhcpOperation{
 }
 
 impl DhcpOperation {
+    /// Constructs a new DhcpOperation from u8
     pub fn from_u8(n: u8) -> Option<DhcpOperation> {
         match n {
             1 => Some(DhcpOperation::Request),
@@ -86,6 +87,7 @@ pub enum DhcpHardwareType{
 }
 
 impl DhcpHardwareType {
+    /// Constructs a new DhcpHardwareType from u8
     pub fn from_u8(n: u8) -> Option<DhcpHardwareType> {
         match n {
             1 => Some(DhcpHardwareType::Ethernet),

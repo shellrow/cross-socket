@@ -8,6 +8,7 @@ mod windows;
 #[cfg(target_os = "windows")]
 pub use self::windows::*;
 
+/// Application information on system
 #[derive(Debug, Clone)]
 pub struct AppInfo {
     pub display_name: String,

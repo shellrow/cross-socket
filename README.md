@@ -5,11 +5,7 @@
 
 # cross-socket [![Crates.io][crates-badge]][crates-url] ![License][license-badge]
 `cross-socket` is a cross-platform library designed for working with RawSocket. 
-Empowers you to create, send, and receive raw network packets effortlessly.
-
-## Note
-- Under development and the public API is subject to change without notice.
-- Documentation is under preparation.
+Empowers you to create, send, and receive raw network packets.
 
 ## Usage
 Add `cross-socket` to your dependencies  
@@ -29,4 +25,4 @@ See [Examples][examples-url]
 ## Feature flags 
 The following feature flags can be used to enable/disable specific features.
 #### `--feature setup` (for Windows users)
-**For Windows**. This feature allows you to easy check/setup npcap dependencies.
+**For Windows**. This feature allows you to easy check/setup dependencies.

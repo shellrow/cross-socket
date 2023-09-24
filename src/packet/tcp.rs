@@ -3,12 +3,15 @@ use pnet::packet::Packet;
 
 /// Minimum TCP Header Length
 pub const TCP_HEADER_LEN: usize = pnet::packet::tcp::MutableTcpPacket::minimum_packet_size();
+/// Minimum TCP Data Offset
 pub const TCP_MIN_DATA_OFFSET: u8 = 5;
 /// Maximum TCP Option Length
 pub const TCP_OPTION_MAX_LEN: usize = 40;
 /// Maximum TCP Header Length (with options)
 pub const TCP_HEADER_MAX_LEN: usize = TCP_HEADER_LEN + TCP_OPTION_MAX_LEN;
+/// Default TCP Option Length
 pub const TCP_DEFAULT_OPTION_LEN: usize = 12;
+/// Default TCP Source Port
 pub const DEFAULT_SRC_PORT: u16 = 53443;
 
 /// TCP Option Kind
@@ -87,20 +90,24 @@ impl TcpOptionKind {
     }
 }
 
+/// TCP Option
 #[derive(Clone, Debug, PartialEq)]
 pub struct TcpOption {
+    /// TCP Option Kind
     pub kind: TcpOptionKind,
+    /// TCP Option Data
     pub data: Vec<u8>,
 }
 
 impl TcpOption {
+    /// No Operation (NOP) TCP option.
     pub fn nop() -> Self {
         TcpOption {
             kind: TcpOptionKind::Nop,
             data: vec![],
         }
     }
-
+    /// Timestamp TCP option
     pub fn timestamp(my: u32, their: u32) -> Self {
         let mut data = vec![];
         data.extend_from_slice(&my.to_be_bytes());
@@ -111,7 +118,7 @@ impl TcpOption {
             data: data,
         }
     }
-
+    /// Get the timestamp of the TCP option
     pub fn get_timestamp(&self) -> (u32, u32) {
         let mut my: [u8; 4] = [0; 4];
         my.copy_from_slice(&self.data[0..4]);
@@ -119,7 +126,7 @@ impl TcpOption {
         their.copy_from_slice(&self.data[4..8]);
         (u32::from_be_bytes(my), u32::from_be_bytes(their))
     }
-
+    /// Maximum Segment Size (MSS) TCP option
     pub fn mss(val: u16) -> Self {
         let mut data = vec![];
         data.extend_from_slice(&val.to_be_bytes());
@@ -129,31 +136,31 @@ impl TcpOption {
             data: data,
         }
     }
-
+    /// Get the MSS of the TCP option
     pub fn get_mss(&self) -> u16 {
         let mut mss: [u8; 2] = [0; 2];
         mss.copy_from_slice(&self.data[0..2]);
         u16::from_be_bytes(mss)
     }
-
+    /// Window Scale (WSCALE) TCP option
     pub fn wscale(val: u8) -> Self {
         TcpOption {
             kind: TcpOptionKind::Wscale,
             data: vec![val],
         }
     }
-
+    /// Get the WSCALE of the TCP option
     pub fn get_wscale(&self) -> u8 {
         self.data[0]
     }
-
+    /// Selective Acknowledgement Permitted (SACK_PERMITTED) TCP option
     pub fn sack_perm() -> Self {
         TcpOption {
             kind: TcpOptionKind::SackParmitted,
             data: vec![],
         }
     }
-
+    /// Selective Acknowledgement (SACK) TCP option
     pub fn selective_ack(acks: &[u32]) -> Self {
         let mut data = vec![];
         for ack in acks {
@@ -211,6 +218,7 @@ pub enum TcpFlag {
 }
 
 impl TcpFlag {
+    /// Get the TCP flag kind from u8
     pub fn from_u8(n: u8) -> TcpFlag {
         match n {
             pnet::packet::tcp::TcpFlags::SYN => TcpFlag::Syn,
@@ -268,6 +276,7 @@ impl TcpFlag {
     }
 }
 
+/// Get the length of TCP options from TCP data offset
 pub fn get_tcp_options_length(data_offset: u8) -> usize {
     if data_offset > 5 {
         data_offset as usize * 4 - TCP_HEADER_LEN
@@ -276,6 +285,7 @@ pub fn get_tcp_options_length(data_offset: u8) -> usize {
     }
 }
 
+/// Get the TCP data offset from TCP options
 pub fn get_tcp_data_offset(opstions: Vec<TcpOption>) -> u8 {
     let mut total_size: u8 = 0;
     for opt in opstions {
@@ -291,17 +301,29 @@ pub fn get_tcp_data_offset(opstions: Vec<TcpOption>) -> u8 {
 /// Represents a TCP packet.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TcpPacket {
+    /// Source port
     pub source: u16,
+    /// Destination port
     pub destination: u16,
+    /// Sequence number
     pub sequence: u32,
+    /// Acknowledgement number
     pub acknowledgement: u32,
+    /// Data offset
     pub data_offset: u8,
+    /// Reserved
     pub reserved: u8,
+    /// TCP flags
     pub flags: Vec<TcpFlag>,
+    /// Window size
     pub window: u16,
+    /// Checksum
     pub checksum: u16,
+    /// Urgent pointer
     pub urgent_ptr: u16,
+    /// TCP options
     pub options: Vec<TcpOption>,
+    /// TCP Payload
     pub payload: Vec<u8>,
 }
 
@@ -401,17 +423,26 @@ pub(crate) fn build_tcp_packet(
 /// TCP Packet Builder
 #[derive(Clone, Debug)]
 pub struct TcpPacketBuilder {
+    /// Source IP address
     pub src_ip: IpAddr,
+    /// Source port
     pub src_port: u16,
+    /// Destination IP address
     pub dst_ip: IpAddr,
+    /// Destination port
     pub dst_port: u16,
+    /// Window size
     pub window: u16,
+    /// TCP flags
     pub flags: Vec<TcpFlag>,
+    /// TCP options
     pub options: Vec<TcpOption>,
+    /// TCP payload
     pub payload: Vec<u8>,
 }
 
 impl TcpPacketBuilder {
+    /// Constructs a new TcpPacketBuilder from Source SocketAddr and Destination SocketAddr with default options.
     pub fn new(src_addr: SocketAddr, dst_addr: SocketAddr) -> TcpPacketBuilder {
         TcpPacketBuilder {
             src_ip: src_addr.ip(),
@@ -430,6 +461,7 @@ impl TcpPacketBuilder {
             payload: vec![],
         }
     }
+    /// Build a TCP packet and return bytes
     pub fn build(&self) -> Vec<u8> {
         let data_offset = get_tcp_data_offset(self.options.clone());
         let tcp_options_len = get_tcp_options_length(data_offset);

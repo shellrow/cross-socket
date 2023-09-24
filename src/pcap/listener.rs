@@ -7,10 +7,15 @@ use crate::pcap::capture::start_capture;
 /// Listner
 #[derive(Debug)]
 pub struct Listner {
+    /// Packet capture options
     pub options: PacketCaptureOptions,
+    /// Message Sender
     pub tx: Arc<Mutex<Sender<PacketFrame>>>,
+    /// Message Receiver
     pub rx: Arc<Mutex<Receiver<PacketFrame>>>,
+    /// Stop handle
     pub stop: Arc<Mutex<bool>>,
+    /// Packets store
     pub packets: Arc<Mutex<Vec<PacketFrame>>>,
 }
 

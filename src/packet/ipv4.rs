@@ -2,7 +2,9 @@ use std::net::Ipv4Addr;
 use pnet::packet::Packet;
 use crate::packet::ip::IpNextLevelProtocol;
 
+/// IPv4 Header Length
 pub const IPV4_HEADER_LEN: usize = pnet::packet::ipv4::MutableIpv4Packet::minimum_packet_size();
+/// IPv4 Header Bytes (32 bits)
 pub const IPV4_HEADER_BYTES: usize = 4;
 
 /// Represents the IPv4 flags.
@@ -56,6 +58,7 @@ pub enum Ipv4Option {
 }
 
 impl Ipv4Option {
+    /// Constructs a new Ipv4Option from u8
     pub fn from_u8(n: u8) -> Ipv4Option {
         match n {
             0 => Ipv4Option::EndOfOptionsList,
@@ -87,6 +90,7 @@ impl Ipv4Option {
             _ => Ipv4Option::Unknown(n),
         }
     }
+    /// Returns the number of the Ipv4Option
     pub fn number(&self) -> u8 {
         match *self {
             Ipv4Option::EndOfOptionsList => 0,
@@ -123,20 +127,35 @@ impl Ipv4Option {
 /// Represents an IPv4 packet.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Ipv4Packet {
+    /// IP version
     pub version: u8,
+    /// IP header length
     pub header_length: u8,
+    /// Differentiated Services Code Point (DSCP)
     pub dscp: u8,
+    /// Explicit Congestion Notification (ECN)
     pub ecn: u8,
+    /// Total length
     pub total_length: u16,
+    /// Identification
     pub identification: u16,
+    /// Flags
     pub flags: u8,
+    /// Fragment offset
     pub fragment_offset: u16,
+    /// Time to live
     pub ttl: u8,
+    /// Next level protocol
     pub next_level_protocol: IpNextLevelProtocol,
+    /// Checksum
     pub checksum: u16,
+    /// Source IP address
     pub source: Ipv4Addr,
+    /// Destination IP address
     pub destination: Ipv4Addr,
+    /// Options
     pub options: Vec<Ipv4Option>,
+    /// Payload
     pub payload: Vec<u8>,
 }
 
@@ -163,12 +182,14 @@ impl Ipv4Packet {
             payload: packet.payload().to_vec(),
         }
     }
+    /// Constructs a new Ipv4Packet from bytes
     pub fn from_bytes(packet: &[u8]) -> Ipv4Packet {
         let ipv4_packet = pnet::packet::ipv4::Ipv4Packet::new(packet).unwrap();
         Ipv4Packet::from_pnet_packet(&ipv4_packet)
     }
 }
 
+/// Build IPv4 packet
 pub(crate) fn build_ipv4_packet(
     ipv4_packet: &mut pnet::packet::ipv4::MutableIpv4Packet,
     src_ip: Ipv4Addr,
@@ -214,6 +235,7 @@ pub struct Ipv4PacketBuilder {
 }
 
 impl Ipv4PacketBuilder {
+    /// Constructs a new Ipv4PacketBuilder
     pub fn new(src_ip: Ipv4Addr, dst_ip: Ipv4Addr, next_protocol: IpNextLevelProtocol) -> Self {
         Ipv4PacketBuilder {
             src_ip,
@@ -225,6 +247,7 @@ impl Ipv4PacketBuilder {
             flags: None,
         }
     }
+    /// Builds IPv4 packet and return bytes
     pub fn build(&self) -> Vec<u8> {
         let mut buffer = vec![0; IPV4_HEADER_LEN];
         let mut ipv4_packet = pnet::packet::ipv4::MutableIpv4Packet::new(&mut buffer).unwrap();

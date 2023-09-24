@@ -4,7 +4,7 @@ pub mod npcap;
 
 use inquire::Confirm;
 
-// Resolve dependencies
+/// Check and resolve dependencies
 pub fn resolve_dependencies(interactive: bool) -> bool {
     // Check if npcap is installed
     if !npcap::is_npcap_installed() {
