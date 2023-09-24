@@ -4,6 +4,7 @@ use std::time::Duration;
 use default_net::Interface;
 use cross_socket::pcap::PacketCaptureOptions;
 use cross_socket::pcap::listener::Listner;
+use cross_socket::packet::ethernet::EtherType;
 use cross_socket::packet::ip::IpNextLevelProtocol;
 
 // Start capturing TCP packets on the default interface
@@ -21,7 +22,7 @@ fn main() {
         dst_ips: HashSet::new(),
         src_ports: [22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443].iter().cloned().collect(),
         dst_ports: [22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443].iter().cloned().collect(),
-        ether_types: HashSet::new(),
+        ether_types: [EtherType::Ipv4].iter().cloned().collect(),
         ip_protocols: [IpNextLevelProtocol::Tcp].iter().cloned().collect(),
         duration: Duration::from_secs(30),
         promiscuous: false,
