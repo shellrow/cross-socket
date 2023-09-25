@@ -436,6 +436,16 @@ pub struct Icmpv6PacketBuilder {
 }
 
 impl Icmpv6PacketBuilder {
+    /// Constructs a new Icmpv6PacketBuilder
+    pub fn new(src_ip: Ipv6Addr, dst_ip: Ipv6Addr) -> Icmpv6PacketBuilder {
+        Icmpv6PacketBuilder {
+            src_ip,
+            dst_ip,
+            icmpv6_type: Icmpv6Type::EchoRequest,
+            sequence_number: None,
+            identifier: None,
+        }
+    }
     /// Build ICMPv6 packet and return bytes
     pub fn build(&self) -> Vec<u8> {
         let buffer: &mut [u8] = &mut [0u8; ICMPV6_HEADER_LEN];
