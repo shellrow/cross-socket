@@ -1,6 +1,6 @@
 [package]
 name = "cross-socket"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["shellrow <shellrow@protonmail.com>"]
 description = "cross-socket is a cross-platform library designed for working with RawSocket"
@@ -19,7 +19,7 @@ socket2 = { version = "0.5", features = ["all"] }
 pnet = "0.34"
 chrono = "0.4"
 async-io = "1.13"
-cross-socket-deps = { path = "deps", version = "0.2.0", optional = true }
+cross-socket-deps = { path = "deps", version = "0.3.0", optional = true }
 
 [target.'cfg(windows)'.dependencies.windows-sys]
 version = "0.48.0"
