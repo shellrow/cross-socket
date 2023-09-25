@@ -15,7 +15,7 @@ use async_io::Async;
 use socket2::{Domain, SockAddr, Socket as SystemSocket, Type};
 use std::io;
 use std::mem::MaybeUninit;
-use std::net::SocketAddr;
+use std::net::{SocketAddr, Shutdown};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -146,6 +146,16 @@ impl AsyncSocket {
             inner: Arc::new(Async::new(socket)?),
         })
     }
+    /// Send packet
+    pub async fn send(&self, buf: &[u8]) -> io::Result<usize> {
+        loop {
+            self.inner.writable().await?;
+            match self.inner.write_with(|inner| inner.send(buf)).await {
+                Ok(n) => return Ok(n),
+                Err(_) => continue,
+            }
+        }
+    }
     /// Send packet to target
     pub async fn send_to(&self, buf: &[u8], target: SocketAddr) -> io::Result<usize> {
         let target: SockAddr = SockAddr::from(target);
@@ -216,6 +226,51 @@ impl AsyncSocket {
                     .write_with(|inner| inner.set_unicast_hops_v6(ttl))
                     .await
             }
+        }
+    }
+    /// Initiate TCP connection
+    pub async fn connect(&self, addr: SocketAddr) -> io::Result<()> {
+        let addr: SockAddr = SockAddr::from(addr);
+        self.inner.writable().await?;
+        self.inner.write_with(|inner| inner.connect(&addr)).await
+    }
+    /// Shutdown TCP connection
+    pub async fn shutdown(&self, how: Shutdown) -> io::Result<()> {
+        self.inner.writable().await?;
+        self.inner.write_with(|inner| inner.shutdown(how)).await
+    }
+    /// Listen TCP connection
+    pub async fn listen(&self, backlog: i32) -> io::Result<()> {
+        self.inner.writable().await?;
+        self.inner.write_with(|inner| inner.listen(backlog)).await
+    }
+    /// Accept TCP connection
+    pub async fn accept(&self) -> io::Result<(AsyncSocket, SocketAddr)> {
+        self.inner.readable().await?;
+        match self.inner.read_with(|inner| inner.accept()).await {
+            Ok((socket, addr)) => {
+                let socket = AsyncSocket {
+                    inner: Arc::new(Async::new(socket)?),
+                };
+                Ok((socket, addr.as_socket().unwrap()))
+            }
+            Err(e) => Err(e),
+        }
+    }
+    /// Get peer address
+    pub async fn peer_addr(&self) -> io::Result<SocketAddr> {
+        self.inner.writable().await?;
+        match self.inner.read_with(|inner| inner.peer_addr()).await {
+            Ok(addr) => Ok(addr.as_socket().unwrap()),
+            Err(e) => Err(e),
+        }
+    }
+    /// Get local address
+    pub async fn local_addr(&self) -> io::Result<SocketAddr> {
+        self.inner.writable().await?;
+        match self.inner.read_with(|inner| inner.local_addr()).await {
+            Ok(addr) => Ok(addr.as_socket().unwrap()),
+            Err(e) => Err(e),
         }
     }
 }
@@ -302,6 +357,40 @@ impl Socket {
         match ip_version {
             IpVersion::V4 => self.inner.set_ttl(ttl),
             IpVersion::V6 => self.inner.set_unicast_hops_v6(ttl),
+        }
+    }
+    /// Initiate TCP connection
+    pub fn connect(&self, addr: SocketAddr) -> io::Result<()> {
+        let addr: SockAddr = SockAddr::from(addr);
+        self.inner.connect(&addr)
+    }
+    /// Shutdown TCP connection
+    pub fn shutdown(&self, how: Shutdown) -> io::Result<()> {
+        self.inner.shutdown(how)
+    }
+    /// Listen TCP connection
+    pub fn listen(&self, backlog: i32) -> io::Result<()> {
+        self.inner.listen(backlog)
+    }
+    /// Accept TCP connection
+    pub fn accept(&self) -> io::Result<(Socket, SocketAddr)> {
+        match self.inner.accept() {
+            Ok((socket, addr)) => Ok((Socket { inner: Arc::new(socket) }, addr.as_socket().unwrap())),
+            Err(e) => Err(e),
+        }
+    }
+    /// Get peer address
+    pub fn peer_addr(&self) -> io::Result<SocketAddr> {
+        match self.inner.peer_addr() {
+            Ok(addr) => Ok(addr.as_socket().unwrap()),
+            Err(e) => Err(e),
+        }
+    }
+    /// Get local address
+    pub fn local_addr(&self) -> io::Result<SocketAddr> {
+        match self.inner.local_addr() {
+            Ok(addr) => Ok(addr.as_socket().unwrap()),
+            Err(e) => Err(e),
         }
     }
 }
