@@ -54,7 +54,7 @@ fn main() {
             Ok((packet_len, _)) => {
                 let ip_packet =
                     cross_socket::packet::ipv4::Ipv4Packet::from_bytes(&buf[..packet_len]);
-                if ip_packet.next_level_protocol != IpNextLevelProtocol::Icmp
+                if ip_packet.next_protocol != IpNextLevelProtocol::Icmp
                     || ip_packet.source != std::net::Ipv4Addr::new(1, 1, 1, 1)
                 {
                     continue;

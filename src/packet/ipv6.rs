@@ -16,8 +16,8 @@ pub struct Ipv6Packet {
     pub flow_label: u32,
     /// Payload Length
     pub payload_length: u16,
-    /// Next Header
-    pub next_header: IpNextLevelProtocol,
+    /// Next level protocol
+    pub next_protocol: IpNextLevelProtocol,
     /// Hop Limit
     pub hop_limit: u8,
     /// Source IPv6 Address
@@ -35,7 +35,7 @@ impl Ipv6Packet {
             traffic_class: packet.get_traffic_class(),
             flow_label: packet.get_flow_label(),
             payload_length: packet.get_payload_length(),
-            next_header: IpNextLevelProtocol::from_u8(packet.get_next_header().0),
+            next_protocol: IpNextLevelProtocol::from_u8(packet.get_next_header().0),
             hop_limit: packet.get_hop_limit(),
             source: packet.get_source(),
             destination: packet.get_destination(),
@@ -85,6 +85,8 @@ pub struct Ipv6PacketBuilder {
     pub dst_ip: Ipv6Addr,
     /// Next level protocol
     pub next_protocol: IpNextLevelProtocol,
+    /// Payload Length
+    pub payload_length: Option<u16>,
     /// Hop Limit
     pub hop_limit: Option<u8>,
 }
@@ -96,6 +98,7 @@ impl Ipv6PacketBuilder {
             src_ip,
             dst_ip,
             next_protocol,
+            payload_length: None,
             hop_limit: None,
         }
     }
@@ -109,6 +112,9 @@ impl Ipv6PacketBuilder {
             self.dst_ip,
             self.next_protocol,
         );
+        if let Some(payload_length) = self.payload_length {
+            ipv6_packet.set_payload_length(payload_length);
+        }
         if let Some(hop_limit) = self.hop_limit {
             ipv6_packet.set_hop_limit(hop_limit);
         }

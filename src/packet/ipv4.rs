@@ -146,7 +146,7 @@ pub struct Ipv4Packet {
     /// Time to live
     pub ttl: u8,
     /// Next level protocol
-    pub next_level_protocol: IpNextLevelProtocol,
+    pub next_protocol: IpNextLevelProtocol,
     /// Checksum
     pub checksum: u16,
     /// Source IP address
@@ -171,7 +171,7 @@ impl Ipv4Packet {
             flags: packet.get_flags(),
             fragment_offset: packet.get_fragment_offset(),
             ttl: packet.get_ttl(),
-            next_level_protocol: IpNextLevelProtocol::from_u8(packet.get_next_level_protocol().0),
+            next_protocol: IpNextLevelProtocol::from_u8(packet.get_next_level_protocol().0),
             checksum: packet.get_checksum(),
             source: packet.get_source(),
             destination: packet.get_destination(),
