@@ -68,6 +68,10 @@ name = "icmp_build"
 path = "examples/datalink_socket/icmp_build.rs"
 
 [[example]]
+name = "icmpv6_build"
+path = "examples/datalink_socket/icmpv6_build.rs"
+
+[[example]]
 name = "tcp_ping"
 path = "examples/datalink_socket/tcp_ping.rs"
 
