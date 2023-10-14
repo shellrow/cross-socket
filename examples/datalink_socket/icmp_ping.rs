@@ -5,6 +5,7 @@ use cross_socket::packet::builder::PacketBuildOption;
 use cross_socket::packet::ethernet::EtherType;
 use cross_socket::packet::ip::IpNextLevelProtocol;
 use cross_socket::socket::DataLinkSocket;
+use default_net::interface::MacAddr;
 
 // Send ICMP Echo Request packets to 1.1.1.1 and check reply
 fn main() {
@@ -30,8 +31,8 @@ fn main() {
     // Packet builder for ICMP Echo Request
     let mut packet_option = PacketBuildOption::new();
     packet_option.use_tun = use_tun;
-    packet_option.src_mac = socket.interface.mac_addr.clone().unwrap();
-    packet_option.dst_mac = socket.interface.gateway.clone().unwrap().mac_addr;
+    packet_option.src_mac = if use_tun { MacAddr::zero() } else { socket.interface.mac_addr.clone().unwrap() };
+    packet_option.dst_mac = if use_tun { MacAddr::zero() } else { socket.interface.gateway.clone().unwrap().mac_addr };
     packet_option.ether_type = EtherType::Ipv4;
     packet_option.src_ip = IpAddr::V4(socket.interface.ipv4[0].addr);
     packet_option.dst_ip = IpAddr::V4(dst_ip);

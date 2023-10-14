@@ -7,6 +7,7 @@ use cross_socket::packet::ip::IpNextLevelProtocol;
 use cross_socket::packet::ipv4::Ipv4PacketBuilder;
 use cross_socket::packet::tcp::{TcpFlag, TcpOption, TcpPacketBuilder};
 use cross_socket::socket::DataLinkSocket;
+use default_net::interface::MacAddr;
 // Send TCP SYN packets to 1.1.1.1:80 and check if the port is open
 fn main() {
     let interface: Interface = match env::args().nth(1) {
@@ -32,8 +33,8 @@ fn main() {
     // Packet builder for TCP SYN
     let mut packet_builder = PacketBuilder::new();
     let ethernet_packet_builder = EthernetPacketBuilder {
-        src_mac: socket.interface.mac_addr.clone().unwrap(),
-        dst_mac: socket.interface.gateway.clone().unwrap().mac_addr,
+        src_mac: if use_tun { MacAddr::zero() } else { socket.interface.mac_addr.clone().unwrap() },
+        dst_mac: if use_tun { MacAddr::zero() } else { socket.interface.gateway.clone().unwrap().mac_addr },
         ether_type: EtherType::Ipv4,
     };
     packet_builder.set_ethernet(ethernet_packet_builder);
