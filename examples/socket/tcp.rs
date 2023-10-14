@@ -1,4 +1,5 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::env;
 
 use cross_socket::datalink::interface::Interface;
 use cross_socket::packet::ethernet::EtherType;
@@ -11,7 +12,21 @@ use cross_socket::socket::{DataLinkSocket, IpVersion, Socket, SocketOption, Sock
 // For Windows, use examples/datalink_socket/tcp_ping.rs instead.
 // (Due to Winsock2 limitation.)
 fn main() {
-    let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
+    let interface: Interface = match env::args().nth(1) {
+        Some(n) => {
+            // Use interface specified by user
+            let interfaces: Vec<Interface> = default_net::get_interfaces();
+            let interface: Interface = interfaces
+                .into_iter()
+                .find(|interface| interface.name == n)
+                .expect("Failed to get interface information");
+            interface
+        },
+        None => {
+            // Use default interface
+            default_net::get_default_interface().expect("Failed to get default interface information")
+        }
+    };
     let src_ip: IpAddr = IpAddr::V4(interface.ipv4[0].addr);
     let dst_ip: IpAddr = IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1));
     let dst_socket_addr: SocketAddr = SocketAddr::new(dst_ip, 80);

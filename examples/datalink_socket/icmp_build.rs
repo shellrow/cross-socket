@@ -6,9 +6,25 @@ use cross_socket::packet::ip::IpNextLevelProtocol;
 use cross_socket::packet::ipv4::Ipv4PacketBuilder;
 use cross_socket::socket::DataLinkSocket;
 use std::net::Ipv4Addr;
+use std::env;
+
 // Send ICMP Echo Request packets to 1.1.1.1 and check reply
 fn main() {
-    let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
+    let interface: Interface = match env::args().nth(1) {
+        Some(n) => {
+            // Use interface specified by user
+            let interfaces: Vec<Interface> = default_net::get_interfaces();
+            let interface: Interface = interfaces
+                .into_iter()
+                .find(|interface| interface.name == n)
+                .expect("Failed to get interface information");
+            interface
+        },
+        None => {
+            // Use default interface
+            default_net::get_default_interface().expect("Failed to get default interface information")
+        }
+    };
     let src_ip: Ipv4Addr = interface.ipv4[0].addr;
     let dst_ip: Ipv4Addr = Ipv4Addr::new(1, 1, 1, 1);
     // Create new socket

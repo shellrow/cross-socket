@@ -1,5 +1,5 @@
 use std::net::IpAddr;
-
+use std::env;
 use cross_socket::datalink::interface::Interface;
 use cross_socket::packet::builder::PacketBuildOption;
 use cross_socket::packet::ethernet::EtherType;
@@ -7,7 +7,21 @@ use cross_socket::packet::ip::IpNextLevelProtocol;
 use cross_socket::socket::DataLinkSocket;
 // Send UDP packets to 1.1.1.1:33435 and check ICMP Port Unreachable reply
 fn main() {
-    let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
+    let interface: Interface = match env::args().nth(1) {
+        Some(n) => {
+            // Use interface specified by user
+            let interfaces: Vec<Interface> = default_net::get_interfaces();
+            let interface: Interface = interfaces
+                .into_iter()
+                .find(|interface| interface.name == n)
+                .expect("Failed to get interface information");
+            interface
+        },
+        None => {
+            // Use default interface
+            default_net::get_default_interface().expect("Failed to get default interface information")
+        }
+    };
     // Create new socket
     let mut socket: DataLinkSocket = DataLinkSocket::new(interface, false).unwrap();
     // Packet builder for UDP packet. Expect ICMP Destination (Port) Unreachable.
