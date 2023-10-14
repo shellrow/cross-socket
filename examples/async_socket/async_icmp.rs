@@ -79,7 +79,7 @@ async fn async_main() {
 
     let mut capture_options: PacketCaptureOptions = PacketCaptureOptions {
         interface_index: interface.index,
-        interface_name: interface.name,
+        interface_name: interface.name.clone(),
         src_ips: HashSet::new(),
         dst_ips: HashSet::new(),
         src_ports: HashSet::new(),
@@ -91,8 +91,8 @@ async fn async_main() {
         store: true,
         store_limit: 1000,
         receive_undefined: false,
-        use_tun: false,
-        loopback: false,
+        use_tun: interface.is_tun(),
+        loopback: interface.is_loopback(),
     };
     for target in hosts.clone() {
         capture_options.src_ips.insert(IpAddr::V4(target));

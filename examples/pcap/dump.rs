@@ -26,7 +26,7 @@ fn main() {
     // No filter. Capture all packets.
     let capture_options: PacketCaptureOptions = PacketCaptureOptions {
         interface_index: interface.index,
-        interface_name: interface.name,
+        interface_name: interface.name.clone(),
         src_ips: HashSet::new(),
         dst_ips: HashSet::new(),
         src_ports: HashSet::new(),
@@ -38,8 +38,8 @@ fn main() {
         store: false,
         store_limit: 0,
         receive_undefined: true,
-        use_tun: false,
-        loopback: false,
+        use_tun: interface.is_tun(),
+        loopback: interface.is_loopback(),
     };
     // Create new listener
     let listener: Listner = Listner::new(capture_options);

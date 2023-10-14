@@ -1,4 +1,4 @@
-use std::net::IpAddr;
+use std::net::{IpAddr, Ipv4Addr};
 use std::env;
 use cross_socket::datalink::interface::Interface;
 use cross_socket::packet::builder::PacketBuildOption;
@@ -22,6 +22,8 @@ fn main() {
             default_net::get_default_interface().expect("Failed to get default interface information")
         }
     };
+    let is_tun: bool = interface.is_tun();
+    let dst_ip: Ipv4Addr = Ipv4Addr::new(1, 1, 1, 1);
     // Create new socket
     let mut socket: DataLinkSocket = DataLinkSocket::new(interface, false).unwrap();
     // Packet builder for TCP SYN
@@ -30,7 +32,7 @@ fn main() {
     packet_option.dst_mac = socket.interface.gateway.clone().unwrap().mac_addr;
     packet_option.ether_type = EtherType::Ipv4;
     packet_option.src_ip = IpAddr::V4(socket.interface.ipv4[0].addr);
-    packet_option.dst_ip = IpAddr::V4(std::net::Ipv4Addr::new(1, 1, 1, 1));
+    packet_option.dst_ip = IpAddr::V4(dst_ip);
     packet_option.src_port = Some(53443);
     packet_option.dst_port = Some(80);
     packet_option.ip_protocol = Some(IpNextLevelProtocol::Tcp);
@@ -51,23 +53,39 @@ fn main() {
     loop {
         match socket.receive() {
             Ok(packet) => {
-                let ethernet_packet =
+                if is_tun {
+                    let ip_packet =
+                        cross_socket::packet::ipv4::Ipv4Packet::from_bytes(&packet);
+                    if ip_packet.next_protocol != IpNextLevelProtocol::Tcp
+                        || ip_packet.source != dst_ip
+                    {
+                        continue;
+                    }
+                    println!("Received {} bytes from {}", packet.len(), ip_packet.source);
+                    let tcp_packet =
+                        cross_socket::packet::tcp::TcpPacket::from_bytes(&ip_packet.payload);
+                    println!("Packet: {:?}", tcp_packet);
+                    break;
+                }else {
+                    let ethernet_packet =
                     cross_socket::packet::ethernet::EthernetPacket::from_bytes(&packet);
-                if ethernet_packet.ethertype != EtherType::Ipv4 {
-                    continue;
+                    if ethernet_packet.ethertype != EtherType::Ipv4 {
+                        continue;
+                    }
+                    let ip_packet =
+                        cross_socket::packet::ipv4::Ipv4Packet::from_bytes(&ethernet_packet.payload);
+                    if ip_packet.next_protocol != IpNextLevelProtocol::Tcp
+                        || ip_packet.source != dst_ip
+                    {
+                        continue;
+                    }
+                    println!("Received {} bytes from {}", packet.len(), ip_packet.source);
+                    let tcp_packet =
+                        cross_socket::packet::tcp::TcpPacket::from_bytes(&ip_packet.payload);
+                    println!("Packet: {:?}", tcp_packet);
+                    break;
                 }
-                let ip_packet =
-                    cross_socket::packet::ipv4::Ipv4Packet::from_bytes(&ethernet_packet.payload);
-                if ip_packet.next_protocol != IpNextLevelProtocol::Tcp
-                    || ip_packet.source != std::net::Ipv4Addr::new(1, 1, 1, 1)
-                {
-                    continue;
-                }
-                println!("Received {} bytes from {}", packet.len(), ip_packet.source);
-                let tcp_packet =
-                    cross_socket::packet::tcp::TcpPacket::from_bytes(&ip_packet.payload);
-                println!("Packet: {:?}", tcp_packet);
-                break;
+                
             }
             Err(e) => {
                 println!("Error: {}", e);

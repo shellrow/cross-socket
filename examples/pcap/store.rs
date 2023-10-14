@@ -31,7 +31,7 @@ fn main() {
     // Filter: Protocol: TCP only, Ports: 22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443
     let capture_options: PacketCaptureOptions = PacketCaptureOptions {
         interface_index: interface.index,
-        interface_name: interface.name,
+        interface_name: interface.name.clone(),
         src_ips: HashSet::new(),
         dst_ips: HashSet::new(),
         src_ports: [22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443]
@@ -49,8 +49,8 @@ fn main() {
         store: true,
         store_limit: 1000,
         receive_undefined: false,
-        use_tun: false,
-        loopback: false,
+        use_tun: interface.is_tun(),
+        loopback: interface.is_loopback(),
     };
     // Create new listener
     let listener: Listner = Listner::new(capture_options);

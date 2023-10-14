@@ -25,6 +25,7 @@ fn main() {
             default_net::get_default_interface().expect("Failed to get default interface information")
         }
     };
+    let is_tun: bool = interface.is_tun();
     let src_ip: Ipv6Addr = interface.ipv6[0].addr;
     let dst_ip: Ipv6Addr = Ipv6Addr::new(0x2606, 0x4700, 0x4700, 0, 0, 0, 0, 0x1111);
     // Create new socket
@@ -58,23 +59,38 @@ fn main() {
     loop {
         match socket.receive() {
             Ok(packet) => {
-                let ethernet_packet =
+                if is_tun {
+                    let ip_packet =
+                        cross_socket::packet::ipv6::Ipv6Packet::from_bytes(&packet);
+                    if ip_packet.next_protocol != IpNextLevelProtocol::Icmpv6
+                        || ip_packet.source != dst_ip
+                    {
+                        continue;
+                    }
+                    println!("Received {} bytes from {}", packet.len(), ip_packet.source);
+                    let icmp_packet =
+                        cross_socket::packet::icmpv6::Icmpv6Packet::from_bytes(&ip_packet.payload);
+                    println!("Packet: {:?}", icmp_packet);
+                    break;
+                } else {
+                    let ethernet_packet =
                     cross_socket::packet::ethernet::EthernetPacket::from_bytes(&packet);
-                if ethernet_packet.ethertype != EtherType::Ipv6 {
-                    continue;
+                    if ethernet_packet.ethertype != EtherType::Ipv6 {
+                        continue;
+                    }
+                    let ip_packet =
+                        cross_socket::packet::ipv6::Ipv6Packet::from_bytes(&ethernet_packet.payload);
+                    if ip_packet.next_protocol != IpNextLevelProtocol::Icmpv6
+                        || ip_packet.source != dst_ip
+                    {
+                        continue;
+                    }
+                    println!("Received {} bytes from {}", packet.len(), ip_packet.source);
+                    let icmp_packet =
+                        cross_socket::packet::icmpv6::Icmpv6Packet::from_bytes(&ip_packet.payload);
+                    println!("Packet: {:?}", icmp_packet);
+                    break;
                 }
-                let ip_packet =
-                    cross_socket::packet::ipv6::Ipv6Packet::from_bytes(&ethernet_packet.payload);
-                if ip_packet.next_protocol != IpNextLevelProtocol::Icmpv6
-                    || ip_packet.source != dst_ip
-                {
-                    continue;
-                }
-                println!("Received {} bytes from {}", packet.len(), ip_packet.source);
-                let icmp_packet =
-                    cross_socket::packet::icmpv6::Icmpv6Packet::from_bytes(&ip_packet.payload);
-                println!("Packet: {:?}", icmp_packet);
-                break;
             }
             Err(e) => {
                 println!("Error: {}", e);
