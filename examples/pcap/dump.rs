@@ -25,6 +25,8 @@ fn main() {
         store: false,
         store_limit: 0,
         receive_undefined: true,
+        use_tun: false,
+        loopback: false,
     };
     // Create new listener
     let listener: Listner = Listner::new(capture_options);

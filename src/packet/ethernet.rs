@@ -224,3 +224,30 @@ impl EthernetPacketBuilder {
         eth_packet.to_immutable().packet().to_vec()
     }
 }
+
+/// Create Dummy Ethernet Frame
+pub(crate) fn create_dummy_ethernet_frame(
+    payload_offset: usize,
+    packet: &[u8],
+) -> Vec<u8> {
+    if packet.len() <= payload_offset {
+        return packet.to_vec();
+    }
+    let mut buffer: Vec<u8> = vec![0; ETHERNET_HEADER_LEN];
+    let src_mac: MacAddr = MacAddr::zero();
+    let dst_mac: MacAddr = MacAddr::zero();
+    let mut ether_type: EtherType = EtherType::Unknown(0);
+    let mut eth_packet = pnet::packet::ethernet::MutableEthernetPacket::new(&mut buffer).unwrap();
+    if let Some (ip_packet) = pnet::packet::ipv4::Ipv4Packet::new(&packet[payload_offset..]) {
+        let version = ip_packet.get_version();
+        if version == 4 {
+            ether_type = EtherType::Ipv4;
+        }
+        else if version == 6 {
+            ether_type = EtherType::Ipv6;
+        }
+    }
+    build_ethernet_packet(&mut eth_packet, src_mac, dst_mac, ether_type);
+    eth_packet.set_payload(&packet[payload_offset..]);
+    eth_packet.to_immutable().packet().to_vec()
+}

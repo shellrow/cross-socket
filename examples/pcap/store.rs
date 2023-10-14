@@ -36,6 +36,8 @@ fn main() {
         store: true,
         store_limit: 1000,
         receive_undefined: false,
+        use_tun: false,
+        loopback: false,
     };
     // Create new listener
     let listener: Listner = Listner::new(capture_options);

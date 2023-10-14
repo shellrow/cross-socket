@@ -76,6 +76,8 @@ async fn async_main() {
         store: true,
         store_limit: 1000,
         receive_undefined: false,
+        use_tun: false,
+        loopback: false,
     };
     for target in hosts.clone() {
         capture_options.src_ips.insert(IpAddr::V4(target));
