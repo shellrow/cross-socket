@@ -22,12 +22,13 @@ fn main() {
             default_net::get_default_interface().expect("Failed to get default interface information")
         }
     };
-    let is_tun: bool = interface.is_tun();
+    let use_tun: bool = interface.is_tun();
     let dst_ip: Ipv4Addr = Ipv4Addr::new(1, 1, 1, 1);
     // Create new socket
     let mut socket: DataLinkSocket = DataLinkSocket::new(interface, false).unwrap();
     // Packet builder for UDP packet. Expect ICMP Destination (Port) Unreachable.
     let mut packet_option = PacketBuildOption::new();
+    packet_option.use_tun = use_tun;
     packet_option.src_mac = socket.interface.mac_addr.clone().unwrap();
     packet_option.dst_mac = socket.interface.gateway.clone().unwrap().mac_addr;
     packet_option.ether_type = EtherType::Ipv4;
@@ -53,7 +54,7 @@ fn main() {
     loop {
         match socket.receive() {
             Ok(packet) => {
-                if is_tun {
+                if use_tun {
                     let ip_packet =
                         cross_socket::packet::ipv4::Ipv4Packet::from_bytes(&packet);
                     if ip_packet.next_protocol != IpNextLevelProtocol::Icmp

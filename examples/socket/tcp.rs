@@ -27,7 +27,7 @@ fn main() {
             default_net::get_default_interface().expect("Failed to get default interface information")
         }
     };
-    let is_tun: bool = interface.is_tun();
+    let use_tun: bool = interface.is_tun();
     let src_ip: IpAddr = IpAddr::V4(interface.ipv4[0].addr);
     let dst_ipv4: Ipv4Addr = Ipv4Addr::new(1, 1, 1, 1);
     let dst_ip: IpAddr = IpAddr::V4(dst_ipv4);
@@ -76,7 +76,7 @@ fn main() {
     loop {
         match listener_socket.receive() {
             Ok(packet) => {
-                if is_tun {
+                if use_tun {
                     // Logic for TUN interface
                     let ip_packet =
                         cross_socket::packet::ipv4::Ipv4Packet::from_bytes(&packet);

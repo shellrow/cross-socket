@@ -25,7 +25,7 @@ fn main() {
             default_net::get_default_interface().expect("Failed to get default interface information")
         }
     };
-    let is_tun: bool = interface.is_tun();
+    let use_tun: bool = interface.is_tun();
     let src_ip: Ipv4Addr = interface.ipv4[0].addr;
     let dst_ip: Ipv4Addr = Ipv4Addr::new(1, 1, 1, 1);
     // Create new socket
@@ -45,7 +45,8 @@ fn main() {
     packet_builder.set_icmp(icmp_packet_builder);
 
     // Send ICMP Echo Request packets to 1.1.1.1
-    match socket.send_to(&packet_builder.packet()) {
+    let packet = if use_tun {packet_builder.ip_packet()} else {packet_builder.packet()};
+    match socket.send_to(&packet) {
         Ok(packet_len) => {
             println!("Sent {} bytes", packet_len);
         }
@@ -59,7 +60,7 @@ fn main() {
     loop {
         match socket.receive() {
             Ok(packet) => {
-                if is_tun {
+                if use_tun {
                     let ip_packet =
                         cross_socket::packet::ipv4::Ipv4Packet::from_bytes(&packet);
                     if ip_packet.next_protocol != IpNextLevelProtocol::Icmp
