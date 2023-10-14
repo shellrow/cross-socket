@@ -233,7 +233,8 @@ pub(crate) fn create_dummy_ethernet_frame(
     if packet.len() <= payload_offset {
         return packet.to_vec();
     }
-    let mut buffer: Vec<u8> = vec![0; ETHERNET_HEADER_LEN];
+    let buffer_size: usize = packet.len() + ETHERNET_HEADER_LEN - payload_offset;
+    let mut buffer: Vec<u8> = vec![0; buffer_size];
     let src_mac: MacAddr = MacAddr::zero();
     let dst_mac: MacAddr = MacAddr::zero();
     let mut ether_type: EtherType = EtherType::Unknown(0);
