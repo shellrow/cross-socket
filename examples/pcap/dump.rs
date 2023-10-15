@@ -4,16 +4,29 @@ use default_net::Interface;
 use std::collections::HashSet;
 use std::thread;
 use std::time::Duration;
+use std::env;
 
-// Start capturing all packets (TCP, UDP, ICMP only) on the default interface
+// Start capturing all packets (TCP, UDP, ICMP only) on the default interface (or the interface specified by user)
 fn main() {
-    // Get default interface information
-    let default_interface: Interface =
-        default_net::get_default_interface().expect("Failed to get default interface information");
+    let interface: Interface = match env::args().nth(1) {
+        Some(n) => {
+            // Use interface specified by user
+            let interfaces: Vec<Interface> = default_net::get_interfaces();
+            let interface: Interface = interfaces
+                .into_iter()
+                .find(|interface| interface.name == n)
+                .expect("Failed to get interface information");
+            interface
+        },
+        None => {
+            // Use default interface
+            default_net::get_default_interface().expect("Failed to get default interface information")
+        }
+    };
     // No filter. Capture all packets.
     let capture_options: PacketCaptureOptions = PacketCaptureOptions {
-        interface_index: default_interface.index,
-        interface_name: default_interface.name,
+        interface_index: interface.index,
+        interface_name: interface.name.clone(),
         src_ips: HashSet::new(),
         dst_ips: HashSet::new(),
         src_ports: HashSet::new(),
@@ -25,6 +38,8 @@ fn main() {
         store: false,
         store_limit: 0,
         receive_undefined: true,
+        use_tun: interface.is_tun(),
+        loopback: interface.is_loopback(),
     };
     // Create new listener
     let listener: Listner = Listner::new(capture_options);

@@ -6,18 +6,31 @@ use default_net::Interface;
 use std::collections::HashSet;
 use std::thread;
 use std::time::Duration;
+use std::env;
 
-// Start capturing TCP packets on the default interface
+// Start capturing TCP packets on the default interface (or the interface specified by user)
 // Filter: Protocol: TCP only, Ports: 22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443
 // Stop after 10 seconds using the stop handle
 fn main() {
-    // Get default interface information
-    let default_interface: Interface =
-        default_net::get_default_interface().expect("Failed to get default interface information");
+    let interface: Interface = match env::args().nth(1) {
+        Some(n) => {
+            // Use interface specified by user
+            let interfaces: Vec<Interface> = default_net::get_interfaces();
+            let interface: Interface = interfaces
+                .into_iter()
+                .find(|interface| interface.name == n)
+                .expect("Failed to get interface information");
+            interface
+        },
+        None => {
+            // Use default interface
+            default_net::get_default_interface().expect("Failed to get default interface information")
+        }
+    };
     // Filter: Protocol: TCP only, Ports: 22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443
     let capture_options: PacketCaptureOptions = PacketCaptureOptions {
-        interface_index: default_interface.index,
-        interface_name: default_interface.name,
+        interface_index: interface.index,
+        interface_name: interface.name.clone(),
         src_ips: HashSet::new(),
         dst_ips: HashSet::new(),
         src_ports: [22, 80, 443, 4433, 5000, 8080, 8443, 8888, 9000, 9443]
@@ -35,6 +48,8 @@ fn main() {
         store: false,
         store_limit: 0,
         receive_undefined: false,
+        use_tun: interface.is_tun(),
+        loopback: interface.is_loopback(),
     };
     // Create new listener
     let listener: Listner = Listner::new(capture_options);

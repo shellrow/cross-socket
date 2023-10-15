@@ -1,10 +1,22 @@
 use pnet::packet::Packet;
 use std::net::{IpAddr, SocketAddr};
+use crate::packet::ethernet::ETHERNET_HEADER_LEN;
+use crate::packet::ipv4::IPV4_HEADER_LEN;
+use crate::packet::ipv6::IPV6_HEADER_LEN;
 
 /// UDP Header Length
 pub const UDP_HEADER_LEN: usize = 8;
 /// UDP BASE Destination Port. Usually used for traceroute.
 pub const UDP_BASE_DST_PORT: u16 = 33435;
+
+/// UDP (IPv4) Minimum Packet Length
+pub const UDPV4_PACKET_LEN: usize = ETHERNET_HEADER_LEN + IPV4_HEADER_LEN + UDP_HEADER_LEN;
+/// UDP (IPv4) Minimum IP Packet Length
+pub const UDPV4_IP_PACKET_LEN: usize = IPV4_HEADER_LEN + UDP_HEADER_LEN;
+/// UDP (IPv6) Minimum Packet Length
+pub const UDPV6_PACKET_LEN: usize = ETHERNET_HEADER_LEN + IPV6_HEADER_LEN + UDP_HEADER_LEN;
+/// UDP (IPv6) Minimum IP Packet Length
+pub const UDPV6_IP_PACKET_LEN: usize = IPV6_HEADER_LEN + UDP_HEADER_LEN;
 
 /// Represents the UDP packet.
 #[derive(Clone, Debug, PartialEq)]

@@ -1,6 +1,6 @@
 [package]
 name = "cross-socket-deps"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 authors = ["shellrow <shellrow@protonmail.com>"]
 description = "cross-socket-deps is a helper crate for the cross-socket library, managing OS-specific dependencies to ensure seamless cross-platform functionality"

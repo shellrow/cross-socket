@@ -1,8 +1,14 @@
 use pnet::packet::Packet;
 use std::net::Ipv6Addr;
+use crate::packet::ethernet::ETHERNET_HEADER_LEN;
+use crate::packet::ipv6::IPV6_HEADER_LEN;
 
 pub const ICMPV6_HEADER_LEN: usize =
     pnet::packet::icmpv6::echo_request::MutableEchoRequestPacket::minimum_packet_size();
+/// ICMPv6 Minimum Packet Length
+pub const ICMPV6_PACKET_LEN: usize = ETHERNET_HEADER_LEN + IPV6_HEADER_LEN + ICMPV6_HEADER_LEN;
+/// ICMPv6 IP Packet Length
+pub const ICMPV6_IP_PACKET_LEN: usize = IPV6_HEADER_LEN + ICMPV6_HEADER_LEN;
 
 /// ICMPv6 types
 /// <https://www.iana.org/assignments/icmpv6-parameters/icmpv6-parameters.xhtml>
@@ -236,142 +242,11 @@ impl Icmpv6Type {
             pnet::packet::icmpv6::Icmpv6Types::ParameterProblem => Icmpv6Type::ParameterProblem,
             pnet::packet::icmpv6::Icmpv6Types::EchoRequest => Icmpv6Type::EchoRequest,
             pnet::packet::icmpv6::Icmpv6Types::EchoReply => Icmpv6Type::EchoReply,
+            pnet::packet::icmpv6::Icmpv6Types::NeighborSolicit => Icmpv6Type::NeighborSolicitation,
+            pnet::packet::icmpv6::Icmpv6Types::NeighborAdvert => Icmpv6Type::NeighborAdvertisement,
+            pnet::packet::icmpv6::Icmpv6Types::RouterSolicit => Icmpv6Type::RouterSolicitation,
+            pnet::packet::icmpv6::Icmpv6Types::RouterAdvert => Icmpv6Type::RouterAdvertisement,
             _ => Icmpv6Type::Unknown(t.0),
-        }
-    }
-}
-
-/// Represents the ICMPv6 code header field.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Icmpv6Code {
-    DestinationUnreachable,
-    PacketTooBig,
-    TimeExceeded,
-    ParameterProblem,
-    EchoRequest,
-    EchoReply,
-    MulticastListenerQuery,
-    MulticastListenerReport,
-    MulticastListenerDone,
-    RouterSolicitation,
-    RouterAdvertisement,
-    NeighborSolicitation,
-    NeighborAdvertisement,
-    RedirectMessage,
-    RouterRenumbering,
-    NodeInformationQuery,
-    NodeInformationResponse,
-    InverseNeighborDiscoverySolicitation,
-    InverseNeighborDiscoveryAdvertisement,
-    Version2MulticastListenerReport,
-    HomeAgentAddressDiscoveryRequest,
-    HomeAgentAddressDiscoveryReply,
-    MobilePrefixSolicitation,
-    MobilePrefixAdvertisement,
-    CertificationPathSolicitationMessage,
-    CertificationPathAdvertisementMessage,
-    ExperimentalMobilityProtocols,
-    MulticastRouterAdvertisement,
-    MulticastRouterSolicitation,
-    MulticastRouterTermination,
-    FMIPv6Messages,
-    RPLControlMessage,
-    ILNPv6LocatorUpdateMessage,
-    DuplicateAddressRequest,
-    DuplicateAddressConfirmation,
-    MPLControlMessage,
-    ExtendedEchoRequest,
-    ExtendedEchoReply,
-    Unknown(u8),
-}
-
-impl Icmpv6Code {
-    /// Constructs a new Icmpv6Code from u8
-    pub fn from_u8(t: u8) -> Icmpv6Code {
-        match t {
-            1 => Icmpv6Code::DestinationUnreachable,
-            2 => Icmpv6Code::PacketTooBig,
-            3 => Icmpv6Code::TimeExceeded,
-            4 => Icmpv6Code::ParameterProblem,
-            128 => Icmpv6Code::EchoRequest,
-            129 => Icmpv6Code::EchoReply,
-            130 => Icmpv6Code::MulticastListenerQuery,
-            131 => Icmpv6Code::MulticastListenerReport,
-            132 => Icmpv6Code::MulticastListenerDone,
-            133 => Icmpv6Code::RouterSolicitation,
-            134 => Icmpv6Code::RouterAdvertisement,
-            135 => Icmpv6Code::NeighborSolicitation,
-            136 => Icmpv6Code::NeighborAdvertisement,
-            137 => Icmpv6Code::RedirectMessage,
-            138 => Icmpv6Code::RouterRenumbering,
-            139 => Icmpv6Code::NodeInformationQuery,
-            140 => Icmpv6Code::NodeInformationResponse,
-            141 => Icmpv6Code::InverseNeighborDiscoverySolicitation,
-            142 => Icmpv6Code::InverseNeighborDiscoveryAdvertisement,
-            143 => Icmpv6Code::Version2MulticastListenerReport,
-            144 => Icmpv6Code::HomeAgentAddressDiscoveryRequest,
-            145 => Icmpv6Code::HomeAgentAddressDiscoveryReply,
-            146 => Icmpv6Code::MobilePrefixSolicitation,
-            147 => Icmpv6Code::MobilePrefixAdvertisement,
-            148 => Icmpv6Code::CertificationPathSolicitationMessage,
-            149 => Icmpv6Code::CertificationPathAdvertisementMessage,
-            150 => Icmpv6Code::ExperimentalMobilityProtocols,
-            151 => Icmpv6Code::MulticastRouterAdvertisement,
-            152 => Icmpv6Code::MulticastRouterSolicitation,
-            153 => Icmpv6Code::MulticastRouterTermination,
-            154 => Icmpv6Code::FMIPv6Messages,
-            155 => Icmpv6Code::RPLControlMessage,
-            156 => Icmpv6Code::ILNPv6LocatorUpdateMessage,
-            157 => Icmpv6Code::DuplicateAddressRequest,
-            158 => Icmpv6Code::DuplicateAddressConfirmation,
-            159 => Icmpv6Code::MPLControlMessage,
-            160 => Icmpv6Code::ExtendedEchoRequest,
-            161 => Icmpv6Code::ExtendedEchoReply,
-            _ => Icmpv6Code::Unknown(t),
-        }
-    }
-    /// Get the number of the ICMPv6 code
-    pub fn number(&self) -> u8 {
-        match *self {
-            Icmpv6Code::DestinationUnreachable => 1,
-            Icmpv6Code::PacketTooBig => 2,
-            Icmpv6Code::TimeExceeded => 3,
-            Icmpv6Code::ParameterProblem => 4,
-            Icmpv6Code::EchoRequest => 128,
-            Icmpv6Code::EchoReply => 129,
-            Icmpv6Code::MulticastListenerQuery => 130,
-            Icmpv6Code::MulticastListenerReport => 131,
-            Icmpv6Code::MulticastListenerDone => 132,
-            Icmpv6Code::RouterSolicitation => 133,
-            Icmpv6Code::RouterAdvertisement => 134,
-            Icmpv6Code::NeighborSolicitation => 135,
-            Icmpv6Code::NeighborAdvertisement => 136,
-            Icmpv6Code::RedirectMessage => 137,
-            Icmpv6Code::RouterRenumbering => 138,
-            Icmpv6Code::NodeInformationQuery => 139,
-            Icmpv6Code::NodeInformationResponse => 140,
-            Icmpv6Code::InverseNeighborDiscoverySolicitation => 141,
-            Icmpv6Code::InverseNeighborDiscoveryAdvertisement => 142,
-            Icmpv6Code::Version2MulticastListenerReport => 143,
-            Icmpv6Code::HomeAgentAddressDiscoveryRequest => 144,
-            Icmpv6Code::HomeAgentAddressDiscoveryReply => 145,
-            Icmpv6Code::MobilePrefixSolicitation => 146,
-            Icmpv6Code::MobilePrefixAdvertisement => 147,
-            Icmpv6Code::CertificationPathSolicitationMessage => 148,
-            Icmpv6Code::CertificationPathAdvertisementMessage => 149,
-            Icmpv6Code::ExperimentalMobilityProtocols => 150,
-            Icmpv6Code::MulticastRouterAdvertisement => 151,
-            Icmpv6Code::MulticastRouterSolicitation => 152,
-            Icmpv6Code::MulticastRouterTermination => 153,
-            Icmpv6Code::FMIPv6Messages => 154,
-            Icmpv6Code::RPLControlMessage => 155,
-            Icmpv6Code::ILNPv6LocatorUpdateMessage => 156,
-            Icmpv6Code::DuplicateAddressRequest => 157,
-            Icmpv6Code::DuplicateAddressConfirmation => 158,
-            Icmpv6Code::MPLControlMessage => 159,
-            Icmpv6Code::ExtendedEchoRequest => 160,
-            Icmpv6Code::ExtendedEchoReply => 161,
-            Icmpv6Code::Unknown(n) => n,
         }
     }
 }
@@ -382,7 +257,7 @@ pub struct Icmpv6Packet {
     /// ICMPv6 type
     pub icmpv6_type: Icmpv6Type,
     /// ICMPv6 code
-    pub icmpv6_code: Icmpv6Code,
+    pub icmpv6_code: u8,
     /// ICMPv6 checksum
     pub checksum: u16,
     /// Payload
@@ -393,7 +268,7 @@ impl Icmpv6Packet {
     pub(crate) fn from_pnet_packet(packet: &pnet::packet::icmpv6::Icmpv6Packet) -> Icmpv6Packet {
         Icmpv6Packet {
             icmpv6_type: Icmpv6Type::from_pnet_type(packet.get_icmpv6_type()),
-            icmpv6_code: Icmpv6Code::from_u8(packet.get_icmpv6_code().0),
+            icmpv6_code: packet.get_icmpv6_code().0,
             checksum: packet.get_checksum(),
             payload: packet.payload().to_vec(),
         }

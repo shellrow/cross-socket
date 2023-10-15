@@ -1,3 +1,4 @@
+use crate::packet::ethernet;
 use crate::packet::ethernet::EthernetPacket;
 use crate::packet::{
     arp::ArpPacket, ethernet::EtherType, icmp::IcmpPacket, icmpv6::Icmpv6Packet,
@@ -75,62 +76,100 @@ fn receive_packets(
                     tcp_packet: None,
                     udp_packet: None,
                 };
-                if let Some(frame) = pnet::packet::ethernet::EthernetPacket::new(frame) {
-                    packet_frame.ethernet_packet = Some(EthernetPacket::from_pnet_packet(&frame));
-                    match frame.get_ethertype() {
-                        pnet::packet::ethernet::EtherTypes::Ipv4 => {
-                            if filter_ether_type(EtherType::Ipv4, &capture_options) {
-                                ipv4_handler(
-                                    &frame,
-                                    &capture_options,
-                                    &mut packet_frame,
-                                    msg_tx,
-                                    &packets,
-                                );
+                if capture_options.use_tun || capture_options.loopback {
+                    let payload_offset;
+                    if capture_options.loopback && cfg!(any(target_os = "macos", target_os = "ios")) {
+                        payload_offset = 14;
+                    } else {
+                        payload_offset = 0;
+                    }
+                    let dummy_frame = ethernet::create_dummy_ethernet_frame(payload_offset, frame);
+                    if let Some(frame) = pnet::packet::ethernet::EthernetPacket::new(&dummy_frame) {
+                        packet_frame.ethernet_packet = Some(EthernetPacket::from_pnet_packet(&frame));
+                        match frame.get_ethertype() {
+                            pnet::packet::ethernet::EtherTypes::Ipv4 => {
+                                if filter_ether_type(EtherType::Ipv4, &capture_options) {
+                                    ipv4_handler(
+                                        &frame,
+                                        &capture_options,
+                                        &mut packet_frame,
+                                        msg_tx,
+                                        &packets,
+                                    );
+                                }
                             }
-                        }
-                        pnet::packet::ethernet::EtherTypes::Ipv6 => {
-                            if filter_ether_type(EtherType::Ipv6, &capture_options) {
-                                ipv6_handler(
-                                    &frame,
-                                    &capture_options,
-                                    &mut packet_frame,
-                                    msg_tx,
-                                    &packets,
-                                );
+                            pnet::packet::ethernet::EtherTypes::Ipv6 => {
+                                if filter_ether_type(EtherType::Ipv6, &capture_options) {
+                                    ipv6_handler(
+                                        &frame,
+                                        &capture_options,
+                                        &mut packet_frame,
+                                        msg_tx,
+                                        &packets,
+                                    );
+                                }
                             }
+                            _ => {}
                         }
-                        pnet::packet::ethernet::EtherTypes::Arp => {
-                            if filter_ether_type(EtherType::Arp, &capture_options) {
-                                arp_handler(
-                                    &frame,
-                                    &capture_options,
-                                    &mut packet_frame,
-                                    msg_tx,
-                                    &packets,
-                                );
+                    }
+                }else {
+                    if let Some(frame) = pnet::packet::ethernet::EthernetPacket::new(frame) {
+                        packet_frame.ethernet_packet = Some(EthernetPacket::from_pnet_packet(&frame));
+                        match frame.get_ethertype() {
+                            pnet::packet::ethernet::EtherTypes::Ipv4 => {
+                                if filter_ether_type(EtherType::Ipv4, &capture_options) {
+                                    ipv4_handler(
+                                        &frame,
+                                        &capture_options,
+                                        &mut packet_frame,
+                                        msg_tx,
+                                        &packets,
+                                    );
+                                }
                             }
-                        }
-                        pnet::packet::ethernet::EtherTypes::Rarp => {
-                            if filter_ether_type(EtherType::Rarp, &capture_options) {
-                                rarp_handler(
-                                    &frame,
-                                    &capture_options,
-                                    &mut packet_frame,
-                                    msg_tx,
-                                    &packets,
-                                );
+                            pnet::packet::ethernet::EtherTypes::Ipv6 => {
+                                if filter_ether_type(EtherType::Ipv6, &capture_options) {
+                                    ipv6_handler(
+                                        &frame,
+                                        &capture_options,
+                                        &mut packet_frame,
+                                        msg_tx,
+                                        &packets,
+                                    );
+                                }
                             }
-                        }
-                        _ => {
-                            if capture_options.receive_undefined {
-                                eth_handler(
-                                    &frame,
-                                    &capture_options,
-                                    &mut packet_frame,
-                                    msg_tx,
-                                    &packets,
-                                );
+                            pnet::packet::ethernet::EtherTypes::Arp => {
+                                if filter_ether_type(EtherType::Arp, &capture_options) {
+                                    arp_handler(
+                                        &frame,
+                                        &capture_options,
+                                        &mut packet_frame,
+                                        msg_tx,
+                                        &packets,
+                                    );
+                                }
+                            }
+                            pnet::packet::ethernet::EtherTypes::Rarp => {
+                                if filter_ether_type(EtherType::Rarp, &capture_options) {
+                                    rarp_handler(
+                                        &frame,
+                                        &capture_options,
+                                        &mut packet_frame,
+                                        msg_tx,
+                                        &packets,
+                                    );
+                                }
+                            }
+                            _ => {
+                                if capture_options.receive_undefined {
+                                    eth_handler(
+                                        &frame,
+                                        &capture_options,
+                                        &mut packet_frame,
+                                        msg_tx,
+                                        &packets,
+                                    );
+                                }
                             }
                         }
                     }

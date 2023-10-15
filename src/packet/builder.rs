@@ -19,6 +19,13 @@ impl PacketBuilder {
     pub fn packet(&self) -> Vec<u8> {
         self.packet.clone()
     }
+    /// Retern IP packet bytes (without ethernet header)
+    pub fn ip_packet(&self) -> Vec<u8> {
+        if self.packet.len() < packet::ethernet::ETHERNET_HEADER_LEN {
+            return Vec::new();
+        }
+        self.packet[packet::ethernet::ETHERNET_HEADER_LEN..].to_vec()
+    }
     /// Set ethernet header
     pub fn set_ethernet(&mut self, packet_builder: packet::ethernet::EthernetPacketBuilder) {
         if self.packet.len() < packet::ethernet::ETHERNET_HEADER_LEN {
@@ -199,6 +206,7 @@ pub struct PacketBuildOption {
     pub dst_port: Option<u16>,
     pub ip_protocol: Option<ip::IpNextLevelProtocol>,
     pub payload: Vec<u8>,
+    pub use_tun: bool,
 }
 
 impl PacketBuildOption {
@@ -214,6 +222,7 @@ impl PacketBuildOption {
             dst_port: None,
             ip_protocol: None,
             payload: Vec::new(),
+            use_tun: false,
         }
     }
 }
@@ -284,7 +293,11 @@ pub fn build_full_icmp_packet(packet_builder: PacketBuildOption) -> Vec<u8> {
     packet::icmp::build_icmp_echo_packet(&mut icmp_packet);
     ipv4_packet.set_payload(icmp_packet.packet());
     ethernet_packet.set_payload(ipv4_packet.packet());
-    ethernet_packet.packet().to_vec()
+    if packet_builder.use_tun {
+        ethernet_packet.packet()[packet::ethernet::ETHERNET_HEADER_LEN..].to_vec()
+    }else {
+        ethernet_packet.packet().to_vec()
+    }
 }
 
 /// Build ICMP Packet
@@ -332,7 +345,11 @@ pub fn build_full_icmpv6_packet(packet_builder: PacketBuildOption) -> Vec<u8> {
     packet::icmpv6::build_icmpv6_echo_packet(&mut icmpv6_packet, src_ip, dst_ip);
     ipv6_packet.set_payload(icmpv6_packet.packet());
     ethernet_packet.set_payload(ipv6_packet.packet());
-    ethernet_packet.packet().to_vec()
+    if packet_builder.use_tun {
+        ethernet_packet.packet()[packet::ethernet::ETHERNET_HEADER_LEN..].to_vec()
+    }else {
+        ethernet_packet.packet().to_vec()
+    }
 }
 
 /// Build ICMPv6 Packet from PacketBuildOption
@@ -395,7 +412,11 @@ pub fn build_full_tcp_syn_packet(packet_builder: PacketBuildOption) -> Vec<u8> {
                 );
                 ipv4_packet.set_payload(tcp_packet.packet());
                 ethernet_packet.set_payload(ipv4_packet.packet());
-                ethernet_packet.packet().to_vec()
+                if packet_builder.use_tun {
+                    ethernet_packet.packet()[packet::ethernet::ETHERNET_HEADER_LEN..].to_vec()
+                }else {
+                    ethernet_packet.packet().to_vec()
+                }
             }
             IpAddr::V6(_) => return Vec::new(),
         },
@@ -439,7 +460,11 @@ pub fn build_full_tcp_syn_packet(packet_builder: PacketBuildOption) -> Vec<u8> {
                 );
                 ipv6_packet.set_payload(tcp_packet.packet());
                 ethernet_packet.set_payload(ipv6_packet.packet());
-                ethernet_packet.packet().to_vec()
+                if packet_builder.use_tun {
+                    ethernet_packet.packet()[packet::ethernet::ETHERNET_HEADER_LEN..].to_vec()
+                }else {
+                    ethernet_packet.packet().to_vec()
+                }
             }
         },
     }
@@ -498,7 +523,11 @@ pub fn build_full_udp_packet(packet_builder: PacketBuildOption) -> Vec<u8> {
                 );
                 ipv4_packet.set_payload(udp_packet.packet());
                 ethernet_packet.set_payload(ipv4_packet.packet());
-                ethernet_packet.packet().to_vec()
+                if packet_builder.use_tun {
+                    ethernet_packet.packet()[packet::ethernet::ETHERNET_HEADER_LEN..].to_vec()
+                }else {
+                    ethernet_packet.packet().to_vec()
+                }
             }
             IpAddr::V6(_) => return Vec::new(),
         },
@@ -539,7 +568,11 @@ pub fn build_full_udp_packet(packet_builder: PacketBuildOption) -> Vec<u8> {
                 );
                 ipv6_packet.set_payload(udp_packet.packet());
                 ethernet_packet.set_payload(ipv6_packet.packet());
-                ethernet_packet.packet().to_vec()
+                if packet_builder.use_tun {
+                    ethernet_packet.packet()[packet::ethernet::ETHERNET_HEADER_LEN..].to_vec()
+                }else {
+                    ethernet_packet.packet().to_vec()
+                }
             }
         },
     }

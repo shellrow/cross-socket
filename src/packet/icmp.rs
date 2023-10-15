@@ -1,10 +1,16 @@
 use std::net::Ipv4Addr;
 
 use pnet::packet::Packet;
+use crate::packet::ethernet::ETHERNET_HEADER_LEN;
+use crate::packet::ipv4::IPV4_HEADER_LEN;
 
 /// ICMPv4 Header Length
 pub const ICMPV4_HEADER_LEN: usize =
     pnet::packet::icmp::echo_request::MutableEchoRequestPacket::minimum_packet_size();
+/// ICMPv4 Minimum Packet Length
+pub const ICMPV4_PACKET_LEN: usize = ETHERNET_HEADER_LEN + IPV4_HEADER_LEN + ICMPV4_HEADER_LEN;
+/// ICMPv4 IP Packet Length
+pub const ICMPV4_IP_PACKET_LEN: usize = IPV4_HEADER_LEN + ICMPV4_HEADER_LEN;
 
 /// ICMP Types
 /// <https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml>

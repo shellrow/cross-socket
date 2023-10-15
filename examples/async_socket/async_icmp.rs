@@ -10,6 +10,7 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
+use std::env;
 
 use cross_socket::datalink::interface::Interface;
 use cross_socket::packet::icmp::IcmpPacketBuilder;
@@ -47,7 +48,21 @@ fn main() {
 
 // Scan your local network for active hosts using ICMP echo requests.
 async fn async_main() {
-    let interface: Interface = cross_socket::datalink::interface::get_default_interface().unwrap();
+    let interface: Interface = match env::args().nth(1) {
+        Some(n) => {
+            // Use interface specified by user
+            let interfaces: Vec<Interface> = default_net::get_interfaces();
+            let interface: Interface = interfaces
+                .into_iter()
+                .find(|interface| interface.name == n)
+                .expect("Failed to get interface information");
+            interface
+        },
+        None => {
+            // Use default interface
+            default_net::get_default_interface().expect("Failed to get default interface information")
+        }
+    };
     let src_ip: Ipv4Addr = interface.ipv4[0].addr;
     let net: Ipv4Net = Ipv4Net::new(src_ip, 24).unwrap();
     let nw_addr = Ipv4Net::new(net.network(), 24).unwrap();
@@ -64,7 +79,7 @@ async fn async_main() {
 
     let mut capture_options: PacketCaptureOptions = PacketCaptureOptions {
         interface_index: interface.index,
-        interface_name: interface.name,
+        interface_name: interface.name.clone(),
         src_ips: HashSet::new(),
         dst_ips: HashSet::new(),
         src_ports: HashSet::new(),
@@ -76,6 +91,8 @@ async fn async_main() {
         store: true,
         store_limit: 1000,
         receive_undefined: false,
+        use_tun: interface.is_tun(),
+        loopback: interface.is_loopback(),
     };
     for target in hosts.clone() {
         capture_options.src_ips.insert(IpAddr::V4(target));

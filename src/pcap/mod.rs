@@ -36,6 +36,10 @@ pub struct PacketCaptureOptions {
     pub store_limit: u32,
     /// Receive undefined packets
     pub receive_undefined: bool,
+    /// Use TUN interface
+    pub use_tun: bool,
+    /// Loopback interface
+    pub loopback: bool,
 }
 
 impl PacketCaptureOptions {
@@ -55,6 +59,8 @@ impl PacketCaptureOptions {
             store: false,
             store_limit: u32::MAX,
             receive_undefined: false,
+            use_tun: false,
+            loopback: false,
         }
     }
     /// Set interface index
