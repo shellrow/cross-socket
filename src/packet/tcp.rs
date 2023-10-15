@@ -1,5 +1,8 @@
 use pnet::packet::Packet;
 use std::net::{IpAddr, SocketAddr};
+use crate::packet::ethernet::ETHERNET_HEADER_LEN;
+use crate::packet::ipv4::IPV4_HEADER_LEN;
+use crate::packet::ipv6::IPV6_HEADER_LEN;
 
 /// Minimum TCP Header Length
 pub const TCP_HEADER_LEN: usize = pnet::packet::tcp::MutableTcpPacket::minimum_packet_size();
@@ -13,6 +16,23 @@ pub const TCP_HEADER_MAX_LEN: usize = TCP_HEADER_LEN + TCP_OPTION_MAX_LEN;
 pub const TCP_DEFAULT_OPTION_LEN: usize = 12;
 /// Default TCP Source Port
 pub const DEFAULT_SRC_PORT: u16 = 53443;
+
+/// TCP (IPv4) Minimum Packet Length
+pub const TCPV4_MINIMUM_PACKET_LEN: usize = ETHERNET_HEADER_LEN + IPV4_HEADER_LEN + TCP_HEADER_LEN;
+/// TCP (IPv4) Default Packet Length
+pub const TCPV4_DEFAULT_PACKET_LEN: usize = ETHERNET_HEADER_LEN + IPV4_HEADER_LEN + TCP_HEADER_LEN + TCP_DEFAULT_OPTION_LEN;
+/// TCP (IPv4) Minimum IP Packet Length
+pub const TCPV4_MINIMUM_IP_PACKET_LEN: usize = IPV4_HEADER_LEN + TCP_HEADER_LEN;
+/// TCP (IPv4) Default IP Packet Length
+pub const TCPV4_DEFAULT_IP_PACKET_LEN: usize = IPV4_HEADER_LEN + TCP_HEADER_LEN + TCP_DEFAULT_OPTION_LEN;
+/// TCP (IPv6) Minimum Packet Length
+pub const TCPV6_MINIMUM_PACKET_LEN: usize = ETHERNET_HEADER_LEN + IPV6_HEADER_LEN + TCP_HEADER_LEN;
+/// TCP (IPv6) Default Packet Length
+pub const TCPV6_DEFAULT_PACKET_LEN: usize = ETHERNET_HEADER_LEN + IPV6_HEADER_LEN + TCP_HEADER_LEN + TCP_DEFAULT_OPTION_LEN;
+/// TCP (IPv6) Minimum IP Packet Length
+pub const TCPV6_MINIMUM_IP_PACKET_LEN: usize = IPV6_HEADER_LEN + TCP_HEADER_LEN;
+/// TCP (IPv6) Default IP Packet Length
+pub const TCPV6_DEFAULT_IP_PACKET_LEN: usize = IPV6_HEADER_LEN + TCP_HEADER_LEN + TCP_DEFAULT_OPTION_LEN;
 
 /// TCP Option Kind
 /// <https://www.iana.org/assignments/tcp-parameters/tcp-parameters.xhtml#tcp-parameters-1>

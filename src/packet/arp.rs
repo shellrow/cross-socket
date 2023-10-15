@@ -1,10 +1,12 @@
 use crate::datalink::MacAddr;
-use crate::packet::ethernet::EtherType;
+use crate::packet::ethernet::{ETHERNET_HEADER_LEN, EtherType};
 use pnet::packet::Packet;
 use std::net::Ipv4Addr;
 
 /// ARP Header Length
 pub const ARP_HEADER_LEN: usize = 28;
+/// ARP Minimum Packet Length
+pub const ARP_PACKET_LEN: usize = ETHERNET_HEADER_LEN + ARP_HEADER_LEN;
 
 /// Represents the ARP operation types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
