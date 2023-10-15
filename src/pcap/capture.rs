@@ -176,9 +176,7 @@ fn receive_packets(
                 }
                 cnt += 1;
             }
-            Err(e) => {
-                println!("Failed to read: {}", e);
-            }
+            Err(_) => {}
         }
         if *stop.lock().unwrap() {
             return packets.lock().unwrap().clone();
