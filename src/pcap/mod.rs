@@ -28,6 +28,8 @@ pub struct PacketCaptureOptions {
     pub ip_protocols: HashSet<IpNextLevelProtocol>,
     /// Capture duration limit
     pub duration: Duration,
+    /// Read Timeout for read next packet (Linux, BPF, Netmap only)
+    pub read_timeout: Duration,
     /// Capture in promiscuous mode
     pub promiscuous: bool,
     /// Store captured packets in memory
@@ -55,6 +57,7 @@ impl PacketCaptureOptions {
             ether_types: HashSet::new(),
             ip_protocols: HashSet::new(),
             duration: Duration::from_secs(30),
+            read_timeout: Duration::from_secs(2),
             promiscuous: false,
             store: false,
             store_limit: u32::MAX,

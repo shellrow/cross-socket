@@ -34,6 +34,7 @@ fn main() {
         ether_types: HashSet::new(),
         ip_protocols: HashSet::new(),
         duration: Duration::from_secs(30),
+        read_timeout: Duration::from_secs(2),
         promiscuous: false,
         store: false,
         store_limit: 0,
@@ -48,6 +49,7 @@ fn main() {
     let handle = thread::spawn(move || listener.start());
     // Print captured packets
     while let Ok(msg) = rx.lock().unwrap().recv() {
+        println!("----{}--------", msg.capture_info.capture_no);
         println!("{:?}", msg);
     }
     let _result = handle.join().unwrap();

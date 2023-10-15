@@ -30,7 +30,7 @@ pub(crate) fn start_capture(
     let config = pnet::datalink::Config {
         write_buffer_size: 4096,
         read_buffer_size: 4096,
-        read_timeout: None,
+        read_timeout: Some(capture_options.read_timeout),
         write_timeout: None,
         channel_type: pnet::datalink::ChannelType::Layer2,
         bpf_fd_attempts: 1000,
@@ -174,6 +174,7 @@ fn receive_packets(
                         }
                     }
                 }
+                cnt += 1;
             }
             Err(e) => {
                 println!("Failed to read: {}", e);
@@ -185,7 +186,6 @@ fn receive_packets(
         if Instant::now().duration_since(start_time) > capture_options.duration {
             return packets.lock().unwrap().clone();
         }
-        cnt += 1;
     }
 }
 

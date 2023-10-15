@@ -45,6 +45,7 @@ fn main() {
         ether_types: [EtherType::Ipv4].iter().cloned().collect(),
         ip_protocols: [IpNextLevelProtocol::Tcp].iter().cloned().collect(),
         duration: Duration::from_secs(30),
+        read_timeout: Duration::from_secs(2),
         promiscuous: false,
         store: true,
         store_limit: 1000,
