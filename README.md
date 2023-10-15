@@ -11,7 +11,7 @@ Empowers you to create, send, and receive raw network packets.
 Add `cross-socket` to your dependencies  
 ```toml:Cargo.toml
 [dependencies]
-cross-socket = "0.5"
+cross-socket = "0.6"
 ```
 
 ## Example
