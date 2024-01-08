@@ -1,0 +1,14 @@
+[package]
+name = "netpulsar"
+version = "0.1.0"
+authors = ["shellrow <shellrow@intsigma.com>"]
+description = "Cross-platform network activity monitoring tool"
+repository = "https://github.com/shellrow/netpulsar"
+documentation = "https://github.com/shellrow/netpulsar"
+readme = "README.md"
+keywords = ["network","security","cross-platform"]
+categories = ["network-programming"]
+license = "MIT"
+
+[dependencies]
+netpulsar-core = { path = "../netpulsar-core", version = "0.1.0" }
