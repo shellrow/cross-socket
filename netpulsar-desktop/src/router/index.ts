@@ -1,23 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Dashboard from '../components/Dashboard.vue';
 //import HelloWorld from '../components/HelloWorld.vue';
-import BasicTable from '../components/BasicTable.vue';
+import Packet from '../components/Packet.vue';
 
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: Dashboard,
-  },
-  {
-    path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
   },
   {
-    path: '/basictable',
-    name: 'BasicTable',
-    component: BasicTable,
+    path: '/dashboard',
+    name: 'Dashboard2',
+    component: Dashboard,
+  },
+  {
+    path: '/packet',
+    name: 'Packet',
+    component: Packet,
   },
 ];
 

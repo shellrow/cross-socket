@@ -92,15 +92,15 @@ onUnmounted(() => {
                         </a>
                         <ul class="list-none py-0 pl-3 pr-0 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out">
                             <li>
-                                <router-link to="/basictable">
+                                <router-link to="/packet">
                                     <a v-ripple class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
-                                        <i class="pi pi-table mr-2"></i>
+                                        <i class="pi pi-arrow-right-arrow-left mr-2"></i>
                                         <span class="font-medium">Packet</span>
                                     </a>
                                 </router-link>
                             </li>
                             <li>
-                                <router-link to="/dashboard">
+                                <router-link to="/">
                                     <a v-ripple class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
                                         <i class="pi pi-globe mr-2"></i>
                                         <span class="font-medium">Address</span>
@@ -108,7 +108,7 @@ onUnmounted(() => {
                                 </router-link>
                             </li>
                             <li>
-                                <router-link to="/dashboard">
+                                <router-link to="/">
                                     <a v-ripple class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
                                         <i class="pi pi-link mr-2"></i>
                                         <span class="font-medium">Connection</span>
@@ -116,7 +116,7 @@ onUnmounted(() => {
                                 </router-link>
                             </li>
                             <li>
-                                <router-link to="/dashboard">
+                                <router-link to="/">
                                     <a v-ripple class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
                                         <i class="pi pi-list mr-2"></i>
                                         <span class="font-medium">Process</span>
@@ -134,7 +134,7 @@ onUnmounted(() => {
                         </a>
                         <ul class="list-none py-0 pl-3 pr-0 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out">
                             <li>
-                                <router-link to="/basictable">
+                                <router-link to="/packet">
                                     <a v-ripple class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
                                         <i class="pi pi-send mr-2"></i>
                                         <span class="font-medium">Ping</span>
@@ -142,7 +142,7 @@ onUnmounted(() => {
                                 </router-link>
                             </li>
                             <li>
-                                <router-link to="/dashboard">
+                                <router-link to="/">
                                     <a v-ripple class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
                                         <i class="pi pi-share-alt mr-2"></i>
                                         <span class="font-medium">Traceroute</span>
@@ -155,7 +155,7 @@ onUnmounted(() => {
             </div>
             <div class="mt-auto">
                 <hr class="mb-3 mx-3 border-top-1 border-none surface-border" />
-                <router-link to="/dashboard">
+                <router-link to="/">
                     <a v-ripple class="m-3 flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
                         <i class="pi pi-cog mr-2"></i>
                         <span class="font-medium">Settings</span>

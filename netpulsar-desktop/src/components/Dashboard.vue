@@ -14,7 +14,7 @@
                                 <div class="text-900 font-medium text-xl">64338</div>
                             </div>
                             <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width:2.5rem;height:2.5rem">
-                                <i class="pi pi-sort-alt text-blue-500 text-xl"></i>
+                                <i class="pi pi-arrow-right-arrow-left text-blue-500 text-xl"></i>
                             </div>
                         </div>
                         <span class="text-green-500 font-medium">4322 captured </span>
@@ -174,7 +174,7 @@
                 </div>
                 <div class="col-12">
                     <div class="border-round p-4">
-                        <div class="text-xl text-900 font-medium mb-5">Probe Timeline</div>
+                        <div class="text-xl text-900 font-medium mb-5">Timeline</div>
                         <div class="mb-5 flex">
                             <div class="flex flex-column align-items-center" style="width:2rem">
                                 <span class="bg-blue-500 text-0 flex align-items-center justify-content-center border-circle p-2">
