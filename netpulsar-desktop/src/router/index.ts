@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Dashboard from '../components/Dashboard.vue';
 //import HelloWorld from '../components/HelloWorld.vue';
 import Packet from '../components/Packet.vue';
+import RemoteAddress from '../components/RemoteAddress.vue';
 
 const routes = [
   {
@@ -18,6 +19,11 @@ const routes = [
     path: '/packet',
     name: 'Packet',
     component: Packet,
+  },
+  {
+    path: '/remote',
+    name: 'RemoteAddress',
+    component: RemoteAddress,
   },
 ];
 

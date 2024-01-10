@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const sample_data = ref(
+const sampleData = ref(
     [
         {
             capture_no: 1,
@@ -37,7 +37,7 @@ const sample_data = ref(
             info: 'TCP Handshake: ACK',
         },
         {
-            capture_no: 1,
+            capture_no: 4,
             timestamp: '2024-01-10 00:00:00',
             src_ip: '192.168.1.10',
             src_port: 53443,
@@ -48,7 +48,7 @@ const sample_data = ref(
             info: 'TCP Handshake: SYN',
         },
         {
-            capture_no: 2,
+            capture_no: 5,
             timestamp: '2024-01-10 00:00:01',
             src_ip: '1.1.1.1',
             src_port: 443,
@@ -59,7 +59,7 @@ const sample_data = ref(
             info: 'TCP Handshake: SYN-ACK',
         },
         {
-            capture_no: 3,
+            capture_no: 6,
             timestamp: '2024-01-10 00:00:02',
             src_ip: '192.168.1.10',
             src_port: 53443,
@@ -70,7 +70,7 @@ const sample_data = ref(
             info: 'TCP Handshake: ACK',
         },
         {
-            capture_no: 1,
+            capture_no: 7,
             timestamp: '2024-01-10 00:00:00',
             src_ip: '192.168.1.10',
             src_port: 53443,
@@ -81,7 +81,7 @@ const sample_data = ref(
             info: 'TCP Handshake: SYN',
         },
         {
-            capture_no: 2,
+            capture_no: 8,
             timestamp: '2024-01-10 00:00:01',
             src_ip: '1.1.1.1',
             src_port: 443,
@@ -92,7 +92,7 @@ const sample_data = ref(
             info: 'TCP Handshake: SYN-ACK',
         },
         {
-            capture_no: 3,
+            capture_no: 9,
             timestamp: '2024-01-10 00:00:02',
             src_ip: '192.168.1.10',
             src_port: 53443,
@@ -103,7 +103,7 @@ const sample_data = ref(
             info: 'TCP Handshake: ACK',
         },
         {
-            capture_no: 1,
+            capture_no: 10,
             timestamp: '2024-01-10 00:00:00',
             src_ip: '192.168.1.10',
             src_port: 53443,
@@ -114,7 +114,7 @@ const sample_data = ref(
             info: 'TCP Handshake: SYN',
         },
         {
-            capture_no: 2,
+            capture_no: 11,
             timestamp: '2024-01-10 00:00:01',
             src_ip: '1.1.1.1',
             src_port: 443,
@@ -125,7 +125,7 @@ const sample_data = ref(
             info: 'TCP Handshake: SYN-ACK',
         },
         {
-            capture_no: 3,
+            capture_no: 12,
             timestamp: '2024-01-10 00:00:02',
             src_ip: '192.168.1.10',
             src_port: 53443,
@@ -137,6 +137,8 @@ const sample_data = ref(
         },
     ]
 );
+
+const selectedPacket = ref<any>();
 
 // Nodes for demo.
 const sampleTreeNodes = [
@@ -188,6 +190,19 @@ const sampleTreeNodes = [
         ]
     }
 ];
+
+const dialogVisible = ref(false);
+
+const onRowSelect = (event: any) => {
+    dialogVisible.value = true;
+    console.log(event.data);
+};
+
+const onRowUnselect = (event: any) => {
+    dialogVisible.value = false;
+    console.log(event.data);
+}
+
 </script>
 
 <style scoped>
@@ -197,10 +212,10 @@ const sampleTreeNodes = [
 </style>
 
 <template>
-    <Card class="mt-2">
+    <Card>
         <template #title> Capture Interface: eth0 </template>
         <template #content>
-            <DataTable :value="sample_data" scrollable scrollHeight="400px" tableStyle="min-width: 50rem">
+            <DataTable :value="sampleData" v-model:selection="selectedPacket" selectionMode="single" dataKey="capture_no" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable scrollHeight="70vh" tableStyle="min-width: 50rem">
                 <Column field="capture_no" header="No" ></Column>
                 <Column field="timestamp" header="Timestamp" ></Column>
                 <Column field="src_ip" header="SRC IP" ></Column>
@@ -213,10 +228,16 @@ const sampleTreeNodes = [
             </DataTable>
         </template>
     </Card>
-    <Card class="mt-2">
-        <template #title> No: 4 </template>
-        <template #content>
-            <Tree :value="sampleTreeNodes" class="w-full"></Tree>
+    <Dialog v-model:visible="dialogVisible" :modal="false" :closable="true" header="Detail" :showHeader="true" :breakpoints="{'960px': '75vw', '640px': '100vw'}" :style="{width: '45vw'}">
+        <div class="flex justify-content-between align-items-center w-full">
+            <p class="font-medium text-lg text-700 mt-0">No. 8</p>
+            <span class="text-500 flex align-items-center"><i class="pi pi-check-square text-lg mr-2"></i>1/4</span>
+        </div>
+        <Tree :value="sampleTreeNodes" class="w-full mt-2"></Tree>
+        <template #footer>
+            <div class="flex border-top-1 pt-5 surface-border justify-content-end align-items-center">
+                <Button @click="dialogVisible = false" icon="pi pi-check" label="OK" class="m-0"></Button>
+            </div>
         </template>
-    </Card>
+    </Dialog>
 </template>

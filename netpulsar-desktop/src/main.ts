@@ -18,6 +18,7 @@ import Card from 'primevue/card';
 import ScrollPanel from 'primevue/scrollpanel';
 import ToggleButton from 'primevue/togglebutton';
 import Tree from 'primevue/tree';
+import Dialog from 'primevue/dialog';
 
 import 'primeflex/primeflex.css';
 
@@ -43,6 +44,7 @@ app.component('Card', Card);
 app.component('ScrollPanel', ScrollPanel);
 app.component('ToggleButton', ToggleButton);
 app.component('Tree', Tree);
+app.component('Dialog', Dialog);
 app.directive('badge', BadgeDirective);
 app.directive('ripple', Ripple);
 app.directive('styleclass', StyleClass);

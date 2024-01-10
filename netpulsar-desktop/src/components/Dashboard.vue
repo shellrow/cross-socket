@@ -25,22 +25,22 @@
                     <div class="surface-card shadow-2 p-3 border-1 border-50 border-round">
                         <div class="flex justify-content-between mb-3">
                             <div>
-                                <span class="block text-500 font-medium mb-3">Address</span>
-                                <div class="text-900 font-medium text-xl">248</div>
+                                <span class="block text-500 font-medium mb-3">Network Interface</span>
+                                <div class="text-900 font-medium text-xl">eth0</div>
                             </div>
                             <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width:2.5rem;height:2.5rem">
-                                <i class="pi pi-globe text-orange-500 text-xl"></i>
+                                <i class="pi pi-cog text-orange-500 text-xl"></i>
                             </div>
                         </div>
-                        <span class="text-green-500 font-medium">24 new </span>
-                        <span class="text-500">since last run</span>
+                        <span class="text-green-500 font-medium">12 </span>
+                        <span class="text-500">Interface found</span>
                     </div>
                 </div>
                 <div class="col-12 lg:col-6 xl:col-3">
                     <div class="surface-card shadow-2 p-3 border-1 border-50 border-round">
                         <div class="flex justify-content-between mb-3">
                             <div>
-                                <span class="block text-500 font-medium mb-3">Download</span>
+                                <span class="block text-500 font-medium mb-3">Ingress</span>
                                 <div class="text-900 font-medium text-xl">8441.5 MB</div>
                             </div>
                             <div class="flex align-items-center justify-content-center bg-cyan-100 border-round" style="width:2.5rem;height:2.5rem">
@@ -48,14 +48,14 @@
                             </div>
                         </div>
                         <span class="text-green-500 font-medium">124.5 MB </span>
-                        <span class="text-500">newly downloaded</span>
+                        <span class="text-500">new inbound</span>
                     </div>
                 </div>
                 <div class="col-12 lg:col-6 xl:col-3">
                     <div class="surface-card shadow-2 p-3 border-1 border-50 border-round">
                         <div class="flex justify-content-between mb-3">
                             <div>
-                                <span class="block text-500 font-medium mb-3">Upload</span>
+                                <span class="block text-500 font-medium mb-3">Egress</span>
                                 <div class="text-900 font-medium text-xl">6551.2 MB </div>
                             </div>
                             <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width:2.5rem;height:2.5rem">
@@ -63,7 +63,7 @@
                             </div>
                         </div>
                         <span class="text-green-500 font-medium">85.1 MB </span>
-                        <span class="text-500">newly uploaded</span>
+                        <span class="text-500">new outbound</span>
                     </div>
                 </div>
                 <div class="col-12 xl:col-6">
