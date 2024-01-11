@@ -167,7 +167,7 @@ const onRowUnselect = (event: any) => {
 
 <template>
     <Card>
-        <template #title> Detected RemoteHosts </template>
+        <template #title> Detected RemoteAddress. Click row for more detail. </template>
         <template #content>
             <DataTable :value="sampleData" v-model:selection="selectedHost" selectionMode="single" dataKey="host_id" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable scrollHeight="70vh" tableStyle="min-width: 50rem">
                 <Column field="host_id" header="No" ></Column>
