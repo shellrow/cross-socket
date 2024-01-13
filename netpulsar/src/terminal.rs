@@ -22,7 +22,7 @@ pub fn run(tick_rate: Duration, enhanced_graphics: bool) -> Result<(), Box<dyn E
     let mut terminal = Terminal::new(backend)?;
 
     // create app and run it
-    let app = App::new("Crossterm Demo", enhanced_graphics);
+    let app = App::new("NetPulsar", enhanced_graphics);
     let res = run_app(&mut terminal, app, tick_rate);
 
     // restore terminal
@@ -55,10 +55,10 @@ fn run_app<B: Backend>(
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
                     match key.code {
-                        KeyCode::Left | KeyCode::Char('h') => app.on_left(),
-                        KeyCode::Up | KeyCode::Char('k') => app.on_up(),
-                        KeyCode::Right | KeyCode::Char('l') => app.on_right(),
-                        KeyCode::Down | KeyCode::Char('j') => app.on_down(),
+                        KeyCode::Left | KeyCode::Char('a') => app.on_left(),
+                        KeyCode::Up | KeyCode::Char('w') => app.on_up(),
+                        KeyCode::Right | KeyCode::Char('d') => app.on_right(),
+                        KeyCode::Down | KeyCode::Char('s') => app.on_down(),
                         KeyCode::Char(c) => app.on_key(c),
                         _ => {}
                     }
