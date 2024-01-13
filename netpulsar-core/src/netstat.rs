@@ -67,8 +67,10 @@ pub fn get_netstat() -> Vec<ProcessSocketInfo> {
                 let socket_info = ProcessSocketInfo {
                     index: index,
                     socket_info: SocketInfo {
-                        local_socket_addr: format!("{}:{}", tcp_si.local_addr, tcp_si.local_port),
-                        remote_socket_addr: Some(format!("{}:{}", tcp_si.remote_addr, tcp_si.remote_port)),
+                        local_ip_addr: tcp_si.local_addr.to_string(),
+                        local_port: tcp_si.local_port,
+                        remote_ip_addr: Some(tcp_si.remote_addr.to_string()),
+                        remote_port: Some(tcp_si.remote_port),
                         protocol: "TCP".to_string(),
                         state: Some(tcp_si.state.to_string()),
                         ip_version: if tcp_si.local_addr.is_ipv4() {4} else {6},
@@ -81,8 +83,10 @@ pub fn get_netstat() -> Vec<ProcessSocketInfo> {
                 let socket_info = ProcessSocketInfo {
                     index: index,
                     socket_info: SocketInfo {
-                        local_socket_addr: format!("{}:{}", udp_si.local_addr, udp_si.local_port),
-                        remote_socket_addr: None,
+                        local_ip_addr: udp_si.local_addr.to_string(),
+                        local_port: udp_si.local_port,
+                        remote_ip_addr: None,
+                        remote_port: None,
                         protocol: "UDP".to_string(),
                         state: None,
                         ip_version: if udp_si.local_addr.is_ipv4() {4} else {6},

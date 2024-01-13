@@ -1,12 +1,52 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { invoke } from '@tauri-apps/api/tauri';
+//import { listen } from '@tauri-apps/api/event';
+import { ProcessSocketInfo } from '../types/np-types';
 
-function getRandomPort(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+interface ConnectionInfo {
+    conn_id: number;
+    protocol: string;
+    local_ip_addr: string;
+    local_hostname: string;
+    local_port: number;
+    remote_ip_addr: string | null;
+    remote_hostname: string | null;
+    remote_port: number | null;
+    status: string;
+    process_id: number;
+    process_name: string;
 }
 
-const sampleData = ref([
-  {
+const GetNetStat = async() => {
+    const result = await invoke<ProcessSocketInfo[]>('get_netstat');
+    console.log(result);
+    // convert ProcessSocketInfo[] to ConnectionInfo[]
+    const connInfo: ConnectionInfo[] = [];
+    result.forEach((item, index) => {
+        connInfo.push({
+            conn_id: index,
+            protocol: item.socket_info.protocol,
+            local_ip_addr: item.socket_info.local_ip_addr,
+            local_hostname: "",
+            local_port: item.socket_info.local_port,
+            remote_ip_addr: item.socket_info.remote_ip_addr,
+            remote_hostname: "",
+            remote_port: item.socket_info.remote_port,
+            status: item.socket_info.state || "",
+            process_id: item.process_info.pid,
+            process_name: item.process_info.name,
+        });
+    });
+    tableData.value = connInfo;
+}
+
+/* function getRandomPort(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+} */
+
+const tableData = ref<ConnectionInfo[]>([
+/*   {
     conn_id: 1,
     protocol: 'TCP',
     src_ip_addr: '192.168.11.9',
@@ -16,8 +56,8 @@ const sampleData = ref([
     dst_hostname: 'dns.google',
     dst_port: 53,
     status: 'ESTABLISHED',
-    pid: 82,
-    pname: 'exampleProcess0',
+    process_id: 82,
+    process_name: 'exampleProcess0',
   },
   {
     conn_id: 2,
@@ -29,8 +69,8 @@ const sampleData = ref([
     dst_hostname: 'one.one.one.one',
     dst_port: 80,
     status: 'CLOSE_WAIT',
-    pid: 123,
-    pname: 'exampleProcess1',
+    process_id: 123,
+    process_name: 'exampleProcess1',
   },
   {
     conn_id: 3,
@@ -42,8 +82,8 @@ const sampleData = ref([
     dst_hostname: 'example.com',
     dst_port: 443,
     status: 'SYN_SENT',
-    pid: 456,
-    pname: 'anotherProcess2',
+    process_id: 456,
+    process_name: 'anotherProcess2',
   },
   {
     conn_id: 4,
@@ -55,8 +95,8 @@ const sampleData = ref([
     dst_hostname: 'twitter.com',
     dst_port: 443,
     status: 'TIME_WAIT',
-    pid: 789,
-    pname: 'thirdProcess3',
+    process_id: 789,
+    process_name: 'thirdProcess3',
   },
   {
     conn_id: 5,
@@ -68,8 +108,8 @@ const sampleData = ref([
     dst_hostname: 'github.com',
     dst_port: 443,
     status: 'FIN_WAIT_1',
-    pid: 1011,
-    pname: 'processFour',
+    process_id: 1011,
+    process_name: 'processFour',
   },
   {
     conn_id: 6,
@@ -81,8 +121,8 @@ const sampleData = ref([
     dst_hostname: 'example.com',
     dst_port: 80,
     status: 'ESTABLISHED',
-    pid: 1213,
-    pname: 'sampleProcess5',
+    process_id: 1213,
+    process_name: 'sampleProcess5',
   },
   {
     conn_id: 7,
@@ -94,8 +134,8 @@ const sampleData = ref([
     dst_hostname: 'resolver1.opendns.com',
     dst_port: 53,
     status: 'CLOSED',
-    pid: 1415,
-    pname: 'processSix',
+    process_id: 1415,
+    process_name: 'processSix',
   },
   {
     conn_id: 8,
@@ -107,9 +147,9 @@ const sampleData = ref([
     dst_hostname: 'developer.mozilla.org',
     dst_port: 443,
     status: 'ESTABLISHED',
-    pid: 1617,
-    pname: 'processSeven',
-  },
+    process_id: 1617,
+    process_name: 'processSeven',
+  }, */
 ]);
 
 const selectedHostKv = ref(
@@ -167,6 +207,14 @@ const onRowUnselect = (event: any) => {
     console.log(event.data);
 }
 
+onMounted(() => {
+    GetNetStat();
+});
+
+onUnmounted(() => {
+
+});
+
 </script>
 
 <style scoped>
@@ -179,18 +227,18 @@ const onRowUnselect = (event: any) => {
     <Card>
         <template #title> Active TCP connections and the TCP and UDP ports on which is listening. Click row for more detail.  </template>
         <template #content>
-            <DataTable :value="sampleData" v-model:selection="selectedHost" selectionMode="single" dataKey="conn_id" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable scrollHeight="70vh" tableStyle="min-width: 50rem">
-                <Column field="conn_id" header="No"></Column>
-                <Column field="src_ip_addr" header="Source IP Address"></Column>
-                <Column field="src_hostname" header="Source Host Name"></Column>
-                <Column field="src_port" header="Source Port"></Column>
-                <Column field="dst_ip_addr" header="Destination IP Address"></Column>
-                <Column field="dst_hostname" header="Destination Host Name"></Column>
-                <Column field="dst_port" header="Destination Port"></Column>
-                <Column field="protocol" header="Protocol"></Column>
-                <Column field="status" header="Status"></Column>
-                <Column field="pid" header="Process ID"></Column>
-                <Column field="pname" header="Process Name"></Column>
+            <DataTable :value="tableData" v-model:selection="selectedHost" selectionMode="single" dataKey="conn_id" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable scrollHeight="70vh" tableStyle="min-width: 50rem">
+                <Column field="conn_id" header="No" sortable></Column>
+                <Column field="local_ip_addr" header="SRC IP Address" sortable></Column>
+                <!-- <Column field="local_hostname" header="SRC Host Name"></Column> -->
+                <Column field="local_port" header="SRC Port" sortable></Column>
+                <Column field="remote_ip_addr" header="DST IP Address" sortable></Column>
+                <!-- <Column field="remote_hostname" header="DST Host Name"></Column> -->
+                <Column field="remote_port" header="DST Port" sortable></Column>
+                <Column field="protocol" header="Protocol" sortable></Column>
+                <Column field="status" header="Status" sortable></Column>
+                <Column field="process_id" header="Process ID" sortable></Column>
+                <Column field="process_name" header="Process Name" sortable></Column>
             </DataTable>
         </template>
     </Card>
