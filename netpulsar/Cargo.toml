@@ -1,6 +1,7 @@
 [package]
 name = "netpulsar"
 version = "0.1.0"
+edition = "2021"
 authors = ["shellrow <shellrow@intsigma.com>"]
 description = "Cross-platform network activity monitoring tool"
 repository = "https://github.com/shellrow/netpulsar"

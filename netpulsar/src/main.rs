@@ -1,8 +1,3 @@
-extern crate rand;
-extern crate ratatui;
-extern crate argh;
-extern crate crossterm;
-
 use std::{error::Error, time::Duration};
 use argh::FromArgs;
 
