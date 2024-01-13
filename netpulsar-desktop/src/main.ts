@@ -19,6 +19,9 @@ import ScrollPanel from 'primevue/scrollpanel';
 import ToggleButton from 'primevue/togglebutton';
 import Tree from 'primevue/tree';
 import Dialog from 'primevue/dialog';
+import ProgressSpinner from 'primevue/progressspinner';
+import BlockUI from 'primevue/blockui';
+import InputSwitch from 'primevue/inputswitch';
 
 import 'primeflex/primeflex.css';
 
@@ -45,6 +48,9 @@ app.component('ScrollPanel', ScrollPanel);
 app.component('ToggleButton', ToggleButton);
 app.component('Tree', Tree);
 app.component('Dialog', Dialog);
+app.component('ProgressSpinner', ProgressSpinner);
+app.component('BlockUI', BlockUI);
+app.component('InputSwitch', InputSwitch);
 app.directive('badge', BadgeDirective);
 app.directive('ripple', Ripple);
 app.directive('styleclass', StyleClass);
