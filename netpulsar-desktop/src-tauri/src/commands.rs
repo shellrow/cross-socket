@@ -23,6 +23,17 @@ pub async fn start_packet_capture(app_handle: tauri::AppHandle) -> CaptureReport
     let pacp_handler = thread::spawn(move || {
         netpulsar_core::pcap::start_capture(pcap_option.unwrap(), tx, &stop)
     });
+    let stop_pcap_event = app_handle.listen_global("stop_pcap", move |event| {
+        println!("got stop_pcap with payload {:?}", event.payload());
+        match stop_handle.lock() {
+            Ok(mut stop) => {
+                *stop = true;
+            }
+            Err(e) => {
+                eprintln!("Error: {:?}", e);
+            }
+        }
+    });
     let print_handler = thread::spawn(move || {
         while let Ok(frame) = rx.recv() {
             match app_handle.emit_all("packet_frame", frame) {
@@ -34,8 +45,9 @@ pub async fn start_packet_capture(app_handle: tauri::AppHandle) -> CaptureReport
                 }
             }
         }
+        app_handle.unlisten(stop_pcap_event);
     });
-    thread::sleep(std::time::Duration::from_secs(30));
+    /* thread::sleep(std::time::Duration::from_secs(30));
     match stop_handle.lock() {
         Ok(mut stop) => {
             *stop = true;
@@ -43,7 +55,7 @@ pub async fn start_packet_capture(app_handle: tauri::AppHandle) -> CaptureReport
         Err(e) => {
             eprintln!("Error: {:?}", e);
         }
-    }    
+    }   */  
     match pacp_handler.join() {
         Ok(r) => {
             println!("pacp_handler: {:?}", r);

@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api/tauri';
-import { listen } from '@tauri-apps/api/event';
+import { emit, listen } from '@tauri-apps/api/event';
 import { WindowUtil } from '../libnp/window-util';
 import { PacketFrame, PacketFrameExt, PacketSummary } from '../types/np-types';
+//import DataTableProps from 'primevue/datatable';
 
 const windowUtil = new WindowUtil();
 const tableData = ref<PacketFrameExt[]>([]);
 const selectedPacket = ref<any>();
+const caputuring = ref(false);
+//const dataTableRef = document.getElementById('packet-datatable');
 
 // Nodes for demo.
 const sampleTreeNodes = [
@@ -135,12 +138,32 @@ const startPacketCapture = async() => {
     await listen<PacketFrame>('packet_frame', (event) => {
         let packet = parsePacketFrame(event.payload);
         tableData.value.push(packet);
+        // if tableData.value.length > 50, remove the first element.
+        /* if (tableData.value.length > 50) {
+            tableData.value.shift();
+        } */
     });
     console.log('start packet_frame listener');
     invoke('start_packet_capture').then((report) => {
         console.log(report);
         //unlisten();
     });
+};
+
+const stopPacketCapture = async() => {
+    emit('stop_pcap', {
+        message: 'stop_pcap',
+    });
+};
+
+const onChengeCapture = () => {
+    if (caputuring.value) {
+        startPacketCapture();
+        console.log('start capture');
+    }else {
+        stopPacketCapture();
+        console.log('stop capture');
+    }
 };
 
 const onRowSelect = (event: any) => {
@@ -155,7 +178,7 @@ const onRowUnselect = (event: any) => {
 
 onMounted(() => {
     windowUtil.mount();
-    startPacketCapture();
+    //startPacketCapture();
 });
 
 onUnmounted(() => {
@@ -172,7 +195,16 @@ onUnmounted(() => {
 
 <template>
     <Card>
-        <template #title> Capturing from eth0. </template>
+        <template #title>  
+            <div class="flex justify-content-between">
+                <div class="flex">
+                    Capturing from eth0.
+                </div>
+                <div class="flex">
+                    <ToggleButton v-model="caputuring" onLabel="Captureing" offLabel="Stop" onIcon="pi pi-play" offIcon="pi pi-pause" class="mr-2" @change="onChengeCapture" />
+                </div>
+            </div>
+        </template>
         <template #content>
             <DataTable :value="tableData" v-model:selection="selectedPacket" selectionMode="single" dataKey="capture_no" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" size="small" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight-100).toString() + 'px'" tableStyle="min-width: 50rem">
                 <Column field="capture_no" header="No" ></Column>
