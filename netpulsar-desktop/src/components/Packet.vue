@@ -64,22 +64,22 @@ const dialogVisible = ref(false);
 
 const parsePacketFrame = (packetFrame: PacketFrame): PacketFrameExt => {
     const packetSummary: PacketSummary = {
-        src_ip: "",
-        src_port: 0,
-        dst_ip: "",
-        dst_port: 0,
+        src_addr: "",
+        src_port: null,
+        dst_addr: "",
+        dst_port: null,
         protocol: "",
         info: "",
     };
     if (packetFrame.ip) {
         if (packetFrame.ip.ipv4) {
-            packetSummary.src_ip = packetFrame.ip.ipv4.source;
-            packetSummary.dst_ip = packetFrame.ip.ipv4.destination;
+            packetSummary.src_addr = packetFrame.ip.ipv4.source;
+            packetSummary.dst_addr = packetFrame.ip.ipv4.destination;
             packetSummary.protocol = packetFrame.ip.ipv4.next_level_protocol;
         }
         if (packetFrame.ip.ipv6) {
-            packetSummary.src_ip = packetFrame.ip.ipv6.source;
-            packetSummary.dst_ip = packetFrame.ip.ipv6.destination;
+            packetSummary.src_addr = packetFrame.ip.ipv6.source;
+            packetSummary.dst_addr = packetFrame.ip.ipv6.destination;
             packetSummary.protocol = packetFrame.ip.ipv6.next_header;
         }
     }
@@ -100,11 +100,16 @@ const parsePacketFrame = (packetFrame: PacketFrame): PacketFrameExt => {
             packetSummary.dst_port = packetFrame.transport.udp.destination;
         }
     }
-    if (!packetSummary.src_ip || !packetSummary.dst_ip) {
+    if (!packetSummary.src_addr || !packetSummary.dst_addr) {
         if (packetFrame.datalink) {
             if (packetFrame.datalink.arp) {
-                packetSummary.src_ip = packetFrame.datalink.arp.sender_proto_addr;
-                packetSummary.dst_ip = packetFrame.datalink.arp.target_proto_addr;
+                packetSummary.src_addr = packetFrame.datalink.arp.sender_proto_addr;
+                packetSummary.dst_addr = packetFrame.datalink.arp.target_proto_addr;
+            }else {
+                if (packetFrame.datalink.ethernet) {
+                    packetSummary.src_addr = packetFrame.datalink.ethernet.source;
+                    packetSummary.dst_addr = packetFrame.datalink.ethernet.destination;
+                }
             }
         }
     }
@@ -172,9 +177,9 @@ onUnmounted(() => {
             <DataTable :value="tableData" v-model:selection="selectedPacket" selectionMode="single" dataKey="capture_no" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable size="small" scrollHeight="70vh" tableStyle="min-width: 50rem">
                 <Column field="capture_no" header="No" ></Column>
                 <Column field="timestamp" header="Timestamp" ></Column>
-                <Column field="summary.src_ip" header="SRC IP" ></Column>
+                <Column field="summary.src_addr" header="SRC Addr" ></Column>
                 <Column field="summary.src_port" header="SRC Port" ></Column>
-                <Column field="summary.dst_ip" header="DST IP" ></Column>
+                <Column field="summary.dst_addr" header="DST Addr" ></Column>
                 <Column field="summary.dst_port" header="DST Port" ></Column>
                 <Column field="summary.protocol" header="Protocol" ></Column>
                 <Column field="packet_len" header="Length" ></Column>

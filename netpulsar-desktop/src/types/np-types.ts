@@ -34,10 +34,10 @@ export interface ProcessSocketInfo {
 }
 
 export interface PacketSummary {
-    src_ip: string,
-    src_port: number,
-    dst_ip: string,
-    dst_port: number,
+    src_addr: string,
+    src_port: number | null,
+    dst_addr: string,
+    dst_port: number | null,
     protocol: string,
     info: string,
 }
