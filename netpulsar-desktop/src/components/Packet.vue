@@ -174,7 +174,7 @@ onUnmounted(() => {
     <Card>
         <template #title> Capturing from eth0. </template>
         <template #content>
-            <DataTable :value="tableData" v-model:selection="selectedPacket" selectionMode="single" dataKey="capture_no" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable size="small" scrollHeight="70vh" tableStyle="min-width: 50rem">
+            <DataTable :value="tableData" v-model:selection="selectedPacket" selectionMode="single" dataKey="capture_no" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" size="small" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight-100).toString() + 'px'" tableStyle="min-width: 50rem">
                 <Column field="capture_no" header="No" ></Column>
                 <Column field="timestamp" header="Timestamp" ></Column>
                 <Column field="summary.src_addr" header="SRC Addr" ></Column>
