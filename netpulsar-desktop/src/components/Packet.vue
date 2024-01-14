@@ -213,7 +213,7 @@ const onRowUnselect = (event: any) => {
 
 <template>
     <Card>
-        <template #title> Capturing from eth0. Click row for more detail.</template>
+        <template #title> Capturing from eth0. </template>
         <template #content>
             <DataTable :value="sampleData" v-model:selection="selectedPacket" selectionMode="single" dataKey="capture_no" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable scrollHeight="70vh" tableStyle="min-width: 50rem">
                 <Column field="capture_no" header="No" ></Column>
