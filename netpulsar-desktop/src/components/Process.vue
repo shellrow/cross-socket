@@ -141,7 +141,7 @@ const onRowUnselect = (event: any) => {
 
 <template>
     <Card>
-        <template #title> Active processes and their communication details. Click row for more detail. </template>
+        <template #title> Active processes and their communication details. </template>
         <template #content>
             <DataTable :value="sampleData" v-model:selection="selectedHost" selectionMode="single" dataKey="pid" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable scrollHeight="70vh" tableStyle="min-width: 50rem">
                 <Column field="pid" header="Process ID"></Column>
