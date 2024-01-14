@@ -183,7 +183,7 @@ onUnmounted(() => {
         </div>
         <div class="p-5 flex flex-column flex-auto" style="z-index: -1;">
             <div class="border-2 border-dashed surface-border border-round surface-section flex-auto">
-                <ScrollPanel :style="{width: '100%', height: innerHeight-100+'px'}" >
+                <ScrollPanel :style="{width: '100%', height: (innerHeight-100).toString() + 'px'}" >
                     <router-view></router-view>
                 </ScrollPanel>
             </div>
