@@ -1,35 +1,8 @@
-extern crate netpulsar_core;
-
-#[test]
-fn show_netstat() {
-    let netstat = netpulsar_core::netstat::get_netstat();
-    for ns in netstat.iter() {
-        println!("{:?}", ns);
-    }
-    assert!(netstat.len() > 0);
-}
-
-#[test]
-fn test_get_os_type() {
-    let os_type = netpulsar_core::sys::get_os_type();
-    println!("os_type: {}", os_type);
-    assert!(os_type.len() > 0);
-}
-
-#[test]
-fn test_get_sysdate() {
-    let sysdate = netpulsar_core::sys::get_sysdate();
-    println!("sysdate: {}", sysdate);
-    assert!(sysdate.len() > 0);
-}
-
-#[test]
-fn test_pcap() {
-    use xenet::packet::frame::Frame;
-    use std::sync::mpsc::{channel, Receiver, Sender};
-    use std::sync::{Arc, Mutex};
-    use std::thread;
-
+use xenet::packet::frame::Frame;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::{Arc, Mutex};
+use std::thread;
+fn main() {
     let (tx, rx): (Sender<Frame>, Receiver<Frame>) = channel();
     let stop = Arc::new(Mutex::new(false));
     let stop_handle = stop.clone();
@@ -37,16 +10,16 @@ fn test_pcap() {
     let pacp_handler = thread::spawn(move || {
         netpulsar_core::pcap::start_capture(pcap_option.unwrap(), tx, &stop)
     });
-    /* let print_handler = thread::spawn(move || {
+    let print_handler = thread::spawn(move || {
         let mut count: usize = 0;
         while let Ok(frame) = rx.recv() {
             println!("frame: {:?}", frame);
             count += 1;
         }
         println!("count: {}", count);
-    }); */
+    });
     // capture packet to 5 seconds
-    let start = std::time::Instant::now();
+    /* let start = std::time::Instant::now();
     let mut count: usize = 0;
     loop {
         while let Ok(frame) = rx.recv() {
@@ -57,8 +30,8 @@ fn test_pcap() {
             println!("count: {}", count);
             break;
         }
-    }
-    //thread::sleep(std::time::Duration::from_secs(30));
+    } */
+    thread::sleep(std::time::Duration::from_secs(30));
     match stop_handle.lock() {
         Ok(mut stop) => {
             *stop = true;
@@ -76,12 +49,12 @@ fn test_pcap() {
             eprintln!("Error: {:?}", e);
         }
     }
-    /* match print_handler.join() {
+    match print_handler.join() {
         Ok(_) => {
             
         }
         Err(e) => {
             eprintln!("Error: {:?}", e);
         }
-    } */
+    }
 }

@@ -23,3 +23,19 @@ reqwest = { version="0.11", default-features = false, features = ["json", "rustl
 chrono = { version = "0.4", features = ["serde"] }
 ipnet = "2.5"
 regex = "1.6"
+crossbeam-channel = "0.5"
+
+[dev-dependencies]
+tokio = { version = "1.21", features = ["macros"] }
+
+[[example]]
+name = "parse_frame"
+path = "examples/parse_frame.rs"
+
+[[example]]
+name = "parse_frame_crossbeam"
+path = "examples/parse_frame_crossbeam.rs"
+
+[[example]]
+name = "parse_frame_async"
+path = "examples/parse_frame_async.rs"
