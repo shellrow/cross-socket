@@ -3,146 +3,10 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
 import { WindowUtil } from '../libnp/window-util';
+import { PacketFrame, PacketFrameExt, PacketSummary } from '../types/np-types';
 
 const windowUtil = new WindowUtil();
-
-const sampleData = ref(
-    [
-        {
-            capture_no: 1,
-            timestamp: '2024-01-10 00:00:00',
-            src_ip: '192.168.1.10',
-            src_port: 53443,
-            dst_ip: '1.1.1.1',
-            dst_port: 443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: SYN',
-        },
-        {
-            capture_no: 2,
-            timestamp: '2024-01-10 00:00:01',
-            src_ip: '1.1.1.1',
-            src_port: 443,
-            dst_ip: '192.168.1.10',
-            dst_port: 53443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: SYN-ACK',
-        },
-        {
-            capture_no: 3,
-            timestamp: '2024-01-10 00:00:02',
-            src_ip: '192.168.1.10',
-            src_port: 53443,
-            dst_ip: '1.1.1.1',
-            dst_port: 443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: ACK',
-        },
-        {
-            capture_no: 4,
-            timestamp: '2024-01-10 00:00:00',
-            src_ip: '192.168.1.10',
-            src_port: 53443,
-            dst_ip: '1.1.1.1',
-            dst_port: 443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: SYN',
-        },
-        {
-            capture_no: 5,
-            timestamp: '2024-01-10 00:00:01',
-            src_ip: '1.1.1.1',
-            src_port: 443,
-            dst_ip: '192.168.1.10',
-            dst_port: 53443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: SYN-ACK',
-        },
-        {
-            capture_no: 6,
-            timestamp: '2024-01-10 00:00:02',
-            src_ip: '192.168.1.10',
-            src_port: 53443,
-            dst_ip: '1.1.1.1',
-            dst_port: 443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: ACK',
-        },
-        {
-            capture_no: 7,
-            timestamp: '2024-01-10 00:00:00',
-            src_ip: '192.168.1.10',
-            src_port: 53443,
-            dst_ip: '1.1.1.1',
-            dst_port: 443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: SYN',
-        },
-        {
-            capture_no: 8,
-            timestamp: '2024-01-10 00:00:01',
-            src_ip: '1.1.1.1',
-            src_port: 443,
-            dst_ip: '192.168.1.10',
-            dst_port: 53443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: SYN-ACK',
-        },
-        {
-            capture_no: 9,
-            timestamp: '2024-01-10 00:00:02',
-            src_ip: '192.168.1.10',
-            src_port: 53443,
-            dst_ip: '1.1.1.1',
-            dst_port: 443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: ACK',
-        },
-        {
-            capture_no: 10,
-            timestamp: '2024-01-10 00:00:00',
-            src_ip: '192.168.1.10',
-            src_port: 53443,
-            dst_ip: '1.1.1.1',
-            dst_port: 443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: SYN',
-        },
-        {
-            capture_no: 11,
-            timestamp: '2024-01-10 00:00:01',
-            src_ip: '1.1.1.1',
-            src_port: 443,
-            dst_ip: '192.168.1.10',
-            dst_port: 53443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: SYN-ACK',
-        },
-        {
-            capture_no: 12,
-            timestamp: '2024-01-10 00:00:02',
-            src_ip: '192.168.1.10',
-            src_port: 53443,
-            dst_ip: '1.1.1.1',
-            dst_port: 443,
-            protocol: 'TCP',
-            length: 74,
-            info: 'TCP Handshake: ACK',
-        },
-    ]
-);
-
+const tableData = ref<PacketFrameExt[]>([]);
 const selectedPacket = ref<any>();
 
 // Nodes for demo.
@@ -198,13 +62,74 @@ const sampleTreeNodes = [
 
 const dialogVisible = ref(false);
 
+const parsePacketFrame = (packetFrame: PacketFrame): PacketFrameExt => {
+    const packetSummary: PacketSummary = {
+        src_ip: "",
+        src_port: 0,
+        dst_ip: "",
+        dst_port: 0,
+        protocol: "",
+        info: "",
+    };
+    if (packetFrame.ip) {
+        if (packetFrame.ip.ipv4) {
+            packetSummary.src_ip = packetFrame.ip.ipv4.source;
+            packetSummary.dst_ip = packetFrame.ip.ipv4.destination;
+            packetSummary.protocol = packetFrame.ip.ipv4.next_level_protocol;
+        }
+        if (packetFrame.ip.ipv6) {
+            packetSummary.src_ip = packetFrame.ip.ipv6.source;
+            packetSummary.dst_ip = packetFrame.ip.ipv6.destination;
+            packetSummary.protocol = packetFrame.ip.ipv6.next_header;
+        }
+    }
+    if (!packetSummary.protocol) {
+        if (packetFrame.datalink) {
+            if (packetFrame.datalink.ethernet) {
+                packetSummary.protocol = packetFrame.datalink.ethernet.ethertype;
+            }
+        }
+    }
+    if (packetFrame.transport) {
+        if (packetFrame.transport.tcp) {
+            packetSummary.src_port = packetFrame.transport.tcp.source;
+            packetSummary.dst_port = packetFrame.transport.tcp.destination;
+        }
+        if (packetFrame.transport.udp) {
+            packetSummary.src_port = packetFrame.transport.udp.source;
+            packetSummary.dst_port = packetFrame.transport.udp.destination;
+        }
+    }
+    if (!packetSummary.src_ip || !packetSummary.dst_ip) {
+        if (packetFrame.datalink) {
+            if (packetFrame.datalink.arp) {
+                packetSummary.src_ip = packetFrame.datalink.arp.sender_proto_addr;
+                packetSummary.dst_ip = packetFrame.datalink.arp.target_proto_addr;
+            }
+        }
+    }
+    packetSummary.protocol = packetSummary.protocol.toUpperCase();
+    const frameExt: PacketFrameExt = {
+        capture_no: packetFrame.capture_no,
+        datalink: packetFrame.datalink,
+        ip: packetFrame.ip,
+        transport: packetFrame.transport,
+        payload: packetFrame.payload,
+        packet_len: packetFrame.packet_len,
+        timestamp: packetFrame.timestamp,
+        summary: packetSummary,
+    };
+    return frameExt;
+};
+
 const startPacketCapture = async() => {
     console.log('start packet capture');
     /* const unlisten = await listen<any>('packet_frame', (event) => {
         console.log(event.payload);
     }); */
-    await listen<any>('packet_frame', (event) => {
-        console.log(event.payload);
+    await listen<PacketFrame>('packet_frame', (event) => {
+        let packet = parsePacketFrame(event.payload);
+        tableData.value.push(packet);
     });
     console.log('start packet_frame listener');
     invoke('start_packet_capture').then((report) => {
@@ -244,16 +169,16 @@ onUnmounted(() => {
     <Card>
         <template #title> Capturing from eth0. </template>
         <template #content>
-            <DataTable :value="sampleData" v-model:selection="selectedPacket" selectionMode="single" dataKey="capture_no" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable scrollHeight="70vh" tableStyle="min-width: 50rem">
+            <DataTable :value="tableData" v-model:selection="selectedPacket" selectionMode="single" dataKey="capture_no" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable size="small" scrollHeight="70vh" tableStyle="min-width: 50rem">
                 <Column field="capture_no" header="No" ></Column>
                 <Column field="timestamp" header="Timestamp" ></Column>
-                <Column field="src_ip" header="SRC IP" ></Column>
-                <Column field="src_port" header="SRC Port" ></Column>
-                <Column field="dst_ip" header="DST IP" ></Column>
-                <Column field="dst_port" header="DST Port" ></Column>
-                <Column field="protocol" header="Protocol" ></Column>
-                <Column field="length" header="Length" ></Column>
-                <Column field="info" header="Info" ></Column>
+                <Column field="summary.src_ip" header="SRC IP" ></Column>
+                <Column field="summary.src_port" header="SRC Port" ></Column>
+                <Column field="summary.dst_ip" header="DST IP" ></Column>
+                <Column field="summary.dst_port" header="DST Port" ></Column>
+                <Column field="summary.protocol" header="Protocol" ></Column>
+                <Column field="packet_len" header="Length" ></Column>
+                <Column field="summary.info" header="Info" ></Column>
             </DataTable>
         </template>
     </Card>

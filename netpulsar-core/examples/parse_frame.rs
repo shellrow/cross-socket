@@ -1,9 +1,9 @@
-use xenet::packet::frame::Frame;
+use netpulsar_core::models::packet::PacketFrame;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 fn main() {
-    let (tx, rx): (Sender<Frame>, Receiver<Frame>) = channel();
+    let (tx, rx): (Sender<PacketFrame>, Receiver<PacketFrame>) = channel();
     let stop = Arc::new(Mutex::new(false));
     let stop_handle = stop.clone();
     let pcap_option = netpulsar_core::pcap::PacketCaptureOptions::default();

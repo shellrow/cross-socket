@@ -13,6 +13,7 @@ use xenet::packet::frame::Frame;
 use xenet::packet::frame::ParseOption;
 use crate::interface;
 use crate::sys;
+use crate::models::packet::PacketFrame;
 
 /// Packet capture message
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -137,7 +138,7 @@ impl PacketCaptureOptions {
 /// Start packet capture
 pub fn start_capture(
     capture_options: PacketCaptureOptions,
-    msg_tx: Sender<Frame>,
+    msg_tx: Sender<PacketFrame>,
     stop: &Arc<Mutex<bool>>,
 ) -> CaptureReport {
     let mut report = CaptureReport::new();
@@ -178,22 +179,16 @@ pub fn start_capture(
                     parse_option.from_ip_packet = true;
                     parse_option.offset = payload_offset;
                 }
+                report.bytes = report.bytes.saturating_add(packet.len());
+                report.packets = report.packets.saturating_add(1);
                 let frame: Frame = Frame::from_bytes(&packet, parse_option);
                 if filter_packet(&frame, &capture_options) {
-                    /* match msg_tx.lock() {
-                        Ok(msg_tx) => match msg_tx.send(frame) {
-                            Ok(_) => {}
-                            Err(_) => {}
-                        },
-                        Err(_) => {}
-                    } */
-                    match msg_tx.send(frame) {
+                    let packet_frame = PacketFrame::from_xenet_frame(report.packets, frame);
+                    match msg_tx.send(packet_frame) {
                         Ok(_) => {}
                         Err(_) => {}
                     }
                 }
-                report.bytes = report.bytes.saturating_add(packet.len());
-                report.packets = report.packets.saturating_add(1);
             }
             Err(_) => {}
         }
