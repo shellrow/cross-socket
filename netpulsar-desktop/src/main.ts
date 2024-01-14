@@ -30,6 +30,8 @@ import 'primevue/resources/themes/lara-dark-teal/theme.css';
 import 'primevue/resources/primevue.min.css';
 import 'primeicons/primeicons.css';   
 
+const autoscrollThreshold = 50;
+
 const app = createApp(App);
 app.use(router);
 app.use(PrimeVue);
@@ -54,5 +56,22 @@ app.component('InputSwitch', InputSwitch);
 app.directive('badge', BadgeDirective);
 app.directive('ripple', Ripple);
 app.directive('styleclass', StyleClass);
+
+app.directive('autoscroll', {
+    mounted(el, _binding) {
+        let scrolledToBottom = true;
+        el.addEventListener('scroll', (event: any) => {
+            const target = event.target;
+            scrolledToBottom = target.scrollTop + target.offsetHeight >= target.scrollHeight - autoscrollThreshold;
+            console.log('scrollHeight: ' + target.scrollHeight);
+        });
+        const observer = new MutationObserver(() => {
+            if (scrolledToBottom) {
+                el.scrollTop = el.scrollHeight;
+            }
+        });
+        observer.observe(el, { childList: true, subtree: true });
+    }
+  });
 
 app.mount('#app');
