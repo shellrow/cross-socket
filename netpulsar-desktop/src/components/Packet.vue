@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { invoke } from '@tauri-apps/api/tauri';
+import { listen } from '@tauri-apps/api/event';
+import { WindowUtil } from '../libnp/window-util';
+
+const windowUtil = new WindowUtil();
 
 const sampleData = ref(
     [
@@ -193,6 +198,21 @@ const sampleTreeNodes = [
 
 const dialogVisible = ref(false);
 
+const startPacketCapture = async() => {
+    console.log('start packet capture');
+    /* const unlisten = await listen<any>('packet_frame', (event) => {
+        console.log(event.payload);
+    }); */
+    await listen<any>('packet_frame', (event) => {
+        console.log(event.payload);
+    });
+    console.log('start packet_frame listener');
+    invoke('start_packet_capture').then((report) => {
+        console.log(report);
+        //unlisten();
+    });
+};
+
 const onRowSelect = (event: any) => {
     dialogVisible.value = true;
     console.log(event.data);
@@ -202,6 +222,15 @@ const onRowUnselect = (event: any) => {
     dialogVisible.value = false;
     console.log(event.data);
 }
+
+onMounted(() => {
+    windowUtil.mount();
+    startPacketCapture();
+});
+
+onUnmounted(() => {
+    windowUtil.unmount();
+});
 
 </script>
 

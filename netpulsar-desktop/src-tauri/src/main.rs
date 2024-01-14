@@ -4,13 +4,15 @@
 mod commands;
 mod sys;
 
-use commands::{greet, get_netstat};
+use commands::{greet, get_netstat, start_packet_capture, start_packet_capture_crossbeam};
 
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             greet,
-            get_netstat
+            get_netstat,
+            start_packet_capture,
+            start_packet_capture_crossbeam
             ])
         .setup(|app| {
             let app_handle = app.handle();
