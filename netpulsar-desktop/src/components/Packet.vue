@@ -6,12 +6,15 @@ import { WindowUtil } from '../libnp/window-util';
 import { PacketFrame, PacketFrameExt, PacketSummary } from '../types/np-types';
 import { DataTableRowSelectEvent } from 'primevue/datatable';
 
+const packetDataTable = ref();
 const maxPacketCount = 1000;
 const windowUtil = new WindowUtil();
 const tableData = ref<PacketFrameExt[]>([]);
 const virtualTableData = ref<PacketFrameExt[]>([]);
 const selectedPacket = ref<any>();
 const caputuring = ref(false);
+const tableBlocked = ref(false);
+const totalRecords = ref(0);
 
 interface TreeNode {
     key: string;
@@ -95,12 +98,13 @@ const parsePacketFrame = (packetFrame: PacketFrame): PacketFrameExt => {
 // for performance. 
 const culcDisplayableCount = (): number => {
     const tableHeight = (windowUtil.windowSize.innerHeight - 200);
-    const rowHeight = 20;
+    const rowHeight = 28;
     return Math.floor(tableHeight / rowHeight);
 };
 
 const startPacketCapture = async() => {
     console.log('start packet capture');
+    tableBlocked.value = true;
     // Clear table data.
     tableData.value = [];
     virtualTableData.value = [];
@@ -116,6 +120,7 @@ const startPacketCapture = async() => {
         if (tableData.value.length > maxPacketCount) {
             tableData.value.shift();
         }
+        totalRecords.value = virtualTableData.value.length;
     });
     console.log('start packet_frame listener');
     invoke('start_packet_capture').then((report) => {
@@ -128,6 +133,7 @@ const stopPacketCapture = async() => {
     emit('stop_pcap', {
         message: 'stop_pcap',
     });
+    tableBlocked.value = false;
 };
 
 const onChengeCapture = () => {
@@ -508,17 +514,19 @@ onUnmounted(() => {
             </div>
         </template>
         <template #content>
-            <DataTable :value="virtualTableData" v-model:selection="selectedPacket" selectionMode="single" dataKey="capture_no" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" size="small" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight - 200).toString() + 'px'" tableStyle="min-width: 50rem">
-                <Column field="capture_no" header="No" ></Column>
-                <Column field="timestamp" header="Timestamp" ></Column>
-                <Column field="summary.src_addr" header="SRC Addr" ></Column>
-                <Column field="summary.src_port" header="SRC Port" ></Column>
-                <Column field="summary.dst_addr" header="DST Addr" ></Column>
-                <Column field="summary.dst_port" header="DST Port" ></Column>
-                <Column field="summary.protocol" header="Protocol" ></Column>
-                <Column field="packet_len" header="Length" ></Column>
-                <Column field="summary.info" header="Info" ></Column>
-            </DataTable>
+            <BlockUI :blocked="tableBlocked">
+                <DataTable ref="packetDataTable" :value="virtualTableData" v-model:selection="selectedPacket" selectionMode="single" dataKey="capture_no" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" size="small" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight - 200).toString() + 'px'" tableStyle="min-width: 50rem">
+                    <Column field="capture_no" header="No" ></Column>
+                    <Column field="timestamp" header="Timestamp" ></Column>
+                    <Column field="summary.src_addr" header="SRC Addr" ></Column>
+                    <Column field="summary.src_port" header="SRC Port" ></Column>
+                    <Column field="summary.dst_addr" header="DST Addr" ></Column>
+                    <Column field="summary.dst_port" header="DST Port" ></Column>
+                    <Column field="summary.protocol" header="Protocol" ></Column>
+                    <Column field="packet_len" header="Length" ></Column>
+                    <Column field="summary.info" header="Info" ></Column>
+                </DataTable>
+            </BlockUI>
         </template>
     </Card>
     <Dialog v-model:visible="dialogVisible" :modal="false" :closable="true" header="Detail" :showHeader="true" :breakpoints="{'960px': '75vw', '640px': '100vw'}" :style="{width: '45vw'}">
