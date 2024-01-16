@@ -33,35 +33,48 @@ export interface ProcessSocketInfo {
     process_info: ProcessInfo,
 }
 
-export interface PacketSummary {
-    src_addr: string,
-    src_port: number | null,
-    dst_addr: string,
-    dst_port: number | null,
-    protocol: string,
-    info: string,
-}
-
-export interface PacketFrameExt {
+export interface PacketDisplayData {
     capture_no: number,
-    datalink: DatalinkLayer | null,
-    ip: IpLayer | null,
-    transport: TransportLayer | null,
-    payload: number[],
-    packet_len: number,
     timestamp: string,
-    summary: PacketSummary,
+    if_index: number,
+    if_name: string,
+    src_mac: string,
+    dst_mac: string,
+    src_ip: string,
+    dst_ip: string,
+    src_addr: string,
+    dst_addr: string,
+    src_port: number,
+    dst_port: number,
+    protocol: string,
+    packet_len: number,
+    info: string,
 }
 
 export interface PacketFrame {
     capture_no: number,
+    timestamp: string,
+    if_index: number,
+    if_name: string,
+    src_mac: string,
+    dst_mac: string,
+    src_ip: string,
+    dst_ip: string,
+    src_port: number,
+    dst_port: number,
+    protocol: string,
+    packet_len: number,
+}
+
+/* export interface PacketFrame {
+    capture_no: number,
     datalink: DatalinkLayer | null,
     ip: IpLayer | null,
     transport: TransportLayer | null,
     payload: number[],
     packet_len: number,
     timestamp: string,
-}
+} */
 
 export interface DatalinkLayer {
     ethernet: EthernetHeader | null,

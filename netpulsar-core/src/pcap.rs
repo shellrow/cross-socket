@@ -183,7 +183,7 @@ pub fn start_capture(
                 report.packets = report.packets.saturating_add(1);
                 let frame: Frame = Frame::from_bytes(&packet, parse_option);
                 if filter_packet(&frame, &capture_options) {
-                    let packet_frame = PacketFrame::from_xenet_frame(report.packets, frame);
+                    let packet_frame = PacketFrame::from_xenet_frame(report.packets,interface.index, interface.name.clone(), frame);
                     match msg_tx.send(packet_frame) {
                         Ok(_) => {}
                         Err(_) => {}

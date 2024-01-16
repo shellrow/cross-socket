@@ -3,14 +3,14 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api/tauri';
 import { emit, listen } from '@tauri-apps/api/event';
 import { WindowUtil } from '../libnp/window-util';
-import { PacketFrame, PacketFrameExt, PacketSummary } from '../types/np-types';
+import { PacketFrame, PacketDisplayData } from '../types/np-types';
 import { DataTableRowSelectEvent } from 'primevue/datatable';
 
 const packetDataTable = ref();
 const maxPacketCount = 1000;
 const windowUtil = new WindowUtil();
-const tableData = ref<PacketFrameExt[]>([]);
-const virtualTableData = ref<PacketFrameExt[]>([]);
+const tableData = ref<PacketFrame[]>([]);
+const virtualTableData = ref<PacketFrame[]>([]);
 const selectedPacket = ref<any>();
 const caputuring = ref(false);
 const tableBlocked = ref(false);
@@ -29,69 +29,32 @@ const packetTreeNodes = ref<TreeNode[]>([]);
 
 const dialogVisible = ref(false);
 
-const parsePacketFrame = (packetFrame: PacketFrame): PacketFrameExt => {
-    const packetSummary: PacketSummary = {
+const parsePacketFrame = (packetFrame: PacketFrame): PacketDisplayData => {
+    const packetSummary: PacketDisplayData = {
+        capture_no: packetFrame.capture_no,
+        if_index: packetFrame.if_index,
+        if_name: packetFrame.if_name,
+        timestamp: packetFrame.timestamp,
+        src_mac: packetFrame.src_mac,
+        dst_mac: packetFrame.dst_mac,
+        src_ip: packetFrame.src_ip,
+        dst_ip: packetFrame.dst_ip,
         src_addr: "",
-        src_port: null,
         dst_addr: "",
-        dst_port: null,
-        protocol: "",
+        src_port: packetFrame.src_port,
+        dst_port: packetFrame.dst_port,
+        protocol: packetFrame.protocol,
+        packet_len: packetFrame.packet_len,
         info: "",
     };
-    if (packetFrame.ip) {
-        if (packetFrame.ip.ipv4) {
-            packetSummary.src_addr = packetFrame.ip.ipv4.source;
-            packetSummary.dst_addr = packetFrame.ip.ipv4.destination;
-            packetSummary.protocol = packetFrame.ip.ipv4.next_level_protocol;
-        }
-        if (packetFrame.ip.ipv6) {
-            packetSummary.src_addr = packetFrame.ip.ipv6.source;
-            packetSummary.dst_addr = packetFrame.ip.ipv6.destination;
-            packetSummary.protocol = packetFrame.ip.ipv6.next_header;
-        }
+    if (packetFrame.src_ip === "0.0.0.0" || packetFrame.dst_ip === "0.0.0.0") {
+        packetSummary.src_addr = packetFrame.src_mac;
+        packetSummary.dst_addr = packetFrame.dst_mac;
+    }else {
+        packetSummary.src_addr = packetFrame.src_ip;
+        packetSummary.dst_addr = packetFrame.dst_ip;
     }
-    if (!packetSummary.protocol) {
-        if (packetFrame.datalink) {
-            if (packetFrame.datalink.ethernet) {
-                packetSummary.protocol = packetFrame.datalink.ethernet.ethertype;
-            }
-        }
-    }
-    if (packetFrame.transport) {
-        if (packetFrame.transport.tcp) {
-            packetSummary.src_port = packetFrame.transport.tcp.source;
-            packetSummary.dst_port = packetFrame.transport.tcp.destination;
-        }
-        if (packetFrame.transport.udp) {
-            packetSummary.src_port = packetFrame.transport.udp.source;
-            packetSummary.dst_port = packetFrame.transport.udp.destination;
-        }
-    }
-    if (!packetSummary.src_addr || !packetSummary.dst_addr) {
-        if (packetFrame.datalink) {
-            if (packetFrame.datalink.arp) {
-                packetSummary.src_addr = packetFrame.datalink.arp.sender_proto_addr;
-                packetSummary.dst_addr = packetFrame.datalink.arp.target_proto_addr;
-            }else {
-                if (packetFrame.datalink.ethernet) {
-                    packetSummary.src_addr = packetFrame.datalink.ethernet.source;
-                    packetSummary.dst_addr = packetFrame.datalink.ethernet.destination;
-                }
-            }
-        }
-    }
-    packetSummary.protocol = packetSummary.protocol.toUpperCase();
-    const frameExt: PacketFrameExt = {
-        capture_no: packetFrame.capture_no,
-        datalink: packetFrame.datalink,
-        ip: packetFrame.ip,
-        transport: packetFrame.transport,
-        payload: packetFrame.payload,
-        packet_len: packetFrame.packet_len,
-        timestamp: packetFrame.timestamp,
-        summary: packetSummary,
-    };
-    return frameExt;
+    return packetSummary;
 };
 
 // Culculate the displayable table data count.
@@ -109,8 +72,10 @@ const startPacketCapture = async() => {
     tableData.value = [];
     virtualTableData.value = [];
     const unlisten = await listen<PacketFrame>('packet_frame', (event) => {
-        let packet = parsePacketFrame(event.payload);
-        tableData.value.push(packet);
+        let packet: PacketDisplayData = parsePacketFrame(event.payload);
+        //let packet: PacketFrame = event.payload;
+        //tableData.value.push(packet);
+        
         // for performance, limit the table data count.
         // check each packet.
         virtualTableData.value.push(packet);
@@ -147,7 +112,7 @@ const onChengeCapture = () => {
 };
 
 const onRowSelect = (event: DataTableRowSelectEvent) => {
-    const packet: PacketFrameExt = event.data;
+    const packet: PacketFrame = event.data;
     // Update tree nodes. clear and add new nodes.
     packetTreeNodes.value = [];
     // Frame
@@ -161,11 +126,11 @@ const onRowSelect = (event: DataTableRowSelectEvent) => {
     packetTreeNodes.value[0].children.push({
         key: '0-0',
         label: 'Interface',
-        data: '1',
+        data: '',
         icon: '',
         children: [
-            { key: '0-0-0', label: 'Interface Index: 1', icon: '', data: '1', children: [] },
-            { key: '0-0-1', label: 'Interface Name: eth0', icon: '', data: 'eth0', children: [] }
+            { key: '0-0-0', label: 'Interface Index: ' + packet.if_index, icon: '', data: packet.if_index, children: [] },
+            { key: '0-0-1', label: 'Interface Name: ' + packet.if_name, icon: '', data: packet.if_name, children: [] }
         ]
     });
     packetTreeNodes.value[0].children.push({
@@ -175,186 +140,55 @@ const onRowSelect = (event: DataTableRowSelectEvent) => {
         icon: '',
         children: []
     });
-    // Ethernet II
+    // Ethernet
     packetTreeNodes.value.push({
         key: '1',
-        label: 'Ethernet II, Src: ' + packet.datalink?.ethernet?.source + ', Dst: ' + packet.datalink?.ethernet?.destination,
-        data: 'Ethernet II, Src: ' + packet.datalink?.ethernet?.source + ', Dst: ' + packet.datalink?.ethernet?.destination,
+        label: 'Ethernet',
+        data: '',
         icon: '',
         children: []
     });
     packetTreeNodes.value[1].children.push({
         key: '1-0',
-        label: 'Destination: ' + packet.datalink?.ethernet?.destination,
-        data: packet.datalink?.ethernet?.destination ?? '',
+        label: 'Destination: ' + packet.dst_mac,
+        data: packet.dst_mac,
         icon: '',
         children: []
     });
     packetTreeNodes.value[1].children.push({
         key: '1-1',
-        label: 'Source: ' + packet.datalink?.ethernet?.source,
-        data: packet.datalink?.ethernet?.source ?? '',
+        label: 'Source: ' + packet.src_mac,
+        data: packet.src_mac,
         icon: '',
         children: []
     });
     // IP
-    
-    if (packet.ip) {
-        if (packet.ip.ipv4) {
-            packetTreeNodes.value.push({
-                key: '2',
-                label: 'Internet Protocol Version 4',
-                data: 'Internet Protocol Version 4',
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-0',
-                label: 'Version: ' + packet.ip.ipv4.version,
-                data: packet.ip.ipv4.version.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-1',
-                label: 'Header Length: ' + packet.ip.ipv4.header_length,
-                data: packet.ip.ipv4.header_length.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-3',
-                label: 'Total Length: ' + packet.ip.ipv4.total_length,
-                data: packet.ip.ipv4.total_length.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-4',
-                label: 'Identification: ' + packet.ip.ipv4.identification,
-                data: packet.ip.ipv4.identification.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-5',
-                label: 'Flags: ' + packet.ip.ipv4.flags,
-                data: packet.ip.ipv4.flags.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-6',
-                label: 'Fragment Offset: ' + packet.ip.ipv4.fragment_offset,
-                data: packet.ip.ipv4.fragment_offset.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-7',
-                label: 'Time to Live: ' + packet.ip.ipv4.ttl,
-                data: packet.ip.ipv4.ttl.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-8',
-                label: 'Protocol: ' + packet.ip.ipv4.next_level_protocol,
-                data: packet.ip.ipv4.next_level_protocol,
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-9',
-                label: 'Header Checksum: ' + packet.ip.ipv4.checksum,
-                data: packet.ip.ipv4.checksum.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-10',
-                label: 'Source: ' + packet.ip.ipv4.source,
-                data: packet.ip.ipv4.source,
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-11',
-                label: 'Destination: ' + packet.ip.ipv4.destination,
-                data: packet.ip.ipv4.destination,
-                icon: '',
-                children: []
-            });
-        }
-        if (packet.ip.ipv6) {
-            packetTreeNodes.value.push({
-                key: '2',
-                label: 'Internet Protocol Version 6',
-                data: 'Internet Protocol Version 6',
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-0',
-                label: 'Version: ' + packet.ip.ipv6.version,
-                data: packet.ip.ipv6.version.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-1',
-                label: 'Traffic Class: ' + packet.ip.ipv6.traffic_class,
-                data: packet.ip.ipv6.traffic_class.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-2',
-                label: 'Flow Label: ' + packet.ip.ipv6.flow_label,
-                data: packet.ip.ipv6.flow_label.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-3',
-                label: 'Payload Length: ' + packet.ip.ipv6.payload_length,
-                data: packet.ip.ipv6.payload_length.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-4',
-                label: 'Next Header: ' + packet.ip.ipv6.next_header,
-                data: packet.ip.ipv6.next_header,
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-5',
-                label: 'Hop Limit: ' + packet.ip.ipv6.hop_limit,
-                data: packet.ip.ipv6.hop_limit.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-6',
-                label: 'Source: ' + packet.ip.ipv6.source,
-                data: packet.ip.ipv6.source,
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[2].children.push({
-                key: '2-7',
-                label: 'Destination: ' + packet.ip.ipv6.destination,
-                data: packet.ip.ipv6.destination,
-                icon: '',
-                children: []
-            });
-        }
+    if (packet.src_ip != "0.0.0.0" && packet.dst_ip != "0.0.0.0") {
+        packetTreeNodes.value.push({
+            key: '2',
+            label: 'Internet Protocol',
+            data: 'Internet Protocol',
+            icon: '',
+            children: []
+        });
+        packetTreeNodes.value[2].children.push({
+            key: '2-0',
+            label: 'Source: ' + packet.src_ip,
+            data: packet.src_ip,
+            icon: '',
+            children: []
+        });
+        packetTreeNodes.value[2].children.push({
+            key: '2-1',
+            label: 'Destination: ' + packet.dst_ip,
+            data: packet.dst_ip,
+            icon: '',
+            children: []
+        });
     }
     // Transport
-    if (packet.transport) {
-        if (packet.transport.tcp) {
+    if (packet.protocol === 'TCP' || packet.protocol === 'UDP') {
+        if (packet.protocol === 'TCP') {
             packetTreeNodes.value.push({
                 key: '3',
                 label: 'Transmission Control Protocol',
@@ -362,64 +196,7 @@ const onRowSelect = (event: DataTableRowSelectEvent) => {
                 icon: '',
                 children: []
             });
-            packetTreeNodes.value[3].children.push({
-                key: '3-0',
-                label: 'Source Port: ' + packet.transport.tcp.source,
-                data: packet.transport.tcp.source.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[3].children.push({
-                key: '3-1',
-                label: 'Destination Port: ' + packet.transport.tcp.destination,
-                data: packet.transport.tcp.destination.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[3].children.push({
-                key: '3-2',
-                label: 'Sequence Number: ' + packet.transport.tcp.sequence,
-                data: packet.transport.tcp.sequence.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[3].children.push({
-                key: '3-3',
-                label: 'Acknowledgment Number: ' + packet.transport.tcp.acknowledgement,
-                data: packet.transport.tcp.acknowledgement.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[3].children.push({
-                key: '3-5',
-                label: 'Flags: ' + packet.transport.tcp.flags,
-                data: packet.transport.tcp.flags.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[3].children.push({
-                key: '3-6',
-                label: 'Window Size Value: ' + packet.transport.tcp.window,
-                data: packet.transport.tcp.window.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[3].children.push({
-                key: '3-7',
-                label: 'Checksum: ' + packet.transport.tcp.checksum,
-                data: packet.transport.tcp.checksum.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[3].children.push({
-                key: '3-8',
-                label: 'Urgent Pointer: ' + packet.transport.tcp.urgent_ptr,
-                data: packet.transport.tcp.urgent_ptr.toString(),
-                icon: '',
-                children: []
-            });
-        }
-        if (packet.transport.udp) {
+        }else if (packet.protocol === 'UDP') {
             packetTreeNodes.value.push({
                 key: '3',
                 label: 'User Datagram Protocol',
@@ -427,49 +204,18 @@ const onRowSelect = (event: DataTableRowSelectEvent) => {
                 icon: '',
                 children: []
             });
-            packetTreeNodes.value[3].children.push({
-                key: '3-0',
-                label: 'Source Port: ' + packet.transport.udp.source,
-                data: packet.transport.udp.source.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[3].children.push({
-                key: '3-1',
-                label: 'Destination Port: ' + packet.transport.udp.destination,
-                data: packet.transport.udp.destination.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[3].children.push({
-                key: '3-2',
-                label: 'Length: ' + packet.transport.udp.length,
-                data: packet.transport.udp.length.toString(),
-                icon: '',
-                children: []
-            });
-            packetTreeNodes.value[3].children.push({
-                key: '3-3',
-                label: 'Checksum: ' + packet.transport.udp.checksum,
-                data: packet.transport.udp.checksum.toString(),
-                icon: '',
-                children: []
-            });
         }
-    }
-    // Payload
-    if (packet.payload) {
-        packetTreeNodes.value.push({
-            key: '4',
-            label: 'Data: ',
-            data: packet.payload.toString(),
+        packetTreeNodes.value[3].children.push({
+            key: '3-0',
+            label: 'Source Port: ' + packet.src_port,
+            data: packet.src_port.toString(),
             icon: '',
             children: []
         });
-        packetTreeNodes.value[4].children.push({
-            key: '4-0',
-            label: 'Data: ',
-            data: packet.payload.toString(),
+        packetTreeNodes.value[3].children.push({
+            key: '3-1',
+            label: 'Destination Port: ' + packet.dst_port,
+            data: packet.dst_port.toString(),
             icon: '',
             children: []
         });
@@ -518,13 +264,13 @@ onUnmounted(() => {
                 <DataTable ref="packetDataTable" :value="virtualTableData" v-model:selection="selectedPacket" selectionMode="single" dataKey="capture_no" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" size="small" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight - 200).toString() + 'px'" tableStyle="min-width: 50rem">
                     <Column field="capture_no" header="No" ></Column>
                     <Column field="timestamp" header="Timestamp" ></Column>
-                    <Column field="summary.src_addr" header="SRC Addr" ></Column>
-                    <Column field="summary.src_port" header="SRC Port" ></Column>
-                    <Column field="summary.dst_addr" header="DST Addr" ></Column>
-                    <Column field="summary.dst_port" header="DST Port" ></Column>
-                    <Column field="summary.protocol" header="Protocol" ></Column>
+                    <Column field="src_addr" header="SRC Addr" ></Column>
+                    <Column field="src_port" header="SRC Port" ></Column>
+                    <Column field="dst_addr" header="DST Addr" ></Column>
+                    <Column field="dst_port" header="DST Port" ></Column>
+                    <Column field="protocol" header="Protocol" ></Column>
                     <Column field="packet_len" header="Length" ></Column>
-                    <Column field="summary.info" header="Info" ></Column>
+                    <!-- <Column field="info" header="Info" ></Column> -->
                 </DataTable>
             </BlockUI>
         </template>
