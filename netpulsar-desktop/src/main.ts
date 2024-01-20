@@ -22,6 +22,7 @@ import Dialog from 'primevue/dialog';
 import ProgressSpinner from 'primevue/progressspinner';
 import BlockUI from 'primevue/blockui';
 import InputSwitch from 'primevue/inputswitch';
+import VirtualScroller from 'primevue/virtualscroller';
 
 import 'primeflex/primeflex.css';
 
@@ -53,6 +54,7 @@ app.component('Dialog', Dialog);
 app.component('ProgressSpinner', ProgressSpinner);
 app.component('BlockUI', BlockUI);
 app.component('InputSwitch', InputSwitch);
+app.component('VirtualScroller', VirtualScroller);
 app.directive('badge', BadgeDirective);
 app.directive('ripple', Ripple);
 app.directive('styleclass', StyleClass);
