@@ -134,7 +134,6 @@ impl PacketCaptureOptions {
     }
 }
 
-
 /// Start packet capture
 pub fn start_capture(
     capture_options: PacketCaptureOptions,
