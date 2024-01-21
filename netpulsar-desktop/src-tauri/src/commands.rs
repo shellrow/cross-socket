@@ -135,3 +135,8 @@ pub async fn start_packet_capture_crossbeam(app_handle: tauri::AppHandle) -> Cap
 pub fn get_netstat(opt: SocketInfoOption) -> Vec<ProcessSocketInfo> {
     netpulsar_core::netstat::get_netstat(opt)
 }
+
+/* #[tauri::command]
+pub fn get_procs(opt: SocketInfoOption) -> Vec<ProcessSocketInfo> {
+    netpulsar_core::netstat::get_netstat(opt)
+} */

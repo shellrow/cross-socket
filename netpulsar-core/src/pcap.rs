@@ -1,4 +1,5 @@
 use std::net::IpAddr;
+use rusqlite::{Connection, Transaction};
 use tokio::sync::mpsc::Sender as TokioSender;
 use crossbeam_channel::Sender as CrossbeamSender;
 use std::sync::mpsc::Sender;
@@ -11,6 +12,8 @@ use xenet::packet::{ip::IpNextLevelProtocol, ethernet::EtherType};
 use xenet::net::interface::Interface;
 use xenet::packet::frame::Frame;
 use xenet::packet::frame::ParseOption;
+use crate::db::{DB_NAME, connect_db};
+use crate::db::table::DbPacketFrame;
 use crate::interface;
 use crate::sys;
 use crate::models::packet::PacketFrame;
@@ -349,6 +352,94 @@ pub async fn start_capture_async(
                 }
                 report.bytes = report.bytes.saturating_add(packet.len());
                 report.packets = report.packets.saturating_add(1);
+            }
+            Err(_) => {}
+        }
+        match stop.lock() {
+            Ok(stop) => {
+                if *stop {
+                    break;
+                }
+            }
+            Err(_) => {}
+        }
+        if Instant::now().duration_since(start_time) > capture_options.capture_timeout {
+            break;
+        }
+    }
+    report.end_time = sys::get_sysdate();
+    report.duration = Instant::now().duration_since(start_time);
+    report
+}
+
+pub fn start_background_capture(
+    capture_options: PacketCaptureOptions,
+    stop: &Arc<Mutex<bool>>,
+) -> CaptureReport {
+    let mut report = CaptureReport::new();
+    let mut conn: Connection = match connect_db(DB_NAME) {
+        Ok(c)=> c, 
+        Err(e) => {
+            println!("Error: {:?}", e);
+            return report;
+        },
+    };
+    let interfaces = xenet::net::interface::get_interfaces();
+    let interface = interfaces
+        .into_iter()
+        .filter(|interface: &Interface| interface.index == capture_options.interface_index)
+        .next()
+        .expect("Failed to get Interface");
+    let config = xenet::datalink::Config {
+        write_buffer_size: 4096,
+        read_buffer_size: 4096,
+        read_timeout: Some(capture_options.read_timeout),
+        write_timeout: None,
+        channel_type: xenet::datalink::ChannelType::Layer2,
+        bpf_fd_attempts: 1000,
+        linux_fanout: None,
+        promiscuous: capture_options.promiscuous,
+    };
+    let (mut _tx, mut rx) = match xenet::datalink::channel(&interface, config) {
+        Ok(xenet::datalink::Channel::Ethernet(tx, rx)) => (tx, rx),
+        Ok(_) => panic!("Unknown channel type"),
+        Err(e) => panic!("Error happened {}", e),
+    };
+    let start_time = Instant::now();
+    report.start_time = sys::get_sysdate();
+    loop {
+        match rx.next() {
+            Ok(packet) => {
+                let mut parse_option: ParseOption = ParseOption::default();
+                if interface.is_tun() {
+                    let payload_offset;
+                    if interface.is_loopback() {
+                        payload_offset = 14;
+                    } else {
+                        payload_offset = 0;
+                    }
+                    parse_option.from_ip_packet = true;
+                    parse_option.offset = payload_offset;
+                }
+                report.bytes = report.bytes.saturating_add(packet.len());
+                report.packets = report.packets.saturating_add(1);
+                let frame: Frame = Frame::from_bytes(&packet, parse_option);
+                if filter_packet(&frame, &capture_options) {
+                    let packet_frame = DbPacketFrame::from_xenet_frame(report.packets,interface.index, interface.name.clone(), frame);
+                    let tran: Transaction = conn.transaction().unwrap();
+                    match packet_frame.insert(&tran) {
+                        Ok(_) => {}
+                        Err(e) => {
+                            println!("Error: {:?}", e);
+                        }
+                    }
+                    match tran.commit() {
+                        Ok(_) => {}
+                        Err(e) => {
+                            println!("Error: {:?}", e);
+                        }
+                    }
+                }
             }
             Err(_) => {}
         }

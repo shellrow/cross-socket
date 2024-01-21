@@ -19,6 +19,12 @@ fn main() {
             sys::init(app_handle);
             Ok(())
             })
+        .on_window_event(|event| match event.event() {
+            tauri::WindowEvent::Destroyed => {
+                sys::cleanup();
+            },
+            _ => {}
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

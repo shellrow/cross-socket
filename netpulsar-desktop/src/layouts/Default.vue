@@ -92,14 +92,6 @@ onUnmounted(() => {
                         </a>
                         <ul class="list-none py-0 pl-3 pr-0 m-0 hidden overflow-y-hidden transition-all transition-duration-400 transition-ease-in-out">
                             <li>
-                                <router-link to="/packet">
-                                    <a v-ripple class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
-                                        <i class="pi pi-arrow-right-arrow-left mr-2"></i>
-                                        <span class="font-medium">Packet</span>
-                                    </a>
-                                </router-link>
-                            </li>
-                            <li>
                                 <router-link to="/remote">
                                     <a v-ripple class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
                                         <i class="pi pi-globe mr-2"></i>
@@ -120,6 +112,14 @@ onUnmounted(() => {
                                     <a v-ripple class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
                                         <i class="pi pi-list mr-2"></i>
                                         <span class="font-medium">Process</span>
+                                    </a>
+                                </router-link>
+                            </li>
+                            <li>
+                                <router-link to="/packet">
+                                    <a v-ripple class="flex align-items-center cursor-pointer p-3 border-round text-700 hover:surface-100 transition-duration-150 transition-colors p-ripple">
+                                        <i class="pi pi-arrow-right-arrow-left mr-2"></i>
+                                        <span class="font-medium">Packet</span>
                                     </a>
                                 </router-link>
                             </li>

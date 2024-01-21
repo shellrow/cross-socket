@@ -17,6 +17,7 @@ xenet = { version = "0.4", features = ["serde"] }
 netprobe = { version = "0.4", features = ["serde", "async"] }
 tokio = { version = "1.21"}
 hickory-resolver = { version = "0.24" }
+futures = {version = "0.3"}
 sysinfo = "0.29"
 netstat2 = "0.9"
 reqwest = { version="0.11", default-features = false, features = ["json", "rustls-tls"]}
@@ -24,7 +25,7 @@ chrono = { version = "0.4", features = ["serde"] }
 ipnet = "2.5"
 regex = "1.6"
 crossbeam-channel = "0.5"
-rusqlite = { version = "0.30.0", features = ["bundled"] }
+rusqlite = { version = "0.30.0", features = ["bundled", "array"] }
 
 [dev-dependencies]
 tokio = { version = "1.21", features = ["macros"] }

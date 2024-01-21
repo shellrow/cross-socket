@@ -61,6 +61,17 @@ pub fn get_interface_local_ipv6(iface: &Interface) -> Option<IpAddr> {
     return None;
 }
 
+pub fn get_interface_ips(iface: &Interface) -> Vec<String> {
+    let mut ips: Vec<String> = Vec::new();
+    for ip in iface.ipv4.clone() {
+        ips.push(ip.addr.to_string());
+    }
+    for ip in iface.ipv6.clone() {
+        ips.push(ip.addr.to_string());
+    }
+    ips
+}
+
 pub fn get_interface_macaddr(iface: &Interface) -> MacAddr {
     match &iface.mac_addr {
         Some(mac_addr) => mac_addr.clone(),

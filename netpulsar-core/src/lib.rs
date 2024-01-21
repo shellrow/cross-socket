@@ -5,4 +5,6 @@ pub mod sys;
 pub mod procs;
 pub mod netstat;
 pub mod db;
+pub mod ip;
+pub mod dns;
 //pub use xenet;
