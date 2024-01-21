@@ -582,6 +582,50 @@ impl DbRemoteHost {
             params![self.packet_sent, self.packet_received, self.bytes_sent, self.bytes_received, self.ip_addr],
         )
     }
+    // Perform MERGE operation. If the record exists, update it. If not, insert it.
+    pub fn merge(self, tran: &Transaction) -> Result<usize, rusqlite::Error> {
+        tran.execute(
+            "INSERT INTO remote_host (
+                ip_addr,
+                hostname,
+                country_code,
+                country_name,
+                asn,
+                as_name,
+                packet_sent,
+                packet_received,
+                bytes_sent,
+                bytes_received,
+                first_seen,
+                updated_at
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
+            ON CONFLICT(ip_addr) DO UPDATE SET
+                hostname = ?2,
+                country_code = ?3,
+                country_name = ?4,
+                asn = ?5,
+                as_name = ?6,
+                packet_sent = ?7,
+                packet_received = ?8,
+                bytes_sent = ?9,
+                bytes_received = ?10,
+                updated_at = ?12",
+            params![
+                self.ip_addr,
+                self.hostname,
+                self.country_code,
+                self.country_name,
+                self.asn,
+                self.as_name,
+                self.packet_sent,
+                self.packet_received,
+                self.bytes_sent,
+                self.bytes_received,
+                self.first_seen,
+                self.updated_at
+            ],
+        )
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

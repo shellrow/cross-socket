@@ -1,7 +1,7 @@
 use std::net::IpAddr;
 
 use crate::{db::{self, table}, sys};
-use rusqlite::{Result, params, Connection, Statement, Rows};
+use rusqlite::{Result, params, Connection, Statement, Rows, Transaction};
 
 pub fn get_traffic_summary(local_ips: Vec<String>) -> Result<Vec<table::DbRemoteHost>, rusqlite::Error> {
     let conn: Connection = match db::connect_db(db::DB_NAME) {
@@ -67,18 +67,53 @@ pub fn get_traffic_summary(local_ips: Vec<String>) -> Result<Vec<table::DbRemote
 pub async fn start_stat_updater() {
     let iface: default_net::Interface = default_net::get_default_interface().unwrap();
     let local_ips = crate::interface::get_interface_ips(&iface);
-    println!("local_ips: {:?}", local_ips);
     loop {
         match get_traffic_summary(local_ips.clone()) {
-            Ok(traffic_summary) => {
-                for remote_host in &traffic_summary {
-                    println!("{:?}", remote_host);
-                }
+            Ok(mut traffic_summary) => {
                 let remote_ips: Vec<IpAddr> = traffic_summary.iter()
                 .filter(|x| crate::ip::is_global_addr(x.ip_addr.parse::<IpAddr>().unwrap()))
                 .map(|x| x.ip_addr.parse::<IpAddr>().unwrap()).collect();
                 let dns_map = crate::dns::lookup_ips_async(remote_ips).await;
-                println!("dns_map: {:?}", dns_map);
+                // set hostname to traffic_summary
+                for remote_host in traffic_summary.iter_mut() {
+                    if let Some(hostname) = dns_map.get(&remote_host.ip_addr.parse::<IpAddr>().unwrap()) {
+                        remote_host.hostname = hostname.clone();
+                    }
+                }
+                let mut affected_row_count: usize = 0;
+                let mut conn: Connection = match db::connect_db(db::DB_NAME) {
+                    Ok(c)=> c, 
+                    Err(e) => {
+                        println!("Error: {:?}", e);
+                        continue;
+                    },
+                };
+                let tran: Transaction = conn.transaction().unwrap();
+                // update traffic_summary
+                for remote_host in traffic_summary {
+                    match remote_host.merge(&tran) {
+                        Ok(row_count) => {
+                            affected_row_count += row_count;
+                        },
+                        Err(e) => {
+                            println!("Error: {:?}", e);
+                        }
+                    }
+                }
+                match tran.commit() {
+                    Ok(_) => {},
+                    Err(e) => {
+                        println!("Error: {:?}", e);
+                    }
+                }
+                if affected_row_count > 0 {
+                    match db::optimize_db() {
+                        Ok(_) => {},
+                        Err(e) => {
+                            println!("Error: {:?}", e);
+                        }
+                    }
+                }
             }
             Err(e) => {
                 eprintln!("Error: {:?}", e);

@@ -2,7 +2,7 @@ pub mod table;
 pub mod stat;
 use std::env;
 use std::path::PathBuf;
-use rusqlite::{Connection, Result, Transaction};
+use rusqlite::{Connection, Result, Transaction, params};
 
 pub const DB_NAME: &str = "netpulsar.db";
 pub const IP_DB_NAME: &str = "ip.db";
@@ -36,6 +36,15 @@ pub fn init_db() -> Result<usize, rusqlite::Error> {
         }
     }
     match table::DbPacketFrame::truncate(&tran) {
+        Ok(count) => {
+            affected_row_count += count;
+        },
+        Err(e) => {
+            return Err(e);
+        }
+    }
+    // remote_host
+    match table::DbRemoteHost::create(&tran) {
         Ok(count) => {
             affected_row_count += count;
         },
@@ -131,4 +140,13 @@ pub fn cleanup_db() -> Result<usize, rusqlite::Error> {
             return Err(e);
         }
     } 
+}
+
+// EXEC VACUUM;
+pub fn optimize_db() -> Result<usize, rusqlite::Error> {
+    let conn: Connection = match connect_db(DB_NAME) {
+        Ok(c)=> c, 
+        Err(e) => return Err(e),
+    };
+    conn.execute("VACUUM;", params![])
 }
