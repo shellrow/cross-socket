@@ -2,8 +2,8 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api/tauri';
 //import { listen } from '@tauri-apps/api/event';
-import { KVItem } from '../types/common';
-import { ProcessSocketInfo } from '../types/np-types';
+import { KVItem, OptionItem } from '../types/common';
+import { ProcessSocketInfo, SocketInfoOption } from '../types/np-types';
 import { setRoutine } from '../libnp/routine';
 import { WindowUtil } from '../libnp/window-util';
 import { DataTableRowSelectEvent } from 'primevue/datatable';
@@ -11,15 +11,37 @@ import { DataTableRowSelectEvent } from 'primevue/datatable';
 const tableData = ref<ProcessSocketInfo[]>([]);
 const selectedHostKv = ref<KVItem[]>([]);
 const selectedHost = ref<any>();
+const selectedAddressFamily = ref<OptionItem[]>([]);
+const selectedTransportProtocol = ref<OptionItem[]>([]);
 const dialogVisible = ref(false);
 const isLoading = ref(false);
 const autoUpdate = ref(false);
 const windowUtil = new WindowUtil();
 
 const GetNetStat = async() => {
+    console.log(selectedAddressFamily.value);
+    console.log(selectedTransportProtocol.value);
     isLoading.value = true;
-    const result = await invoke<ProcessSocketInfo[]>('get_netstat');
-    //console.log(result);
+    let options: SocketInfoOption = {
+        address_family: [],
+        transport_protocol: [],
+    };
+    if (selectedAddressFamily.value) {
+        selectedAddressFamily.value.forEach((item) => {
+            options.address_family?.push(item.id);
+        });
+    } else {
+        options.address_family = ['IPv4', 'IPv6'];
+    }
+    if (selectedTransportProtocol.value) {
+        selectedTransportProtocol.value.forEach((item) => {
+            options.transport_protocol?.push(item.id);
+        });
+    } else {
+        options.transport_protocol = ['TCP'];
+    }
+    console.log(options);
+    const result = await invoke<ProcessSocketInfo[]>('get_netstat', {opt: options});
     tableData.value = result;
     isLoading.value = false;
 }
@@ -33,7 +55,27 @@ const routine = setRoutine({
             console.log(windowUtil.windowSize);
         }
     }
-})
+});
+
+const setDefaultOptions = () => {
+    selectedAddressFamily.value = [
+        { id: 'IPv4', name: ' IPv4' },
+        { id: 'IPv6', name: ' IPv6' }
+    ];
+    selectedTransportProtocol.value = [
+        { id: 'TCP', name: ' TCP' }
+    ];
+}
+
+const address_families: OptionItem[] = [
+    { id: 'IPv4', name: ' IPv4' },
+    { id: 'IPv6', name: ' IPv6' }
+];
+
+const transport_protocols: OptionItem[] = [
+    { id: 'TCP', name: ' TCP' },
+    { id: 'UDP', name: ' UDP' }
+];
 
 const onRowSelect = (event: DataTableRowSelectEvent) => {
     dialogVisible.value = true;
@@ -84,6 +126,7 @@ const onRowUnselect = (_event: DataTableRowSelectEvent) => {
 
 onMounted(() => {
     windowUtil.mount();
+    setDefaultOptions();
     GetNetStat();
     routine.start();
 });
@@ -99,33 +142,25 @@ onUnmounted(() => {
 .p-card, .p-card-title, .p-card-content {
     background-color: var(--surface-ground);
 }
-/* .overlay {
-    position:fixed !important;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 100;
-} */
 </style>
 
 <template>
-    <!-- <BlockUI :blocked="isLoading" :fullScreen="true"></BlockUI>
-    <ProgressSpinner v-show="isLoading" class="overlay"/> -->
-    <Card>
+    <Card class="flex-auto">
         <template #title> 
             <div class="flex justify-content-between">
                 <div class="flex">
-                    Active TCP connections and the TCP and UDP ports on which is listening.  
+                    Network sockets information
                 </div>
                 <div class="flex">
+                    <MultiSelect v-model="selectedAddressFamily" :options="address_families" optionLabel="name" placeholder="AddressFamily" :maxSelectedLabels="2" class="flex mr-2" />
+                    <MultiSelect v-model="selectedTransportProtocol" :options="transport_protocols" optionLabel="name" placeholder="TransportProtocol" :maxSelectedLabels="2" class="mr-2" />
                     <ToggleButton v-model="autoUpdate" onLabel="Auto" offLabel="Manual" onIcon="pi pi-play" offIcon="pi pi-pause" class="mr-2" />
                     <Button type="button" icon="pi pi-refresh" outlined :loading="isLoading" @click="GetNetStat" :disabled="autoUpdate" />
                 </div>
             </div>
         </template>
         <template #content>
-            <DataTable :value="tableData" v-model:selection="selectedHost" :loading="isLoading" selectionMode="single" dataKey="index" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" size="small" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight-100).toString() + 'px'" tableStyle="min-width: 50rem">
+            <DataTable :value="tableData" v-model:selection="selectedHost" :loading="isLoading" :virtualScrollerOptions="{ itemSize: 20 }" selectionMode="single" dataKey="index" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" size="small" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight-200).toString() + 'px'" tableStyle="min-width: 50rem">
                 <Column field="index" header="No" sortable></Column>
                 <Column field="socket_info.local_ip_addr" header="SRC IP Address" sortable></Column>
                 <!-- <Column field="local_hostname" header="SRC Host Name"></Column> -->

@@ -4,7 +4,7 @@ use std::thread;
 use tauri::Manager;
 use xenet::packet::frame::Frame;
 use crossbeam_channel::{bounded, Receiver as CrossbeamReceiver, Sender as CrossbeamSender};
-use netpulsar_core::netstat::ProcessSocketInfo;
+use netpulsar_core::netstat::{ProcessSocketInfo, SocketInfoOption};
 use netpulsar_core::pcap::CaptureReport;
 use netpulsar_core::models::packet::PacketFrame;
 
@@ -132,6 +132,6 @@ pub async fn start_packet_capture_crossbeam(app_handle: tauri::AppHandle) -> Cap
 }
 
 #[tauri::command]
-pub fn get_netstat() -> Vec<ProcessSocketInfo> {
-    netpulsar_core::netstat::get_netstat()
+pub fn get_netstat(opt: SocketInfoOption) -> Vec<ProcessSocketInfo> {
+    netpulsar_core::netstat::get_netstat(opt)
 }

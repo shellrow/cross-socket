@@ -33,8 +33,6 @@ export interface ProcessSocketInfo {
     process_info: ProcessInfo,
 }
 
-
-
 export interface DatalinkLayer {
     ethernet: EthernetHeader | null,
     arp: ArpHeader | null,
@@ -184,4 +182,9 @@ export interface PacketFrameExt {
     datalink: DatalinkLayer | null,
     ip: IpLayer | null,
     transport: TransportLayer | null,
+}
+
+export interface SocketInfoOption {
+    address_family: string[],
+    transport_protocol: string[],
 }

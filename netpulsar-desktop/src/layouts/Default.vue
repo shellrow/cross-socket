@@ -62,7 +62,7 @@ onUnmounted(() => {
 
 <template>
 <div class="min-h-screen flex relative lg:static surface-ground">
-    <div id="app-sidebar-1" class="surface-section h-screen hidden lg:block flex-shrink-0 absolute lg:static left-0 top-0 z-1 border-right-1 surface-border select-none" style="width:280px">
+    <div id="app-sidebar-1" class="surface-section h-screen hidden lg:block flex-shrink-0 absolute lg:static left-0 top-0 z-1 border-right-1 surface-border select-none" style="width:200px">
         <div class="flex flex-column h-full">
             <div class="flex align-items-center px-5 flex-shrink-0" style="height:60px">
                 <a v-ripple class="cursor-pointer block lg:hidden text-700 mr-3 mt-1 p-ripple"
