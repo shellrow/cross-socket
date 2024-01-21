@@ -188,3 +188,18 @@ export interface SocketInfoOption {
     address_family: string[],
     transport_protocol: string[],
 }
+
+export interface RemoteHost {
+    ip_addr: string,
+    hostname: string,
+    country_code: string,
+    country_name: string,
+    asn: string,
+    as_name: string,
+    packet_sent: number,
+    packet_received: number,
+    bytes_sent: number,
+    bytes_received: number,
+    first_seen: string,
+    updated_at: string,
+}

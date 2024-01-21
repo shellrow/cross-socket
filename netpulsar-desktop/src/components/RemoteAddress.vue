@@ -1,161 +1,70 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { invoke } from '@tauri-apps/api/tauri';
+import { RemoteHost } from '../types/np-types';
+import { KVItem } from '../types/common';
+import { WindowUtil } from '../libnp/window-util';
+import { setRoutine } from '../libnp/routine';
 
-const sampleData = ref(
-    [
-        {
-            host_id: 1,
-            ip_addr: '1.1.1.1',
-            hostname: 'one.one.one.one',
-            port: 53,
-            protocol: 'UDP',
-            packets: 24,
-            bytes: 4488,
-            country: 'US',
-            asn: 'AS13335 Cloudflare, Inc.',
-            info: 'DNS Query',
-        },
-        {
-            host_id: 2,
-            ip_addr: '8.8.8.8',
-            hostname: 'dns.google',
-            port: 53,
-            protocol: 'UDP',
-            packets: 50,
-            bytes: 2048,
-            country: 'US',
-            asn: 'AS15169 Google LLC',
-            info: 'DNS Query',
-        },
-        {
-            host_id: 3,
-            ip_addr: '216.58.214.46',
-            hostname: 'google.com',
-            port: 443,
-            protocol: 'TCP',
-            packets: 200,
-            bytes: 40960,
-            country: 'US',
-            asn: 'AS15169 Google LLC',
-            info: 'HTTPS Request',
-        },
-        {
-            "host_id": 4,
-            "ip_addr": "208.67.222.222",
-            "hostname": "resolver1.opendns.com",
-            "port": 53,
-            "protocol": "UDP",
-            "packets": 30,
-            "bytes": 5120,
-            "country": "US",
-            "asn": "AS36692 OpenDNS, LLC",
-            "info": "DNS Query"
-        },
-        {
-            "host_id": 5,
-            "ip_addr": "185.199.108.153",
-            "hostname": "github.com",
-            "port": 443,
-            "protocol": "TCP",
-            "packets": 150,
-            "bytes": 30720,
-            "country": "US",
-            "asn": "AS54113 Fastly",
-            "info": "HTTPS Request"
-        },
-        {
-            "host_id": 6,
-            "ip_addr": "93.184.216.34",
-            "hostname": "example.com",
-            "port": 80,
-            "protocol": "TCP",
-            "packets": 100,
-            "bytes": 20480,
-            "country": "US",
-            "asn": "AS15133 Edgecast Networks, Inc.",
-            "info": "HTTP Request"
-        },
-        {
-            "host_id": 7,
-            "ip_addr": "104.244.42.130",
-            "hostname": "twitter.com",
-            "port": 443,
-            "protocol": "TCP",
-            "packets": 120,
-            "bytes": 24576,
-            "country": "US",
-            "asn": "AS13414 Twitter Inc.",
-            "info": "HTTPS Request"
-        },
-        {
-            "host_id": 8,
-            "ip_addr": "185.199.108.153",
-            "hostname": "developer.mozilla.org",
-            "port": 443,
-            "protocol": "TCP",
-            "packets": 80,
-            "bytes": 16384,
-            "country": "US",
-            "asn": "AS54113 Fastly",
-            "info": "HTTPS Request"
-        }
-    ]
-);
+const windowUtil = new WindowUtil();
+const autoUpdate = ref(true);
+const tableData = ref<RemoteHost[]>([]);
+const isLoading = ref(false);
 
-const selectedHostKv = ref(
-    [
-        {
-            key: 'IP Address',
-            value: '1.1.1.1',
-        },
-        {
-            key: 'Hostname',
-            value: 'one.one.one.one',
-        },
-        {
-            key: 'Port',
-            value: '53',
-        },
-        {
-            key: 'Protocol',
-            value: 'UDP',
-        },
-        {
-            key: 'Packets',
-            value: '24',
-        },
-        {
-            key: 'Bytes',
-            value: '4488',
-        },
-        {
-            key: 'Country',
-            value: 'US',
-        },
-        {
-            key: 'ASN',
-            value: 'AS13335 Cloudflare, Inc.',
-        },
-        {
-            key: 'Info',
-            value: 'DNS Query',
-        },
-    ]
-);
+const selectedHostKv = ref<KVItem[]>([]);
 
-const selectedHost = ref<any>();
+const selectedHost = ref<RemoteHost>();
 
 const dialogVisible = ref(false);
 
 const onRowSelect = (event: any) => {
+    let host: RemoteHost = event.data;
+    // set selectedHostKv. order is original order.
+    selectedHostKv.value = [];
+    selectedHostKv.value.push({key: 'IP Address', value: host.ip_addr});
+    selectedHostKv.value.push({key: 'Host Name', value: host.hostname});
+    selectedHostKv.value.push({key: 'Packet Sent', value: host.packet_sent.toString()});
+    selectedHostKv.value.push({key: 'Packet Received', value: host.packet_received.toString()});
+    selectedHostKv.value.push({key: 'Bytes Sent', value: host.bytes_sent.toString()});
+    selectedHostKv.value.push({key: 'Bytes Received', value: host.bytes_received.toString()});
+    selectedHostKv.value.push({key: 'Country Code', value: host.country_code});
+    selectedHostKv.value.push({key: 'Country Name', value: host.country_name});
+    selectedHostKv.value.push({key: 'ASN', value: host.asn});
+    selectedHostKv.value.push({key: 'AS Name', value: host.as_name});
     dialogVisible.value = true;
-    console.log(event.data);
 };
 
-const onRowUnselect = (event: any) => {
+const onRowUnselect = (_event: any) => {
     dialogVisible.value = false;
-    console.log(event.data);
+    //console.log(event.data);
 }
+
+const GetRemoteHosts = async() => {
+    isLoading.value = true;
+    const remoteHosts: RemoteHost[] = await invoke('get_remote_hosts');
+    tableData.value = remoteHosts;
+    isLoading.value = false;
+}
+
+const routine = setRoutine({
+  interval: 5000,
+  callback: () => { 
+        if (autoUpdate.value) {
+            GetRemoteHosts(); 
+        }
+    }
+});
+
+onMounted(() => {
+    windowUtil.mount();
+    GetRemoteHosts();
+    routine.start();
+});
+
+onUnmounted(() => {
+    windowUtil.unmount();
+    routine.stop();
+});
 
 </script>
 
@@ -166,20 +75,18 @@ const onRowUnselect = (event: any) => {
 </style>
 
 <template>
-    <Card>
+    <Card class="flex-auto">
         <template #title> Detected RemoteAddress. Click row for more detail. </template>
         <template #content>
-            <DataTable :value="sampleData" v-model:selection="selectedHost" selectionMode="single" dataKey="host_id" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable scrollHeight="70vh" tableStyle="min-width: 50rem">
-                <Column field="host_id" header="No" ></Column>
+            <DataTable :value="tableData" v-model:selection="selectedHost" :loading="isLoading" :virtualScrollerOptions="{ itemSize: 20 }" selectionMode="single" dataKey="ip_addr" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight-200).toString() + 'px'" tableStyle="min-width: 50rem">
                 <Column field="ip_addr" header="IP Address" ></Column>
                 <Column field="hostname" header="Host Name" ></Column>
-                <Column field="port" header="Port" ></Column>
-                <Column field="protocol" header="Protocol" ></Column>
-                <Column field="packets" header="Packets" ></Column>
-                <Column field="bytes" header="Bytes" ></Column>
+                <Column field="packet_sent" header="Packet Sent" ></Column>
+                <Column field="packet_received" header="Packet Recv" ></Column>
+                <Column field="bytes_sent" header="Bytes Sent" ></Column>
+                <Column field="bytes_received" header="Bytes Recv" ></Column>
                 <Column field="country" header="Country" ></Column>
                 <Column field="asn" header="ASN" ></Column>
-                <Column field="info" header="Info" ></Column>
             </DataTable>
         </template>
     </Card>

@@ -51,8 +51,6 @@ const routine = setRoutine({
   callback: () => { 
         if (autoUpdate.value) {
             GetNetStat(); 
-            console.log('updated');
-            console.log(windowUtil.windowSize);
         }
     }
 });

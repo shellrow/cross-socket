@@ -4,7 +4,7 @@
 mod commands;
 mod sys;
 
-use commands::{greet, get_netstat, start_packet_capture, start_packet_capture_crossbeam};
+use commands::{greet, get_netstat, start_packet_capture, get_remote_hosts};
 
 fn main() {
     tauri::Builder::default()
@@ -12,7 +12,7 @@ fn main() {
             greet,
             get_netstat,
             start_packet_capture,
-            start_packet_capture_crossbeam
+            get_remote_hosts
             ])
         .setup(|app| {
             let app_handle = app.handle();

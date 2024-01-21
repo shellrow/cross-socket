@@ -1,9 +1,8 @@
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use netpulsar_core::db::table::DbRemoteHost;
 use tauri::Manager;
-use xenet::packet::frame::Frame;
-use crossbeam_channel::{bounded, Receiver as CrossbeamReceiver, Sender as CrossbeamSender};
 use netpulsar_core::netstat::{ProcessSocketInfo, SocketInfoOption};
 use netpulsar_core::pcap::CaptureReport;
 use netpulsar_core::models::packet::PacketFrame;
@@ -76,7 +75,7 @@ pub async fn start_packet_capture(app_handle: tauri::AppHandle) -> CaptureReport
     report
 }
 
-#[tauri::command]
+/* #[tauri::command]
 pub async fn start_packet_capture_crossbeam(app_handle: tauri::AppHandle) -> CaptureReport {
     let mut report = CaptureReport::new();
     let (tx, rx): (CrossbeamSender<Frame>, CrossbeamReceiver<Frame>) = bounded(1);
@@ -129,14 +128,19 @@ pub async fn start_packet_capture_crossbeam(app_handle: tauri::AppHandle) -> Cap
         }
     }
     report
-}
+} */
 
 #[tauri::command]
 pub fn get_netstat(opt: SocketInfoOption) -> Vec<ProcessSocketInfo> {
     netpulsar_core::netstat::get_netstat(opt)
 }
 
-/* #[tauri::command]
-pub fn get_procs(opt: SocketInfoOption) -> Vec<ProcessSocketInfo> {
-    netpulsar_core::netstat::get_netstat(opt)
-} */
+#[tauri::command]
+pub fn get_remote_hosts() -> Vec<DbRemoteHost> {
+    let hosts: Vec<DbRemoteHost> = netpulsar_core::db::stat::get_remote_hosts();
+    if hosts.len() > 0 {
+        return hosts;
+    }else {
+        return netpulsar_core::db::stat::get_traffic_summary();
+    }
+}
