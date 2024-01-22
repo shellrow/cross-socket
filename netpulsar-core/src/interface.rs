@@ -1,4 +1,4 @@
-use std::net::IpAddr;
+use std::{collections::HashSet, net::{IpAddr, Ipv4Addr, Ipv6Addr}};
 use default_net::mac::MacAddr;
 use xenet::net::interface::Interface;
 
@@ -69,6 +69,37 @@ pub fn get_interface_ips(iface: &Interface) -> Vec<String> {
     for ip in iface.ipv6.clone() {
         ips.push(ip.addr.to_string());
     }
+    ips
+}
+
+pub fn get_local_ips(if_index: u32) -> HashSet<IpAddr> {
+    let interface = get_interface_by_index(if_index).unwrap();
+    let mut ips: HashSet<IpAddr> = HashSet::new();
+    for ip in interface.ipv4.clone() {
+        ips.insert(IpAddr::V4(ip.addr));
+    }
+    for ip in interface.ipv6.clone() {
+        ips.insert(IpAddr::V6(ip.addr));
+    }
+    // localhost IP addresses
+    ips.insert(IpAddr::V4(Ipv4Addr::LOCALHOST));
+    ips.insert(IpAddr::V6(Ipv6Addr::LOCALHOST));
+    ips
+}
+
+pub fn get_default_local_ips() -> HashSet<IpAddr> {
+    // Default interface IP addresses
+    let default_interface = default_net::get_default_interface().unwrap();
+    let mut ips: HashSet<IpAddr> = HashSet::new();
+    for ip in default_interface.ipv4.clone() {
+        ips.insert(IpAddr::V4(ip.addr));
+    }
+    for ip in default_interface.ipv6.clone() {
+        ips.insert(IpAddr::V6(ip.addr));
+    }
+    // localhost IP addresses
+    ips.insert(IpAddr::V4(Ipv4Addr::LOCALHOST));
+    ips.insert(IpAddr::V6(Ipv6Addr::LOCALHOST));
     ips
 }
 

@@ -1,5 +1,4 @@
 use std::net::IpAddr;
-use rusqlite::{Connection, Transaction};
 use tokio::sync::mpsc::Sender as TokioSender;
 use crossbeam_channel::Sender as CrossbeamSender;
 use std::sync::mpsc::Sender;
@@ -12,8 +11,7 @@ use xenet::packet::{ip::IpNextLevelProtocol, ethernet::EtherType};
 use xenet::net::interface::Interface;
 use xenet::packet::frame::Frame;
 use xenet::packet::frame::ParseOption;
-use crate::db::{DB_NAME, connect_db};
-use crate::db::table::DbPacketFrame;
+use crate::db;
 use crate::interface;
 use crate::sys;
 use crate::models::packet::PacketFrame;
@@ -375,15 +373,9 @@ pub async fn start_capture_async(
 pub fn start_background_capture(
     capture_options: PacketCaptureOptions,
     stop: &Arc<Mutex<bool>>,
+    netstat_strage: &mut Arc<Mutex<db::stat::NetStatStrage>>,
 ) -> CaptureReport {
     let mut report = CaptureReport::new();
-    let mut conn: Connection = match connect_db(DB_NAME) {
-        Ok(c)=> c, 
-        Err(e) => {
-            println!("Error: {:?}", e);
-            return report;
-        },
-    };
     let interfaces = xenet::net::interface::get_interfaces();
     let interface = interfaces
         .into_iter()
@@ -425,19 +417,12 @@ pub fn start_background_capture(
                 report.packets = report.packets.saturating_add(1);
                 let frame: Frame = Frame::from_bytes(&packet, parse_option);
                 if filter_packet(&frame, &capture_options) {
-                    let packet_frame = DbPacketFrame::from_xenet_frame(report.packets,interface.index, interface.name.clone(), frame);
-                    let tran: Transaction = conn.transaction().unwrap();
-                    match packet_frame.insert(&tran) {
-                        Ok(_) => {}
-                        Err(e) => {
-                            println!("Error: {:?}", e);
+                    let packet_frame = PacketFrame::from_xenet_frame(report.packets,interface.index, interface.name.clone(), frame);
+                    match netstat_strage.lock() {
+                        Ok(mut netstat_strage) => {
+                            netstat_strage.update(packet_frame);
                         }
-                    }
-                    match tran.commit() {
-                        Ok(_) => {}
-                        Err(e) => {
-                            println!("Error: {:?}", e);
-                        }
+                        Err(_) => {}
                     }
                 }
             }

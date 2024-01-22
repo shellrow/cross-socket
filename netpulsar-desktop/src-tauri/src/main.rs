@@ -4,10 +4,14 @@
 mod commands;
 mod sys;
 
+use std::sync::{Arc, Mutex};
+use netpulsar_core::db::stat::NetStatStrage;
 use commands::{greet, get_netstat, start_packet_capture, get_remote_hosts};
 
 fn main() {
+    let netstat_strage: Arc<Mutex<NetStatStrage>> = Arc::new(Mutex::new(NetStatStrage::new()));
     tauri::Builder::default()
+        .manage(netstat_strage)
         .invoke_handler(tauri::generate_handler![
             greet,
             get_netstat,
