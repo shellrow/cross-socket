@@ -1,10 +1,10 @@
-use netpulsar_core::netstat::SocketInfoOption;
+use netpulsar_core::net::socket::SocketInfoOption;
 
 extern crate netpulsar_core;
 
 #[test]
 fn show_netstat() {
-    let netstat = netpulsar_core::netstat::get_netstat(SocketInfoOption::default());
+    let netstat = netpulsar_core::net::socket::get_sockets_info(SocketInfoOption::default());
     for ns in netstat.iter() {
         println!("{:?}", ns);
     }
@@ -27,7 +27,7 @@ fn test_get_sysdate() {
 
 #[test]
 fn test_pcap() {
-    use netpulsar_core::models::packet::PacketFrame;
+    use netpulsar_core::net::packet::PacketFrame;
     use std::sync::mpsc::{channel, Receiver, Sender};
     use std::sync::{Arc, Mutex};
     use std::thread;

@@ -1,5 +1,6 @@
 use std::net::IpAddr;
 use std::time::Duration;
+use std::sync::{Arc, Mutex};
 
 #[cfg(not(any(unix, target_os = "windows")))]
 use hickory_resolver::config::{ResolverConfig, ResolverOpts};
@@ -11,6 +12,8 @@ use hickory_resolver::AsyncResolver;
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::thread;
+
+use super::stat::NetStatStrage;
 
 pub fn lookup_host_name(host_name: String) -> Option<IpAddr> {
     let ip_vec: Vec<IpAddr> = resolve_domain(host_name);
@@ -285,4 +288,39 @@ pub fn lookup_host(host: String) -> Vec<IpAddr> {
 
 pub fn lookup_addr(addr: IpAddr) -> Vec<String> {
     resolve_ip(addr)
+}
+
+pub fn start_dns_updater(netstat_strage: &mut Arc<Mutex<NetStatStrage>>) {
+    loop {
+        let mut lookup_target_ips: Vec<IpAddr> = vec![];
+        match netstat_strage.try_lock() {
+            Ok(netstat_strage) => {
+                println!("Total remotehost {}", netstat_strage.remote_hosts.keys().len());
+                netstat_strage.remote_hosts.keys().for_each(|ip_addr| {
+                    if !netstat_strage.reverse_dns_map.contains_key(ip_addr) {
+                        lookup_target_ips.push(*ip_addr);
+                    }
+                });
+            }
+            Err(e) => {
+                println!("dns_updater lock error: {}", e);
+            }
+        }
+        let dns_map = crate::net::dns::lookup_ips(lookup_target_ips);
+        match netstat_strage.try_lock() {
+            Ok(mut netstat_strage) => {
+                for (ip_addr, hostname) in dns_map {
+                    if let Some(remote_host) = netstat_strage.remote_hosts.get_mut(&ip_addr) {
+                        remote_host.hostname = hostname.clone();
+                    }
+                    netstat_strage.reverse_dns_map.insert(ip_addr, hostname);
+                }
+                //println!("DNS Map updated {:?}", netstat_strage.reverse_dns_map);
+            }
+            Err(e) => {
+                println!("dns_updater lock error: {}", e);
+            }
+        }
+        std::thread::sleep(std::time::Duration::from_secs(2));
+    }
 }

@@ -1,4 +1,4 @@
-use netpulsar_core::models::packet::PacketFrame;
+use netpulsar_core::net::packet::PacketFrame;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;

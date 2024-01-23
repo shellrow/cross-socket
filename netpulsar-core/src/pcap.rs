@@ -11,10 +11,10 @@ use xenet::packet::{ip::IpNextLevelProtocol, ethernet::EtherType};
 use xenet::net::interface::Interface;
 use xenet::packet::frame::Frame;
 use xenet::packet::frame::ParseOption;
-use crate::db;
 use crate::interface;
+use crate::net::stat::NetStatStrage;
 use crate::sys;
-use crate::models::packet::PacketFrame;
+use crate::net::packet::PacketFrame;
 
 /// Packet capture message
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -373,7 +373,7 @@ pub async fn start_capture_async(
 pub fn start_background_capture(
     capture_options: PacketCaptureOptions,
     stop: &Arc<Mutex<bool>>,
-    netstat_strage: &mut Arc<Mutex<db::stat::NetStatStrage>>,
+    netstat_strage: &mut Arc<Mutex<NetStatStrage>>,
 ) -> CaptureReport {
     let mut report = CaptureReport::new();
     let interfaces = xenet::net::interface::get_interfaces();
@@ -422,7 +422,9 @@ pub fn start_background_capture(
                         Ok(mut netstat_strage) => {
                             netstat_strage.update(packet_frame);
                         }
-                        Err(_) => {}
+                        Err(e) => {
+                            println!("background_capture lock error: {:?}", e);
+                        }
                     }
                 }
             }

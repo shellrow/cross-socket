@@ -5,7 +5,7 @@ mod commands;
 mod sys;
 
 use std::sync::{Arc, Mutex};
-use netpulsar_core::db::stat::NetStatStrage;
+use netpulsar_core::net::stat::NetStatStrage;
 use commands::{greet, get_netstat, start_packet_capture, get_remote_hosts};
 
 fn main() {

@@ -1,8 +1,27 @@
+use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use sysinfo::{PidExt, ProcessExt, SystemExt, ProcessRefreshKind, UserExt};
 use chrono::{DateTime, TimeZone, NaiveDateTime, Local};
-use crate::models::process::ProcessInfo;
-use crate::models::user::UserInfo;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UserInfo {
+    pub id: String,
+    pub group_id: String,
+    pub name: String,
+    pub groups: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ProcessInfo {
+    pub pid: u32,
+    pub name: String,
+    pub exe_path: String,
+    pub cmd: Vec<String>,
+    pub status: String,
+    pub user_info: Option<UserInfo>,
+    pub start_time: String,
+    pub elapsed_time: u64,
+}
 
 pub fn get_process_map() -> HashMap<u32, ProcessInfo> {
     let mut process_map: HashMap<u32, ProcessInfo> = HashMap::new();

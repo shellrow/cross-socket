@@ -1,11 +1,12 @@
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use netpulsar_core::db::table::DbRemoteHost;
-use tauri::Manager;
-use netpulsar_core::netstat::{ProcessSocketInfo, SocketInfoOption};
+use netpulsar_core::net::host::RemoteHostInfo;
+use netpulsar_core::net::stat::NetStatStrage;
+use tauri::{Manager, State};
+use netpulsar_core::net::socket::{SocketInfo, SocketInfoOption};
 use netpulsar_core::pcap::CaptureReport;
-use netpulsar_core::models::packet::PacketFrame;
+use netpulsar_core::net::packet::PacketFrame;
 
 #[tauri::command]
 pub fn greet(name: &str) -> String {
@@ -131,16 +132,23 @@ pub async fn start_packet_capture_crossbeam(app_handle: tauri::AppHandle) -> Cap
 } */
 
 #[tauri::command]
-pub fn get_netstat(opt: SocketInfoOption) -> Vec<ProcessSocketInfo> {
-    netpulsar_core::netstat::get_netstat(opt)
+pub fn get_netstat(opt: SocketInfoOption) -> Vec<SocketInfo> {
+    netpulsar_core::net::socket::get_sockets_info(opt)
 }
 
 #[tauri::command]
-pub fn get_remote_hosts() -> Vec<DbRemoteHost> {
-    let hosts: Vec<DbRemoteHost> = netpulsar_core::db::stat::get_remote_hosts();
-    if hosts.len() > 0 {
-        return hosts;
-    }else {
-        return netpulsar_core::db::stat::get_traffic_summary();
+pub fn get_remote_hosts(netstat: State<'_, Arc<Mutex<NetStatStrage>>>) -> Vec<RemoteHostInfo> {
+    match netstat.try_lock() {
+        Ok(netstat_strage) => {
+            let mut hosts: Vec<RemoteHostInfo> = Vec::new();
+            for host in netstat_strage.remote_hosts.values() {
+                hosts.push(host.clone());
+            }
+            hosts
+        }
+        Err(e) => {
+            println!("get_remote_hosts lock error: {:?}", e);
+            Vec::new()
+        }
     }
 }

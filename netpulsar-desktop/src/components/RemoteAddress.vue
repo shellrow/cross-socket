@@ -1,32 +1,32 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api/tauri';
-import { RemoteHost } from '../types/np-types';
+import { RemoteHostInfo } from '../types/np-types';
 import { KVItem } from '../types/common';
 import { WindowUtil } from '../libnp/window-util';
 import { setRoutine } from '../libnp/routine';
 
 const windowUtil = new WindowUtil();
 const autoUpdate = ref(true);
-const tableData = ref<RemoteHost[]>([]);
+const tableData = ref<RemoteHostInfo[]>([]);
 const isLoading = ref(false);
 
 const selectedHostKv = ref<KVItem[]>([]);
 
-const selectedHost = ref<RemoteHost>();
+const selectedHost = ref<RemoteHostInfo>();
 
 const dialogVisible = ref(false);
 
 const onRowSelect = (event: any) => {
-    let host: RemoteHost = event.data;
+    let host: RemoteHostInfo = event.data;
     // set selectedHostKv. order is original order.
     selectedHostKv.value = [];
     selectedHostKv.value.push({key: 'IP Address', value: host.ip_addr});
     selectedHostKv.value.push({key: 'Host Name', value: host.hostname});
-    selectedHostKv.value.push({key: 'Packet Sent', value: host.packet_sent.toString()});
-    selectedHostKv.value.push({key: 'Packet Received', value: host.packet_received.toString()});
-    selectedHostKv.value.push({key: 'Bytes Sent', value: host.bytes_sent.toString()});
-    selectedHostKv.value.push({key: 'Bytes Received', value: host.bytes_received.toString()});
+    selectedHostKv.value.push({key: 'Packet Sent', value: host.traffic_info.packet_sent.toString()});
+    selectedHostKv.value.push({key: 'Packet Received', value: host.traffic_info.packet_received.toString()});
+    selectedHostKv.value.push({key: 'Bytes Sent', value: host.traffic_info.bytes_sent.toString()});
+    selectedHostKv.value.push({key: 'Bytes Received', value: host.traffic_info.bytes_received.toString()});
     selectedHostKv.value.push({key: 'Country Code', value: host.country_code});
     selectedHostKv.value.push({key: 'Country Name', value: host.country_name});
     selectedHostKv.value.push({key: 'ASN', value: host.asn});
@@ -41,7 +41,7 @@ const onRowUnselect = (_event: any) => {
 
 const GetRemoteHosts = async() => {
     isLoading.value = true;
-    const remoteHosts: RemoteHost[] = await invoke('get_remote_hosts');
+    const remoteHosts: RemoteHostInfo[] = await invoke('get_remote_hosts');
     tableData.value = remoteHosts;
     isLoading.value = false;
 }
@@ -81,10 +81,10 @@ onUnmounted(() => {
             <DataTable :value="tableData" v-model:selection="selectedHost" :loading="isLoading" :virtualScrollerOptions="{ itemSize: 20 }" selectionMode="single" dataKey="ip_addr" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight-200).toString() + 'px'" tableStyle="min-width: 50rem">
                 <Column field="ip_addr" header="IP Address" ></Column>
                 <Column field="hostname" header="Host Name" ></Column>
-                <Column field="packet_sent" header="Packet Sent" ></Column>
-                <Column field="packet_received" header="Packet Recv" ></Column>
-                <Column field="bytes_sent" header="Bytes Sent" ></Column>
-                <Column field="bytes_received" header="Bytes Recv" ></Column>
+                <Column field="traffic_info.packet_sent" header="Packet Sent" ></Column>
+                <Column field="traffic_info.packet_received" header="Packet Recv" ></Column>
+                <Column field="traffic_info.bytes_sent" header="Bytes Sent" ></Column>
+                <Column field="traffic_info.bytes_received" header="Bytes Recv" ></Column>
                 <Column field="country" header="Country" ></Column>
                 <Column field="asn" header="ASN" ></Column>
             </DataTable>

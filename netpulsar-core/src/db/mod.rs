@@ -1,5 +1,5 @@
 pub mod table;
-pub mod stat;
+//pub mod stat;
 use std::env;
 use std::path::PathBuf;
 use rusqlite::{Connection, Result, Transaction, params};

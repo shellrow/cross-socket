@@ -189,17 +189,58 @@ export interface SocketInfoOption {
     transport_protocol: string[],
 }
 
-export interface RemoteHost {
+/*
+pub enum Protocol {
+    ARP,
+    NDP,
+    ICMP,
+    TCP,
+    UDP
+}
+
+pub struct TrafficInfo {
+    pub packet_sent: usize,
+    pub packet_received: usize,
+    pub bytes_sent: usize,
+    pub bytes_received: usize,
+}
+
+pub struct RemoteHostInfo {
+    pub if_index: u32,
+    pub if_name: String,
+    pub mac_addr: String,
+    pub ip_addr: IpAddr,
+    pub hostname: String,
+    pub country_code: String,
+    pub country_name: String,
+    pub asn: String,
+    pub as_name: String,
+    pub traffic_info: TrafficInfo,
+    pub protocol_stat: HashMap<Protocol, TrafficInfo>,
+    pub first_seen: String,
+    pub updated_at: String,
+}
+*/
+
+export interface TrafficInfo {
+    packet_sent: number,
+    packet_received: number,
+    bytes_sent: number,
+    bytes_received: number,
+}
+
+export interface RemoteHostInfo {
+    if_index: number,
+    if_name: string,
+    mac_addr: string,
     ip_addr: string,
     hostname: string,
     country_code: string,
     country_name: string,
     asn: string,
     as_name: string,
-    packet_sent: number,
-    packet_received: number,
-    bytes_sent: number,
-    bytes_received: number,
+    traffic_info: TrafficInfo,
+    protocol_stat: { [key: string]: TrafficInfo },
     first_seen: string,
     updated_at: string,
 }
