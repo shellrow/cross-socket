@@ -2,6 +2,7 @@ use default_net::mac::MacAddr;
 use netprobe::{neighbor::DeviceResolver, setting::ProbeSetting};
 use std::{collections::HashMap, net::IpAddr};
 use xenet::net::ipnet::{Ipv4Net, Ipv6Net};
+use crate::net::interface;
 
 pub fn get_network_address(ip_addr: IpAddr) -> Result<String, String> {
     match ip_addr {
@@ -51,7 +52,7 @@ pub fn guess_initial_ttl(ttl: u8) -> u8 {
 
 pub fn get_mac_addresses(ips: Vec<IpAddr>, src_ip: IpAddr) -> HashMap<IpAddr, String> {
     let mut map: HashMap<IpAddr, String> = HashMap::new();
-    if let Some(c_interface) = crate::interface::get_interface_by_ip(src_ip) {
+    if let Some(c_interface) = interface::get_interface_by_ip(src_ip) {
         for ip in ips {
             if ip == src_ip {
                 map.insert(

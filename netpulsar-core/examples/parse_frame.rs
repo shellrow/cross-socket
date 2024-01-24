@@ -18,19 +18,6 @@ fn main() {
         }
         println!("count: {}", count);
     });
-    // capture packet to 5 seconds
-    /* let start = std::time::Instant::now();
-    let mut count: usize = 0;
-    loop {
-        while let Ok(frame) = rx.recv() {
-            println!("frame: {:?}", frame);
-            count += 1;
-        }
-        if start.elapsed().as_secs() >= 5 {
-            println!("count: {}", count);
-            break;
-        }
-    } */
     thread::sleep(std::time::Duration::from_secs(30));
     match stop_handle.lock() {
         Ok(mut stop) => {

@@ -1,38 +1,4 @@
 // TypeScript types from the Rust types
-export interface SocketInfo {
-    local_ip_addr: string,
-    local_port: number,
-    remote_ip_addr: string | null,
-    remote_port: number | null,
-    protocol: string,
-    state: string | null,
-    ip_version: number,
-}
-
-export interface UserInfo {
-    id: string,
-    group_id: string,
-    name: string,
-    groups: string[],
-}
-
-export interface ProcessInfo {
-    pid: number,
-    name: string,
-    exe_path: string,
-    cmd: string[],
-    status: string,
-    user_info: UserInfo | null,
-    start_time: string,
-    elapsed_time: number,
-}
-
-export interface ProcessSocketInfo {
-    index: number,
-    socket_info: SocketInfo,
-    process_info: ProcessInfo,
-}
-
 export interface DatalinkLayer {
     ethernet: EthernetHeader | null,
     arp: ArpHeader | null,
@@ -189,38 +155,34 @@ export interface SocketInfoOption {
     transport_protocol: string[],
 }
 
-/*
-pub enum Protocol {
-    ARP,
-    NDP,
-    ICMP,
-    TCP,
-    UDP
+export interface UserInfo {
+    user_id: string,
+    group_id: string,
+    user_name: string,
+    groups: string[],
 }
 
-pub struct TrafficInfo {
-    pub packet_sent: usize,
-    pub packet_received: usize,
-    pub bytes_sent: usize,
-    pub bytes_received: usize,
+export interface ProcessInfo {
+    pid: number,
+    name: string,
+    exe_path: string,
+    cmd: string[],
+    status: string,
+    user_info: UserInfo | null,
+    start_time: string,
+    elapsed_time: number,
 }
 
-pub struct RemoteHostInfo {
-    pub if_index: u32,
-    pub if_name: String,
-    pub mac_addr: String,
-    pub ip_addr: IpAddr,
-    pub hostname: String,
-    pub country_code: String,
-    pub country_name: String,
-    pub asn: String,
-    pub as_name: String,
-    pub traffic_info: TrafficInfo,
-    pub protocol_stat: HashMap<Protocol, TrafficInfo>,
-    pub first_seen: String,
-    pub updated_at: String,
+export interface SocketInfo {
+    local_ip_addr: string,
+    local_port: number,
+    remote_ip_addr: string | null,
+    remote_port: number | null,
+    protocol: string,
+    status: string,
+    ip_version: string,
+    processes: ProcessInfo[],
 }
-*/
 
 export interface TrafficInfo {
     packet_sent: number,

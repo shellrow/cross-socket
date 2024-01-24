@@ -4,7 +4,7 @@ use std::thread;
 use netpulsar_core::net::host::RemoteHostInfo;
 use netpulsar_core::net::stat::NetStatStrage;
 use tauri::{Manager, State};
-use netpulsar_core::net::socket::{SocketInfo, SocketInfoOption};
+use netpulsar_core::socket::{SocketInfo, SocketInfoOption};
 use netpulsar_core::pcap::CaptureReport;
 use netpulsar_core::net::packet::PacketFrame;
 
@@ -47,15 +47,6 @@ pub async fn start_packet_capture(app_handle: tauri::AppHandle) -> CaptureReport
         }
         app_handle.unlisten(stop_pcap_event);
     });
-    /* thread::sleep(std::time::Duration::from_secs(30));
-    match stop_handle.lock() {
-        Ok(mut stop) => {
-            *stop = true;
-        }
-        Err(e) => {
-            eprintln!("Error: {:?}", e);
-        }
-    }   */  
     match pacp_handler.join() {
         Ok(r) => {
             println!("pacp_handler: {:?}", r);
@@ -76,64 +67,9 @@ pub async fn start_packet_capture(app_handle: tauri::AppHandle) -> CaptureReport
     report
 }
 
-/* #[tauri::command]
-pub async fn start_packet_capture_crossbeam(app_handle: tauri::AppHandle) -> CaptureReport {
-    let mut report = CaptureReport::new();
-    let (tx, rx): (CrossbeamSender<Frame>, CrossbeamReceiver<Frame>) = bounded(1);
-    let stop = Arc::new(Mutex::new(false));
-    let stop_handle = stop.clone();
-    let pcap_option = netpulsar_core::pcap::PacketCaptureOptions::default();
-    let pacp_handler = thread::spawn(move || {
-        netpulsar_core::pcap::start_capture_crossbeam(pcap_option.unwrap(), tx, &stop)
-    });
-    let print_handler = thread::spawn(move || {
-        let mut count: usize = 0;
-        while let Ok(frame) = rx.recv() {
-            match app_handle.emit_all("packet_frame", frame) {
-                Ok(_) => {
-
-                }
-                Err(e) => {
-                    println!("Error: {:?}", e);
-                }
-            }
-            count += 1;
-        }
-        println!("count: {}", count);
-    });
-    thread::sleep(std::time::Duration::from_secs(30));
-    match stop_handle.lock() {
-        Ok(mut stop) => {
-            *stop = true;
-        }
-        Err(e) => {
-            eprintln!("Error: {:?}", e);
-        }
-    }    
-    
-    match pacp_handler.join() {
-        Ok(r) => {
-            println!("pacp_handler: {:?}", r);
-            report = r;
-        }
-        Err(e) => {
-            eprintln!("Error: {:?}", e);
-        }
-    }
-    match print_handler.join() {
-        Ok(_) => {
-            
-        }
-        Err(e) => {
-            eprintln!("Error: {:?}", e);
-        }
-    }
-    report
-} */
-
 #[tauri::command]
 pub fn get_netstat(opt: SocketInfoOption) -> Vec<SocketInfo> {
-    netpulsar_core::net::socket::get_sockets_info(opt)
+    netpulsar_core::socket::get_sockets_info(opt)
 }
 
 #[tauri::command]

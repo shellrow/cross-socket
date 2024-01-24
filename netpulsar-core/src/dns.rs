@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use std::thread;
 
-use super::stat::NetStatStrage;
+use crate::net::stat::NetStatStrage;
 
 pub fn lookup_host_name(host_name: String) -> Option<IpAddr> {
     let ip_vec: Vec<IpAddr> = resolve_domain(host_name);
@@ -107,7 +107,7 @@ fn resolve_domain(host_name: String) -> Vec<IpAddr> {
 fn resolve_ip(ip_addr: IpAddr) -> Vec<String> {
     let mut names: Vec<String> = vec![];
     let mut system_conf = hickory_resolver::system_conf::read_system_conf().unwrap();
-    if crate::ip::is_global_addr(ip_addr) {
+    if crate::net::ip::is_global_addr(ip_addr) {
         system_conf.1.timeout = Duration::from_millis(1000);
     } else {
         system_conf.1.timeout = Duration::from_millis(200);
@@ -199,7 +199,7 @@ async fn resolve_ip_async(ip_addr: String) -> Vec<String> {
     let ip_addr: IpAddr = IpAddr::from_str(ip_addr.as_str()).unwrap();
     let mut names: Vec<String> = vec![];
     let mut system_conf = hickory_resolver::system_conf::read_system_conf().unwrap();
-    if crate::ip::is_global_addr(ip_addr) {
+    if crate::net::ip::is_global_addr(ip_addr) {
         system_conf.1.timeout = Duration::from_millis(1000);
     } else {
         system_conf.1.timeout = Duration::from_millis(200);
@@ -290,12 +290,12 @@ pub fn lookup_addr(addr: IpAddr) -> Vec<String> {
     resolve_ip(addr)
 }
 
-pub fn start_dns_updater(netstat_strage: &mut Arc<Mutex<NetStatStrage>>) {
+pub fn start_dns_map_update(netstat_strage: &mut Arc<Mutex<NetStatStrage>>) {
     loop {
         let mut lookup_target_ips: Vec<IpAddr> = vec![];
         match netstat_strage.try_lock() {
             Ok(netstat_strage) => {
-                println!("Total remotehost {}", netstat_strage.remote_hosts.keys().len());
+                println!("[dns_map_update] Total remotehost: {}", netstat_strage.remote_hosts.keys().len());
                 netstat_strage.remote_hosts.keys().for_each(|ip_addr| {
                     if !netstat_strage.reverse_dns_map.contains_key(ip_addr) {
                         lookup_target_ips.push(*ip_addr);
@@ -303,10 +303,10 @@ pub fn start_dns_updater(netstat_strage: &mut Arc<Mutex<NetStatStrage>>) {
                 });
             }
             Err(e) => {
-                println!("dns_updater lock error: {}", e);
+                println!("[dns_map_update] lock error: {}", e);
             }
         }
-        let dns_map = crate::net::dns::lookup_ips(lookup_target_ips);
+        let dns_map = crate::dns::lookup_ips(lookup_target_ips);
         match netstat_strage.try_lock() {
             Ok(mut netstat_strage) => {
                 for (ip_addr, hostname) in dns_map {
@@ -315,10 +315,9 @@ pub fn start_dns_updater(netstat_strage: &mut Arc<Mutex<NetStatStrage>>) {
                     }
                     netstat_strage.reverse_dns_map.insert(ip_addr, hostname);
                 }
-                //println!("DNS Map updated {:?}", netstat_strage.reverse_dns_map);
             }
             Err(e) => {
-                println!("dns_updater lock error: {}", e);
+                println!("[dns_map_update] lock error: {}", e);
             }
         }
         std::thread::sleep(std::time::Duration::from_secs(2));

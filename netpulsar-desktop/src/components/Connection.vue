@@ -3,12 +3,12 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api/tauri';
 //import { listen } from '@tauri-apps/api/event';
 import { KVItem, OptionItem } from '../types/common';
-import { ProcessSocketInfo, SocketInfoOption } from '../types/np-types';
+import { SocketInfo, SocketInfoOption } from '../types/np-types';
 import { setRoutine } from '../libnp/routine';
 import { WindowUtil } from '../libnp/window-util';
 import { DataTableRowSelectEvent } from 'primevue/datatable';
 
-const tableData = ref<ProcessSocketInfo[]>([]);
+const tableData = ref<SocketInfo[]>([]);
 const selectedHostKv = ref<KVItem[]>([]);
 const selectedHost = ref<any>();
 const selectedAddressFamily = ref<OptionItem[]>([]);
@@ -41,7 +41,7 @@ const GetNetStat = async() => {
         options.transport_protocol = ['TCP'];
     }
     console.log(options);
-    const result = await invoke<ProcessSocketInfo[]>('get_netstat', {opt: options});
+    const result = await invoke<SocketInfo[]>('get_netstat', {opt: options});
     tableData.value = result;
     isLoading.value = false;
 }
@@ -77,11 +77,11 @@ const transport_protocols: OptionItem[] = [
 
 const onRowSelect = (event: DataTableRowSelectEvent) => {
     dialogVisible.value = true;
-    const ps: ProcessSocketInfo = event.data;
+    const socket_info: SocketInfo = event.data;
     selectedHostKv.value = [
         {
             key: 'IP Address',
-            value: ps.socket_info.remote_ip_addr || '',
+            value: socket_info.remote_ip_addr || '',
         },
         {
             key: 'Hostname',
@@ -89,11 +89,11 @@ const onRowSelect = (event: DataTableRowSelectEvent) => {
         },
         {
             key: 'Port',
-            value: ps.socket_info.remote_port?.toString() || '',
+            value: socket_info.remote_port?.toString() || '',
         },
         {
             key: 'Protocol',
-            value: ps.socket_info.protocol,
+            value: socket_info.protocol,
         },
         {
             key: 'Packets',
@@ -160,16 +160,16 @@ onUnmounted(() => {
         <template #content>
             <DataTable :value="tableData" v-model:selection="selectedHost" :loading="isLoading" :virtualScrollerOptions="{ itemSize: 20 }" selectionMode="single" dataKey="index" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" size="small" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight-200).toString() + 'px'" tableStyle="min-width: 50rem">
                 <Column field="index" header="No" sortable></Column>
-                <Column field="socket_info.local_ip_addr" header="SRC IP Address" sortable></Column>
+                <Column field="local_ip_addr" header="SRC IP Address" sortable></Column>
                 <!-- <Column field="local_hostname" header="SRC Host Name"></Column> -->
-                <Column field="socket_info.local_port" header="SRC Port" sortable></Column>
-                <Column field="socket_info.remote_ip_addr" header="DST IP Address" sortable></Column>
+                <Column field="local_port" header="SRC Port" sortable></Column>
+                <Column field="remote_ip_addr" header="DST IP Address" sortable></Column>
                 <!-- <Column field="remote_hostname" header="DST Host Name"></Column> -->
-                <Column field="socket_info.remote_port" header="DST Port" sortable></Column>
-                <Column field="socket_info.protocol" header="Protocol" sortable></Column>
-                <Column field="socket_info.state" header="Status" sortable></Column>
-                <Column field="process_info.pid" header="Process ID" sortable></Column>
-                <Column field="process_info.name" header="Process Name" sortable></Column>
+                <Column field="remote_port" header="DST Port" sortable></Column>
+                <Column field="protocol" header="Protocol" sortable></Column>
+                <Column field="status" header="Status" sortable></Column>
+                <!-- <Column field="processes[0].pid" header="Process ID" sortable></Column> -->
+                <!-- <Column field="processes[0].name" header="Process Name" sortable></Column> -->
             </DataTable>
         </template>
     </Card>

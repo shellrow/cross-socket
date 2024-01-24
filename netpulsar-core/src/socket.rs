@@ -1,12 +1,14 @@
-use std::net::{IpAddr, SocketAddr};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::sync::{Arc, Mutex};
 
 use serde::{Serialize, Deserialize};
 use xenet::packet::tcp::TcpFlags;
 use std::collections::HashMap;
 use netstat2::{AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo};
+use crate::net::stat::NetStatStrage;
 use crate::process;
 use crate::process::ProcessInfo;
-use super::protocol::Protocol;
+use crate::net::protocol::Protocol;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Hash, Eq, Clone, PartialOrd, Ord, Copy)]
 pub struct SocketConnection {
@@ -101,7 +103,7 @@ pub struct SocketConnectionInfo {
     pub bytes_sent: usize,
     pub bytes_received: usize,
     pub status: SocketStatus,
-    pub process_info: Option<ProcessInfo>,
+    pub processes: Vec<ProcessInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -114,15 +116,6 @@ pub struct SocketInfo {
     pub status: SocketStatus,
     pub ip_version: AddressFamily,
     pub processes: Vec<ProcessInfo>,
-}
-
-
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ProcessSocketInfo {
-    pub index: usize,
-    pub socket_info: SocketInfo,
-    pub process_info: ProcessInfo,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -233,4 +226,67 @@ pub fn get_sockets_info(opt: SocketInfoOption) -> Vec<SocketInfo> {
         }
     }
     sockets_info
+}
+
+pub fn start_socket_info_update(netstat_strage: &mut Arc<Mutex<NetStatStrage>>) {
+    loop {
+        let sockets_info = get_sockets_info(SocketInfoOption::default());
+        match netstat_strage.try_lock() {
+            Ok(mut netstat_strage) => {
+                // remove old connections
+                let mut remove_keys: Vec<SocketConnection> = vec![];
+                for conn in netstat_strage.connections.iter() {
+                    if !sockets_info.iter().any(|si| si.local_ip_addr == conn.0.local_socket.ip() && si.local_port == conn.0.local_socket.port()) {
+                        remove_keys.push(conn.0.to_owned());
+                    }
+                }
+                for key in remove_keys {
+                    netstat_strage.connections.remove(&key);
+                }
+                // update connections
+                for socket_info in sockets_info {
+                    match socket_info.protocol {
+                        Protocol::TCP => {
+                            let remote_ip_addr: IpAddr = if let Some(ip) = socket_info.remote_ip_addr { ip } else { IpAddr::V4(Ipv4Addr::UNSPECIFIED) };
+                            let socket_connection: SocketConnection = SocketConnection {
+                                local_socket: SocketAddr::new(socket_info.local_ip_addr, socket_info.local_port),
+                                remote_socket: SocketAddr::new(remote_ip_addr, socket_info.remote_port.unwrap_or(0)),
+                                protocol: Protocol::TCP,
+                            };
+                            let socket_conn_info: &mut SocketConnectionInfo = netstat_strage.connections.entry(socket_connection).or_insert(SocketConnectionInfo {
+                                if_index: 0,
+                                if_name: "".to_string(),
+                                packet_sent: 0,
+                                packet_received: 0,
+                                bytes_sent: 0,
+                                bytes_received: 0,
+                                status: SocketStatus::Unknown,
+                                processes: vec![],
+                            });
+                            socket_conn_info.status = socket_info.status;
+                            socket_conn_info.processes = socket_info.processes;
+                        }
+                        Protocol::UDP => {
+                            // UDP is not a connection-oriented protocol.
+                            // pcap thread can get the Destination IP address and port number from the packet.
+                            // But we want to know which process is using the socket.
+                            // So we use local_socket as a key and update SocketConnectionInfo.
+                            for conn in netstat_strage.connections.iter_mut() {
+                                if conn.0.local_socket.ip() == socket_info.local_ip_addr && conn.0.local_socket.port() == socket_info.local_port {
+                                    conn.1.processes = socket_info.processes;
+                                    break;
+                                }
+                            }
+                        }
+                        _ => {},
+                    }
+                }
+                println!("[socket_info_update] total connections: {}", netstat_strage.connections.keys().len());
+            }
+            Err(e) => {
+                println!("socket_info_update lock error{}", e);
+            }
+        }
+        std::thread::sleep(std::time::Duration::from_secs(2));
+    }
 }

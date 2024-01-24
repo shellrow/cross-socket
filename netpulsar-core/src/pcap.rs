@@ -1,6 +1,4 @@
 use std::net::IpAddr;
-use tokio::sync::mpsc::Sender as TokioSender;
-use crossbeam_channel::Sender as CrossbeamSender;
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 use std::collections::HashSet;
@@ -11,7 +9,7 @@ use xenet::packet::{ip::IpNextLevelProtocol, ethernet::EtherType};
 use xenet::net::interface::Interface;
 use xenet::packet::frame::Frame;
 use xenet::packet::frame::ParseOption;
-use crate::interface;
+use crate::net::interface;
 use crate::net::stat::NetStatStrage;
 use crate::sys;
 use crate::net::packet::PacketFrame;
@@ -209,13 +207,7 @@ pub fn start_capture(
     report
 }
 
-/// Start packet capture with crossbeam channel
-pub fn start_capture_crossbeam(
-    capture_options: PacketCaptureOptions,
-    msg_tx: CrossbeamSender<Frame>,
-    stop: &Arc<Mutex<bool>>,
-) -> CaptureReport {
-    let mut report = CaptureReport::new();
+pub fn start_background_capture(capture_options: PacketCaptureOptions, netstat_strage: &mut Arc<Mutex<NetStatStrage>>) {
     let interfaces = xenet::net::interface::get_interfaces();
     let interface = interfaces
         .into_iter()
@@ -238,7 +230,6 @@ pub fn start_capture_crossbeam(
         Err(e) => panic!("Error happened {}", e),
     };
     let start_time = Instant::now();
-    report.start_time = sys::get_sysdate();
     loop {
         match rx.next() {
             Ok(packet) => {
@@ -255,169 +246,7 @@ pub fn start_capture_crossbeam(
                 }
                 let frame: Frame = Frame::from_bytes(&packet, parse_option);
                 if filter_packet(&frame, &capture_options) {
-                    /* match msg_tx.lock() {
-                        Ok(msg_tx) => match msg_tx.send(frame) {
-                            Ok(_) => {}
-                            Err(_) => {}
-                        },
-                        Err(_) => {}
-                    } */
-                    match msg_tx.send(frame) {
-                        Ok(_) => {}
-                        Err(_) => {}
-                    }
-                }
-                report.bytes = report.bytes.saturating_add(packet.len());
-                report.packets = report.packets.saturating_add(1);
-            }
-            Err(_) => {}
-        }
-        match stop.lock() {
-            Ok(stop) => {
-                if *stop {
-                    break;
-                }
-            }
-            Err(_) => {}
-        }
-        if Instant::now().duration_since(start_time) > capture_options.capture_timeout {
-            break;
-        }
-    }
-    report.end_time = sys::get_sysdate();
-    report.duration = Instant::now().duration_since(start_time);
-    report
-}
-
-/// Start packet capture with tokio channel
-pub async fn start_capture_async(
-    capture_options: PacketCaptureOptions,
-    //msg_tx: &Arc<Mutex<Sender<Frame>>>,
-    msg_tx: TokioSender<Frame>,
-    stop: &Arc<Mutex<bool>>,
-) -> CaptureReport {
-    let mut report = CaptureReport::new();
-    let interfaces = xenet::net::interface::get_interfaces();
-    let interface = interfaces
-        .into_iter()
-        .filter(|interface: &Interface| interface.index == capture_options.interface_index)
-        .next()
-        .expect("Failed to get Interface");
-    let config = xenet::datalink::Config {
-        write_buffer_size: 4096,
-        read_buffer_size: 4096,
-        read_timeout: Some(capture_options.read_timeout),
-        write_timeout: None,
-        channel_type: xenet::datalink::ChannelType::Layer2,
-        bpf_fd_attempts: 1000,
-        linux_fanout: None,
-        promiscuous: capture_options.promiscuous,
-    };
-    let (mut _tx, mut rx) = match xenet::datalink::channel(&interface, config) {
-        Ok(xenet::datalink::Channel::Ethernet(tx, rx)) => (tx, rx),
-        Ok(_) => panic!("Unknown channel type"),
-        Err(e) => panic!("Error happened {}", e),
-    };
-    let start_time = Instant::now();
-    report.start_time = sys::get_sysdate();
-    loop {
-        match rx.next() {
-            Ok(packet) => {
-                let mut parse_option: ParseOption = ParseOption::default();
-                if interface.is_tun() {
-                    let payload_offset;
-                    if interface.is_loopback() {
-                        payload_offset = 14;
-                    } else {
-                        payload_offset = 0;
-                    }
-                    parse_option.from_ip_packet = true;
-                    parse_option.offset = payload_offset;
-                }
-                let frame: Frame = Frame::from_bytes(&packet, parse_option);
-                if filter_packet(&frame, &capture_options) {
-                    /* match msg_tx.lock() {
-                        Ok(msg_tx) => match msg_tx.send(frame) {
-                            Ok(_) => {}
-                            Err(_) => {}
-                        },
-                        Err(_) => {}
-                    } */
-                    match msg_tx.send(frame).await {
-                        Ok(_) => {}
-                        Err(_) => {}
-                    }
-                }
-                report.bytes = report.bytes.saturating_add(packet.len());
-                report.packets = report.packets.saturating_add(1);
-            }
-            Err(_) => {}
-        }
-        match stop.lock() {
-            Ok(stop) => {
-                if *stop {
-                    break;
-                }
-            }
-            Err(_) => {}
-        }
-        if Instant::now().duration_since(start_time) > capture_options.capture_timeout {
-            break;
-        }
-    }
-    report.end_time = sys::get_sysdate();
-    report.duration = Instant::now().duration_since(start_time);
-    report
-}
-
-pub fn start_background_capture(
-    capture_options: PacketCaptureOptions,
-    stop: &Arc<Mutex<bool>>,
-    netstat_strage: &mut Arc<Mutex<NetStatStrage>>,
-) -> CaptureReport {
-    let mut report = CaptureReport::new();
-    let interfaces = xenet::net::interface::get_interfaces();
-    let interface = interfaces
-        .into_iter()
-        .filter(|interface: &Interface| interface.index == capture_options.interface_index)
-        .next()
-        .expect("Failed to get Interface");
-    let config = xenet::datalink::Config {
-        write_buffer_size: 4096,
-        read_buffer_size: 4096,
-        read_timeout: Some(capture_options.read_timeout),
-        write_timeout: None,
-        channel_type: xenet::datalink::ChannelType::Layer2,
-        bpf_fd_attempts: 1000,
-        linux_fanout: None,
-        promiscuous: capture_options.promiscuous,
-    };
-    let (mut _tx, mut rx) = match xenet::datalink::channel(&interface, config) {
-        Ok(xenet::datalink::Channel::Ethernet(tx, rx)) => (tx, rx),
-        Ok(_) => panic!("Unknown channel type"),
-        Err(e) => panic!("Error happened {}", e),
-    };
-    let start_time = Instant::now();
-    report.start_time = sys::get_sysdate();
-    loop {
-        match rx.next() {
-            Ok(packet) => {
-                let mut parse_option: ParseOption = ParseOption::default();
-                if interface.is_tun() {
-                    let payload_offset;
-                    if interface.is_loopback() {
-                        payload_offset = 14;
-                    } else {
-                        payload_offset = 0;
-                    }
-                    parse_option.from_ip_packet = true;
-                    parse_option.offset = payload_offset;
-                }
-                report.bytes = report.bytes.saturating_add(packet.len());
-                report.packets = report.packets.saturating_add(1);
-                let frame: Frame = Frame::from_bytes(&packet, parse_option);
-                if filter_packet(&frame, &capture_options) {
-                    let packet_frame = PacketFrame::from_xenet_frame(report.packets,interface.index, interface.name.clone(), frame);
+                    let packet_frame = PacketFrame::from_xenet_frame(0,interface.index, interface.name.clone(), frame);
                     match netstat_strage.lock() {
                         Ok(mut netstat_strage) => {
                             netstat_strage.update(packet_frame);
@@ -430,21 +259,10 @@ pub fn start_background_capture(
             }
             Err(_) => {}
         }
-        match stop.lock() {
-            Ok(stop) => {
-                if *stop {
-                    break;
-                }
-            }
-            Err(_) => {}
-        }
         if Instant::now().duration_since(start_time) > capture_options.capture_timeout {
             break;
         }
     }
-    report.end_time = sys::get_sysdate();
-    report.duration = Instant::now().duration_since(start_time);
-    report
 }
 
 fn filter_packet(frame: &Frame, capture_options: &PacketCaptureOptions) -> bool {

@@ -5,9 +5,9 @@ use chrono::{DateTime, TimeZone, NaiveDateTime, Local};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserInfo {
-    pub id: String,
+    pub user_id: String,
     pub group_id: String,
-    pub name: String,
+    pub user_name: String,
     pub groups: Vec<String>,
 }
 
@@ -32,8 +32,8 @@ pub fn get_process_map() -> HashMap<u32, ProcessInfo> {
             let user = system.get_user_by_id(user_id);
             if let Some(user) = user {
                 Some(UserInfo { 
-                    id: user.id().to_string(), 
-                    name: user.name().to_string(), 
+                    user_id: user.id().to_string(), 
+                    user_name: user.name().to_string(), 
                     group_id: user.group_id().to_string(), 
                     groups: user.groups().to_owned(), 
                 })

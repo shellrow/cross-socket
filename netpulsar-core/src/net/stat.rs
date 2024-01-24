@@ -1,7 +1,9 @@
 use default_net::mac::MacAddr;
 use serde::{Serialize, Deserialize};
 use std::{collections::{HashMap, HashSet}, net::{IpAddr, SocketAddr}};
-use super::{host::RemoteHostInfo, protocol::Protocol, socket::{SocketConnection, SocketConnectionInfo, SocketStatus}, traffic::{Direction, TrafficInfo}, packet::PacketFrame};
+use super::{host::RemoteHostInfo, protocol::Protocol, traffic::{Direction, TrafficInfo}, packet::PacketFrame};
+use super::interface;
+use crate::socket::{SocketConnection, SocketConnectionInfo, SocketStatus};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NetStatStrage {
@@ -17,7 +19,7 @@ impl NetStatStrage {
             remote_hosts: HashMap::new(),
             connections: HashMap::new(),
             reverse_dns_map: HashMap::new(),
-            local_ips: crate::interface::get_default_local_ips(),
+            local_ips: interface::get_default_local_ips(),
         }
     }
     pub fn reset(&mut self) {
@@ -27,7 +29,7 @@ impl NetStatStrage {
     }
     pub fn change_interface(&mut self, if_index: u32) {
         self.reset();
-        self.local_ips = crate::interface::get_local_ips(if_index);
+        self.local_ips = interface::get_local_ips(if_index);
     }
     pub fn update(&mut self, frame: PacketFrame) {
         let datalink_layer = match frame.datalink {
@@ -139,7 +141,7 @@ impl NetStatStrage {
                     bytes_sent: 0,
                     bytes_received: 0,
                     status: SocketStatus::from_xenet_tcp_flags(tcp.flags),
-                    process_info: None,
+                    processes: vec![],
                 });
                 match direction {
                     Direction::Egress => {
@@ -178,7 +180,7 @@ impl NetStatStrage {
                     bytes_sent: 0,
                     bytes_received: 0,
                     status: SocketStatus::Unknown,
-                    process_info: None,
+                    processes: vec![],
                 });
                 match direction {
                     Direction::Egress => {

@@ -1,10 +1,10 @@
-use netpulsar_core::net::socket::SocketInfoOption;
+use netpulsar_core::socket::SocketInfoOption;
 
 extern crate netpulsar_core;
 
 #[test]
 fn show_netstat() {
-    let netstat = netpulsar_core::net::socket::get_sockets_info(SocketInfoOption::default());
+    let netstat = netpulsar_core::socket::get_sockets_info(SocketInfoOption::default());
     for ns in netstat.iter() {
         println!("{:?}", ns);
     }
