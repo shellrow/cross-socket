@@ -78,7 +78,7 @@ onUnmounted(() => {
     <Card class="flex-auto">
         <template #title> Detected RemoteAddress. Click row for more detail. </template>
         <template #content>
-            <DataTable :value="tableData" v-model:selection="selectedHost" :loading="isLoading" :virtualScrollerOptions="{ itemSize: 20 }" selectionMode="single" dataKey="ip_addr" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight-200).toString() + 'px'" tableStyle="min-width: 50rem">
+            <DataTable :value="tableData" v-model:selection="selectedHost" :loading="isLoading" :virtualScrollerOptions="{ itemSize: 20 }" selectionMode="single" dataKey="ip_addr" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" size="small" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight-200).toString() + 'px'" tableStyle="min-width: 30rem">
                 <Column field="ip_addr" header="IP Address" ></Column>
                 <Column field="hostname" header="Host Name" ></Column>
                 <Column field="traffic_info.packet_sent" header="Packet Sent" ></Column>

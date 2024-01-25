@@ -75,20 +75,40 @@ const transport_protocols: OptionItem[] = [
     { id: 'UDP', name: ' UDP' }
 ];
 
+const generateRowKey = (row: SocketInfo) => {
+    return row.local_ip_addr + ':' + row.local_port;
+}
+
 const onRowSelect = (event: DataTableRowSelectEvent) => {
     dialogVisible.value = true;
     const socket_info: SocketInfo = event.data;
     selectedHostKv.value = [
         {
-            key: 'IP Address',
-            value: socket_info.remote_ip_addr || '',
+            key: 'IP Version',
+            value: socket_info.ip_version,
         },
         {
-            key: 'Hostname',
+            key: 'Local IP Address',
+            value: socket_info.local_ip_addr || '',
+        },
+        {
+            key: 'Local Hostname',
             value: '',
         },
         {
-            key: 'Port',
+            key: 'Local Port',
+            value: socket_info.local_port?.toString() || '',
+        },
+        {
+            key: 'Remote IP Address',
+            value: socket_info.remote_ip_addr || '',
+        },
+        {
+            key: 'Remote Hostname',
+            value: '',
+        },
+        {
+            key: 'Remote Port',
             value: socket_info.remote_port?.toString() || '',
         },
         {
@@ -96,24 +116,40 @@ const onRowSelect = (event: DataTableRowSelectEvent) => {
             value: socket_info.protocol,
         },
         {
-            key: 'Packets',
-            value: '24',
+            key: 'Status',
+            value: socket_info.status,
         },
         {
-            key: 'Bytes',
-            value: '4488',
+            key: 'Process ID',
+            value: socket_info.process?.pid?.toString() || '',
         },
         {
-            key: 'Country',
-            value: 'US',
+            key: 'Process Name',
+            value: socket_info.process?.name || '',
         },
         {
-            key: 'ASN',
-            value: 'AS13335 Cloudflare, Inc.',
+            key: 'Executable Path',
+            value: socket_info.process?.exe_path || '',
         },
         {
-            key: 'Info',
-            value: 'DNS Query',
+            key: 'Command Line',
+            value: socket_info.process?.cmd.join(' ') || '',
+        },
+        {
+            key: 'User ID',
+            value: socket_info.process?.user_info?.user_id || '',
+        },
+        {
+            key: 'User Name',
+            value: socket_info.process?.user_info?.user_name || '',
+        },
+        {
+            key: 'Start Time',
+            value: socket_info.process?.start_time || '',
+        },
+        {
+            key: 'Elapsed Time (sec)',
+            value: socket_info.process?.elapsed_time.toString() || '',
         },
     ];
 };
@@ -158,8 +194,7 @@ onUnmounted(() => {
             </div>
         </template>
         <template #content>
-            <DataTable :value="tableData" v-model:selection="selectedHost" :loading="isLoading" :virtualScrollerOptions="{ itemSize: 20 }" selectionMode="single" dataKey="index" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" size="small" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight-200).toString() + 'px'" tableStyle="min-width: 50rem">
-                <Column field="index" header="No" sortable></Column>
+            <DataTable :value="tableData" v-model:selection="selectedHost" :loading="isLoading" :virtualScrollerOptions="{ itemSize: 20 }" selectionMode="single" :dataKey="generateRowKey" @rowSelect="onRowSelect" @rowUnselect="onRowUnselect" size="small" scrollable :scrollHeight="(windowUtil.windowSize.innerHeight-200).toString() + 'px'" tableStyle="min-width: 30rem">
                 <Column field="local_ip_addr" header="SRC IP Address" sortable></Column>
                 <!-- <Column field="local_hostname" header="SRC Host Name"></Column> -->
                 <Column field="local_port" header="SRC Port" sortable></Column>
@@ -173,7 +208,7 @@ onUnmounted(() => {
             </DataTable>
         </template>
     </Card>
-    <Dialog v-model:visible="dialogVisible" :modal="false" :closable="true" header="RemoteHost Detail" :showHeader="true" :breakpoints="{'960px': '75vw', '640px': '100vw'}" :style="{width: '45vw'}">
+    <Dialog v-model:visible="dialogVisible" :modal="false" :closable="true" header="RemoteHost Detail" :showHeader="true" :breakpoints="{'960px': '75vw', '640px': '100vw'}" :style="{width: '50vw'}">
         <DataTable :value="selectedHostKv" size="small"  scrollable scrollHeight="70vh" tableStyle="min-width: 50rem">
                 <Column field="key" header="" ></Column>
                 <Column field="value" header="" ></Column>
