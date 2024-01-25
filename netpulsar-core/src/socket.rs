@@ -103,7 +103,7 @@ pub struct SocketConnectionInfo {
     pub bytes_sent: usize,
     pub bytes_received: usize,
     pub status: SocketStatus,
-    pub processes: Vec<ProcessInfo>,
+    pub process: Option<ProcessInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -115,7 +115,7 @@ pub struct SocketInfo {
     pub protocol: Protocol,
     pub status: SocketStatus,
     pub ip_version: AddressFamily,
-    pub processes: Vec<ProcessInfo>,
+    pub process: Option<ProcessInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -190,12 +190,6 @@ pub fn get_sockets_info(opt: SocketInfoOption) -> Vec<SocketInfo> {
     let mut sockets_info: Vec<SocketInfo> = Vec::new();
 
     for si in sockets {
-        let mut processes: Vec<ProcessInfo> = vec![];
-        for pid in &si.associated_pids {
-            if let Some(process_info) = process_map.get(pid) {
-                processes.push(process_info.to_owned());
-            }
-        }
         match si.protocol_socket_info {
             ProtocolSocketInfo::Tcp(tcp_si) => {
                 let socket_info = SocketInfo {
@@ -206,7 +200,11 @@ pub fn get_sockets_info(opt: SocketInfoOption) -> Vec<SocketInfo> {
                     protocol: Protocol::TCP,
                     status: SocketStatus::from_netstat2_state(tcp_si.state),
                     ip_version: if tcp_si.local_addr.is_ipv4() {AddressFamily::IPv4} else {AddressFamily::IPv6},
-                    processes: processes,
+                    process: if let Some(pid) = si.associated_pids.first() {
+                        process_map.get(pid).map(|pi| pi.to_owned())
+                    } else {
+                        None
+                    },
                 };
                 sockets_info.push(socket_info);
             },
@@ -219,7 +217,11 @@ pub fn get_sockets_info(opt: SocketInfoOption) -> Vec<SocketInfo> {
                     protocol: Protocol::UDP,
                     status: SocketStatus::Unknown,
                     ip_version: if udp_si.local_addr.is_ipv4() {AddressFamily::IPv4} else {AddressFamily::IPv6},
-                    processes: processes,
+                    process: if let Some(pid) = si.associated_pids.first() {
+                        process_map.get(pid).map(|pi| pi.to_owned())
+                    } else {
+                        None
+                    },
                 };
                 sockets_info.push(socket_info);
             },
@@ -261,10 +263,10 @@ pub fn start_socket_info_update(netstat_strage: &mut Arc<Mutex<NetStatStrage>>) 
                                 bytes_sent: 0,
                                 bytes_received: 0,
                                 status: SocketStatus::Unknown,
-                                processes: vec![],
+                                process: None,
                             });
                             socket_conn_info.status = socket_info.status;
-                            socket_conn_info.processes = socket_info.processes;
+                            socket_conn_info.process = socket_info.process;
                         }
                         Protocol::UDP => {
                             // UDP is not a connection-oriented protocol.
@@ -273,7 +275,7 @@ pub fn start_socket_info_update(netstat_strage: &mut Arc<Mutex<NetStatStrage>>) 
                             // So we use local_socket as a key and update SocketConnectionInfo.
                             for conn in netstat_strage.connections.iter_mut() {
                                 if conn.0.local_socket.ip() == socket_info.local_ip_addr && conn.0.local_socket.port() == socket_info.local_port {
-                                    conn.1.processes = socket_info.processes;
+                                    conn.1.process = socket_info.process;
                                     break;
                                 }
                             }

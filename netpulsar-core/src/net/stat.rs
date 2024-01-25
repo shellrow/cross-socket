@@ -141,7 +141,7 @@ impl NetStatStrage {
                     bytes_sent: 0,
                     bytes_received: 0,
                     status: SocketStatus::from_xenet_tcp_flags(tcp.flags),
-                    processes: vec![],
+                    process: None,
                 });
                 match direction {
                     Direction::Egress => {
@@ -180,7 +180,7 @@ impl NetStatStrage {
                     bytes_sent: 0,
                     bytes_received: 0,
                     status: SocketStatus::Unknown,
-                    processes: vec![],
+                    process: None,
                 });
                 match direction {
                     Direction::Egress => {

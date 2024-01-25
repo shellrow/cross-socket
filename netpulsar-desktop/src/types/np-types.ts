@@ -181,7 +181,7 @@ export interface SocketInfo {
     protocol: string,
     status: string,
     ip_version: string,
-    processes: ProcessInfo[],
+    process: ProcessInfo | null,
 }
 
 export interface TrafficInfo {

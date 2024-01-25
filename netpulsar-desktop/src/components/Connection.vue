@@ -168,8 +168,8 @@ onUnmounted(() => {
                 <Column field="remote_port" header="DST Port" sortable></Column>
                 <Column field="protocol" header="Protocol" sortable></Column>
                 <Column field="status" header="Status" sortable></Column>
-                <!-- <Column field="processes[0].pid" header="Process ID" sortable></Column> -->
-                <!-- <Column field="processes[0].name" header="Process Name" sortable></Column> -->
+                <Column field="process.pid" header="Process ID" sortable></Column>
+                <Column field="process.name" header="Process Name" sortable></Column>
             </DataTable>
         </template>
     </Card>
