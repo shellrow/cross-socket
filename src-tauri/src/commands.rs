@@ -52,7 +52,7 @@ pub fn get_deps_map() -> HashMap<String, bool> {
 #[cfg(target_os = "windows")]
 #[tauri::command]
 pub fn get_deps_map() -> HashMap<String, bool> {
-    netpulsar_core::deps::get_deps_map()
+    crate::deps::get_deps_map()
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -64,7 +64,7 @@ pub async fn download_dep(_app_handle: tauri::AppHandle, _software_name: String)
 #[cfg(target_os = "windows")]
 #[tauri::command]
 pub async fn download_dep(app_handle: tauri::AppHandle, software_name: String) -> Result<u64, String> {
-    if software_name.to_lowercase() == netpulsar_core::deps::NPCAP_SOFTWARE_NAME.to_lowercase() {
+    if software_name.to_lowercase() == crate::deps::NPCAP_SOFTWARE_NAME.to_lowercase() {
         match crate::sys::download_npcap(&app_handle).await {
             Ok(content_length) => {
                 Ok(content_length)
@@ -87,7 +87,7 @@ pub async fn run_dep_installer(_software_name: String) -> Result<(), String> {
 #[cfg(target_os = "windows")]
 #[tauri::command]
 pub async fn run_dep_installer(software_name: String) -> Result<(), String> {
-    if software_name.to_lowercase() == netpulsar_core::deps::NPCAP_SOFTWARE_NAME.to_lowercase() {
+    if software_name.to_lowercase() == crate::deps::NPCAP_SOFTWARE_NAME.to_lowercase() {
         // Run npcap installer with admin privilege
         match crate::sys::run_npcap_installer() {
             Ok(_) => {
