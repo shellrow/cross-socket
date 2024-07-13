@@ -1,7 +1,5 @@
 [workspace]
 resolver = "2"
 members = [
-    "netpulsar-core",
-    "netpulsar",
-    "netpulsar-desktop/src-tauri",
+    "src-tauri",
 ]
