@@ -1,6 +1,6 @@
 [package]
 name = "netpulsar"
-version = "0.3.0"
+version = "0.4.0"
 description = "NetPulsar"
 authors = ["shellrow <shellrow@fortnium.com>"]
 license = "MIT"
