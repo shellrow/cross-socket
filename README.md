@@ -7,7 +7,7 @@
 </div>
 
 ## Overview
-**netpulsar** is a real-time network utilization monitoring tool. Desktop app version of `netpulsar`.
+**netpulsar** is a real-time network utilization monitoring tool. Desktop App.
 It provides comprehensive insights into your network's activity, enabling users to monitor traffic, manage connections, and view network configurations with ease.
 
 ![image](resources/ss/netpulsar-ss-overview.png)
