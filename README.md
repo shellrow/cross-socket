@@ -101,7 +101,7 @@ After installing netpulsar Desktop on macOS, you may encounter a security warnin
 To resolve this issue and open netpulsar Desktop, you can remove the security attributes that macOS assigns to the application using the following command in the Terminal:
 
 ```sh
-xattr -rc "/Applications/netpulsar Desktop.app"
+xattr -rc "/Applications/NetPulsar.app"
 ```
 
 ### Post-Install (Windows)
