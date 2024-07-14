@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="resources/netpulsar-logo-128x128.png" alt="netpulsar - Real-time network utilization monitoring tool"><br>
+    <img src="resources/icon/netpulsar-logo-128x128.png" alt="netpulsar - Real-time network utilization monitoring tool"><br>
     <h1>netpulsar</h1>
     <p>
         <strong>Real-time network utilization monitoring tool.</strong>
@@ -10,7 +10,7 @@
 **netpulsar** is a real-time network utilization monitoring tool. Desktop app version of `netpulsar`.
 It provides comprehensive insights into your network's activity, enabling users to monitor traffic, manage connections, and view network configurations with ease.
 
-![image](resources/netpulsar-ss-overview.png)
+![image](resources/ss/netpulsar-ss-overview.png)
 
 ## Features
 - **Real-time Monitoring**: Track network utilization as it happens.
