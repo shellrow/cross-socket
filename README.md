@@ -1,6 +1,6 @@
 <div align="center">
     <img src="resources/icon/netpulsar-logo-128x128.png" alt="netpulsar - Real-time network utilization monitoring tool"><br>
-    <h1>netpulsar</h1>
+    <h1>NetPulsar</h1>
     <p>
         <strong>Real-time network utilization monitoring tool.</strong>
     </p>
